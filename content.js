@@ -233,9 +233,12 @@ function addMessageToChatContainer(message, isUser = true) {
 
 async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
+    // Load and display any stored messages first
+    await displayStoredMessages();
+    
     const { messagesContainer } = ensureChatInterface();
     
-    // Extract page content first
+    // Extract page content
     const pageContent = extractVisibleContent();
     
     // Add user message to chat
@@ -285,6 +288,10 @@ async function handleUrlChange() {
         responseDiv.innerHTML = formatMessage(responseText);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
+      
+      // Save the bot's response
+      saveMessage(responseText, false);
+      
     } catch (error) {
       console.error('API Error:', error);
       
@@ -292,11 +299,8 @@ async function handleUrlChange() {
       document.getElementById(loadingId)?.remove();
 
       // Show error message
-      messagesContainer.innerHTML += `
-        <div class="kinkong-message bot" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-          ${formatMessage('Sorry, I\'m having trouble connecting right now. Please try again later.')}
-        </div>
-      `;
+      const errorMessage = 'Sorry, I\'m having trouble connecting right now. Please try again later.';
+      addMessageToChatContainer(errorMessage, false);
     }
   }
 }
