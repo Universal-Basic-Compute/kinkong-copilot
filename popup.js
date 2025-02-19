@@ -113,27 +113,43 @@ async function checkSubscriptionStatus() {
 
 async function connectPhantom() {
   try {
-    // First check if Phantom is installed via the new method
-    const isPhantomInstalled = window.phantom?.solana || window.solana?.isPhantom;
+    // Inject script into active tab to access window.solana
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    const result = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      function: () => {
+        // This runs in the context of the webpage
+        if (!window.solana?.isPhantom && !window.phantom?.solana) {
+          return { error: 'no-phantom' };
+        }
+        
+        const provider = window.phantom?.solana || window.solana;
+        return provider.connect()
+          .then(resp => ({ 
+            success: true, 
+            publicKey: resp.publicKey.toString() 
+          }))
+          .catch(err => ({ 
+            error: err.code === 4001 ? 'user-rejected' : 'connection-failed' 
+          }));
+      }
+    });
 
-    if (!isPhantomInstalled) {
+    const response = result[0].result;
+    
+    if (response.error === 'no-phantom') {
       window.open('https://phantom.app/', '_blank');
       throw new Error('Please install Phantom wallet');
+    } else if (response.error === 'user-rejected') {
+      throw new Error('Please approve the connection request');
+    } else if (response.error) {
+      throw new Error('Failed to connect to Phantom');
     }
 
-    const provider = window.phantom?.solana || window.solana;
+    console.log("Connected to Phantom!", response.publicKey);
+    return response.publicKey;
 
-    // Request connection
-    try {
-      const resp = await provider.connect();
-      console.log("Connected to Phantom!", resp.publicKey.toString());
-      return resp.publicKey.toString();
-    } catch (err) {
-      if (err.code === 4001) {
-        throw new Error('Please approve the connection request');
-      }
-      throw err;
-    }
   } catch (error) {
     console.error("Phantom connection error:", error);
     throw error;
