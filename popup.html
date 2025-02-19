@@ -3,17 +3,112 @@
 <head>
   <title>KinKong Copilot</title>
   <style>
+    :root {
+      --primary-black: #1a1a1a;
+      --secondary-black: #2d2d2d;
+      --primary-red: #e31837;
+      --primary-gold: #ffd700;
+      --text-white: #ffffff;
+    }
+
     body {
-      width: 300px;
+      width: 350px;
+      padding: 15px;
+      background-color: var(--primary-black);
+      color: var(--text-white);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--primary-gold);
+    }
+
+    h2 {
+      color: var(--primary-gold);
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .container {
+      background-color: var(--secondary-black);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .button {
+      background-color: var(--primary-red);
+      color: var(--text-white);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #ff1f1f;
+      transform: translateY(-2px);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .stat-box {
+      background-color: var(--primary-black);
       padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .stat-value {
+      color: var(--primary-gold);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      color: #888;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
-  <h2>KinKong Copilot</h2>
-  <div id="app">
-    <!-- Your extension content will go here -->
+  <div class="header">
+    <h2>KinKong Copilot</h2>
   </div>
+
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value">$25,420</div>
+        <div class="stat-label">Portfolio Value</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">+2.4%</div>
+        <div class="stat-label">Daily Change</div>
+      </div>
+    </div>
+    <button class="button">Connect Wallet</button>
+  </div>
+
+  <div class="container">
+    <div id="trading-signals">
+      <!-- Trading signals will be populated by JavaScript -->
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
