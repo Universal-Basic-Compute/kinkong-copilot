@@ -996,6 +996,16 @@ async function injectFloatingCopilot() {
 }
 
 
+function waitForDOM() {
+  return new Promise(resolve => {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', resolve);
+    } else {
+      resolve();
+    }
+  });
+}
+
 // Initialize chat interface
 async function initialize() {
   try {
