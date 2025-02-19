@@ -40,19 +40,19 @@ function formatDate(timestamp) {
   const diffInSeconds = Math.floor((now - date) / 1000);
   
   if (diffInSeconds < 60) {
-    return 'Posted: Just now';
+    return 'Just now';
   } else if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
-    return `Posted: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
   } else if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600);
-    return `Posted: ${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
   } else if (diffInSeconds < 604800) {
     const days = Math.floor(diffInSeconds / 86400);
-    return `Posted: ${days} ${days === 1 ? 'day' : 'days'} ago`;
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
   } else {
     // For older dates, show the full date
-    return `Posted: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }
 }
 
@@ -134,7 +134,7 @@ function renderSignal(signal) {
         <span style="color: #ddd; font-weight: 600;">Reason:</span> 
         <span style="color: #bbb;">${signal.reason}</span>
       </div>
-      <div style="color: #666; font-size: 11px;">Posted: ${formatDate(signal.timestamp)}</div>
+      <div style="color: #666; font-size: 11px;">${formatDate(signal.timestamp)}</div>
     </div>
     ${signal.url ? `<a href="${signal.url}" target="_blank" style="color: var(--primary-gold); text-decoration: none; font-size: 12px; display: block; margin-top: 8px;">View Details →</a>` : ''}
   `;
