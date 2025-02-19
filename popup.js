@@ -91,6 +91,26 @@ function renderSignal(signal) {
 const SUBSCRIPTION_PRICE_SOL = 1.5;
 const RECEIVER_WALLET = 'YOUR_SOLANA_WALLET_ADDRESS';
 
+async function checkSubscriptionStatus() {
+  try {
+    const response = await fetch('https://swarmtrade.ai/api/subscription/status');
+    const data = await response.json();
+    
+    if (data.isSubscribed) {
+      const subscribeButton = document.getElementById('subscribe-button');
+      subscribeButton.textContent = 'Subscribed ✓';
+      subscribeButton.classList.add('subscribed');
+      subscribeButton.disabled = true;
+      
+      const statusDiv = document.querySelector('.subscription-status');
+      const expiryDate = new Date(data.expiresAt).toLocaleDateString();
+      statusDiv.textContent = `Premium access until ${expiryDate}`;
+    }
+  } catch (error) {
+    console.error('Error checking subscription:', error);
+  }
+}
+
 async function connectPhantom() {
   try {
     const { solana } = window;
@@ -121,8 +141,23 @@ async function makePayment() {
     );
 
     const signature = await solana.signAndSendTransaction(transaction);
-    await connection.confirmTransaction(signature);
-    await recordSubscription(solana.publicKey.toString());
+    
+    // Notify backend about the payment
+    const response = await fetch('https://swarmtrade.ai/api/subscription/activate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        signature,
+        wallet: solana.publicKey.toString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to activate subscription');
+    }
+
     return signature;
   } catch (error) {
     console.error('Payment error:', error);
@@ -132,6 +167,7 @@ async function makePayment() {
 
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Extension loaded');
+  await checkSubscriptionStatus();
 
   const subscribeButton = document.getElementById('subscribe-button');
   const statusDiv = document.querySelector('.subscription-status');
