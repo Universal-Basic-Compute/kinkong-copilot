@@ -267,26 +267,9 @@ function isSupportedPage() {
 
 function getInitialMessage(pageType) {
   const path = window.location.pathname;
-  const siteName = {
-    'dexscreener': 'DexScreener',
-    'x': 'X/Twitter', 
-    'solscan': 'Solscan',
-    'swarmtrade': 'SwarmTrade',
-    'ubc': 'Universal Basic Compute'
-  }[pageType] || 'this site';
-
-  // Clean up the path
   const cleanPath = path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, '');
-
-  // Customize message based on site
-  switch(pageType) {
-    case 'swarmtrade':
-      return `On ${cleanPath} at SwarmTrade, what would you like to know?`;
-    case 'ubc':
-      return `On ${cleanPath} at UBC, how can I help you understand Universal Basic Compute?`;
-    default:
-      return `On ${cleanPath} on ${siteName}, what do you think?`;
-  }
+  
+  return `I'm on ${cleanPath}, what do you think?`;
 }
 
 function ensureChatInterface() {
