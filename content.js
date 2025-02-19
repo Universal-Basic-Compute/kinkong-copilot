@@ -232,7 +232,7 @@ function injectFloatingCopilot() {
 
       try {
         // Make API call to KinKong Copilot
-        const response = await fetch('https://swarmtrade.ai/api/kinkong-copilot', {
+        const response = await fetch('https://swarmtrade.ai/api/copilot', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
