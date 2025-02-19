@@ -209,17 +209,6 @@ function extractVisibleContent() {
   return content;
 }
 
-// Helper function to find content using multiple selectors
-function findContent(selectors) {
-  for (const selector of selectors) {
-    const element = document.querySelector(selector);
-    if (element) {
-      const text = element.textContent.trim();
-      if (text) return text;
-    }
-  }
-  return '';
-}
 
 // Helper function to find price-like numbers in text
 function findPrices(text) {
