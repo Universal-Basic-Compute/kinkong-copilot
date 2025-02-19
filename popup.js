@@ -88,6 +88,7 @@ function renderSignal(signal) {
   return signalElement;
 }
 
+/*
 async function checkSubscriptionStatus() {
   try {
     const response = await fetch('https://swarmtrade.ai/api/subscription/status');
@@ -107,10 +108,10 @@ async function checkSubscriptionStatus() {
     console.error('Error checking subscription:', error);
   }
 }
-
+*/
 
 document.addEventListener('DOMContentLoaded', async function() {
-  await checkSubscriptionStatus();
+  // await checkSubscriptionStatus();
 
   const tradingSignals = document.getElementById('trading-signals');
   tradingSignals.innerHTML = '<div style="text-align: center;">Loading signals...</div>';
