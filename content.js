@@ -76,9 +76,82 @@ function addMessageToChatContainer(message, isUser = true) {
 }
 
 // Create a function to handle URL changes
-function handleUrlChange() {
+async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
-    addMessageToChatContainer('Opened this page, what do you think?');
+    // Extract page content first
+    const pageContent = extractVisibleContent();
+    
+    // Add user message to chat
+    addMessageToChatContainer('Opened this page, what do you think?', true);
+
+    // Add loading indicator
+    const loadingId = 'loading-' + Date.now();
+    const messagesContainer = document.querySelector('.kinkong-chat-messages');
+    messagesContainer.innerHTML += `
+      <div id="${loadingId}" class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    try {
+      // Make API call to KinKong Copilot
+      const response = await fetch('https://swarmtrade.ai/api/copilot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Opened this page, what do you think?',
+          url: window.location.href,
+          pageContent: pageContent
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Remove loading message
+      document.getElementById(loadingId).remove();
+
+      // Create response bubble
+      const responseDiv = document.createElement('div');
+      responseDiv.className = 'kinkong-message bot';
+      messagesContainer.appendChild(responseDiv);
+
+      // Get the response reader
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let responseText = '';
+
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+        
+        // Decode and append new chunk
+        const chunk = decoder.decode(value, {stream: true});
+        responseText += chunk;
+        
+        // Update the response bubble with formatted text
+        responseDiv.innerHTML = formatMessage(responseText);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      
+      // Remove loading message
+      document.getElementById(loadingId).remove();
+
+      // Show error message
+      messagesContainer.innerHTML += `
+        <div class="kinkong-message bot" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+          ${formatMessage('Sorry, I\'m having trouble connecting right now. Please try again later.')}
+        </div>
+      `;
+    }
   }
 }
 
