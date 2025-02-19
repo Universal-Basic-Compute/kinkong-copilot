@@ -235,15 +235,11 @@ function injectFloatingCopilot() {
         const response = await fetch('https://swarmtrade.ai/api/copilot', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            query: message,
-            context: {
-              url: window.location.href,
-              timestamp: new Date().toISOString()
-            }
+            message: message,
+            url: window.location.href
           })
         });
 
