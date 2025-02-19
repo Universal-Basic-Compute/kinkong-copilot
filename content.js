@@ -84,6 +84,34 @@ async function makeApiCall(endpoint, data) {
   }
 }
 
+// Helper function to find content using multiple selectors and text matching
+function findContent(selectors) {
+  for (const selector of selectors) {
+    // Handle special case for text content matching
+    if (selector.includes(':contains(')) {
+      const basicSelector = selector.split(':contains(')[0];
+      const searchText = selector.match(/contains\("(.+)"\)/)[1];
+      
+      // Find elements matching basic selector
+      const elements = document.querySelectorAll(basicSelector);
+      for (const element of elements) {
+        if (element.textContent.includes(searchText)) {
+          return element.textContent.trim();
+        }
+      }
+      continue;
+    }
+
+    // Regular selector
+    const element = document.querySelector(selector);
+    if (element) {
+      const text = element.textContent.trim();
+      if (text) return text;
+    }
+  }
+  return '';
+}
+
 function extractVisibleContent() {
   if (isDexScreenerTokenPage()) {
     // Get all text content from the main container
@@ -91,7 +119,8 @@ function extractVisibleContent() {
     let textContent = '';
     
     if (mainContent) {
-      // Get all text nodes that are visible
+      // Get all visible text nodes
+      const textNodes = [];
       const walker = document.createTreeWalker(
         mainContent,
         NodeFilter.SHOW_TEXT,
@@ -100,10 +129,6 @@ function extractVisibleContent() {
             // Check if the node's parent is visible
             const style = window.getComputedStyle(node.parentElement);
             if (style.display === 'none' || style.visibility === 'hidden') {
-              return NodeFilter.FILTER_REJECT;
-            }
-            // Check if the text has content
-            if (!node.textContent.trim()) {
               return NodeFilter.FILTER_REJECT;
             }
             // Ignore script and style tags
@@ -115,41 +140,39 @@ function extractVisibleContent() {
         }
       );
 
-      // Collect all visible text
-      let node;
-      while (node = walker.nextNode()) {
-        const text = node.textContent.trim();
+      while (walker.nextNode()) {
+        const text = walker.currentNode.textContent.trim();
         if (text) {
-          textContent += text + ' ';
+          textNodes.push(text);
         }
       }
+      
+      textContent = textNodes.join(' ');
     }
 
-    // Try to find specific data points
     const content = {
       url: window.location.href,
       pageContent: {
         // Get all visible text
-        fullText: textContent.trim(),
+        fullText: textContent,
         
         // Try multiple selectors for token info
         tokenName: findContent([
           '[data-cy="token-name"]',
-          '.chakra-text:contains("Token")',
           'h1',
-          '[role="heading"]'
+          '[role="heading"]',
+          '.chakra-text'
         ]),
         
         tokenSymbol: findContent([
           '[data-cy="token-symbol"]',
-          '.chakra-text:contains("Symbol")',
-          'h2'
+          'h2',
+          '.chakra-text'
         ]),
         
         price: findContent([
           '[data-cy="price"]',
-          '.chakra-text:contains("$")',
-          '[role="heading"]:contains("$")'
+          '[role="heading"]'
         ]),
         
         // Get any numbers that look like prices
@@ -161,11 +184,13 @@ function extractVisibleContent() {
     Object.keys(content.pageContent).forEach(key => {
       if (!content.pageContent[key] || 
           content.pageContent[key] === 'Loading...' ||
-          content.pageContent[key] === '') {
+          content.pageContent[key] === '' ||
+          (Array.isArray(content.pageContent[key]) && content.pageContent[key].length === 0)) {
         delete content.pageContent[key];
       }
     });
 
+    console.log('Extracted content:', content);
     return content;
   }
   
