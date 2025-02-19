@@ -146,7 +146,7 @@ function renderSignal(signal) {
         <span style="color: #ddd; font-weight: 600;">Reason:</span> 
         <span style="color: #bbb;">${signal.reason}</span>
       </div>
-      <div style="color: #666; font-size: 11px;">${formatDate(signal.timestamp)}</div>
+      <div style="color: #666; font-size: 11px;">${formatDate(signal.createdAt)}</div>
     </div>
     ${signal.url ? `<a href="${signal.url}" target="_blank" style="color: var(--primary-gold); text-decoration: none; font-size: 12px; display: block; margin-top: 8px;">View Details →</a>` : ''}
   `;
