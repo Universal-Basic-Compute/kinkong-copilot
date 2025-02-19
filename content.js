@@ -3,10 +3,10 @@ function injectFloatingCopilot() {
   style.textContent = `
     .kinkong-floating-copilot {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
+      bottom: 30px;
+      right: 30px;
+      width: 80px;
+      height: 80px;
       z-index: 999999;
       animation: kinkong-float 3s ease-in-out infinite;
       cursor: pointer;
