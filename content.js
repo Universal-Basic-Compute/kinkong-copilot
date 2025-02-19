@@ -5,11 +5,16 @@ function injectFloatingCopilot() {
       position: fixed;
       bottom: 30px;
       right: 30px;
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       z-index: 999999;
       animation: kinkong-float 3s ease-in-out infinite;
       cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .kinkong-floating-copilot:hover {
+      transform: scale(1.1);
     }
 
     @keyframes kinkong-float {
@@ -20,71 +25,113 @@ function injectFloatingCopilot() {
 
     .kinkong-chat-container {
       position: fixed;
-      bottom: 130px;
+      bottom: 140px;
       right: 30px;
-      width: 300px;
-      height: 400px;
+      width: 380px;
+      height: 500px;
       background-color: #1a1a1a;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      border-radius: 15px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.4);
       z-index: 999998;
       display: none;
       flex-direction: column;
       overflow: hidden;
+      border: 1px solid rgba(255, 215, 0, 0.2);
     }
 
     .kinkong-chat-header {
-      padding: 15px;
-      background-color: #2d2d2d;
-      color: #ffd700;
+      padding: 20px;
+      background: linear-gradient(135deg, #e31837, #ffd700);
+      color: white;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .kinkong-chat-close {
       cursor: pointer;
-      color: #888;
-      font-size: 20px;
+      color: white;
+      font-size: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .kinkong-chat-close:hover {
+      transform: rotate(90deg);
     }
 
     .kinkong-chat-messages {
       flex-grow: 1;
-      padding: 15px;
+      padding: 20px;
       overflow-y: auto;
       color: #fff;
     }
 
+    .kinkong-message {
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      max-width: 85%;
+      transition: transform 0.2s ease;
+    }
+
+    .kinkong-message:hover {
+      transform: translateX(5px);
+    }
+
+    .kinkong-message.user {
+      background: linear-gradient(135deg, #e31837, #ff4757);
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .kinkong-message.bot {
+      background: linear-gradient(135deg, #ffd700, #ffa502);
+      color: #1a1a1a;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+
     .kinkong-chat-input-container {
-      padding: 15px;
+      padding: 20px;
       background-color: #2d2d2d;
       display: flex;
-      gap: 10px;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 215, 0, 0.1);
     }
 
     .kinkong-chat-input {
       flex-grow: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 5px;
+      padding: 12px;
+      border: 2px solid rgba(255, 215, 0, 0.2);
+      border-radius: 8px;
       background-color: #1a1a1a;
       color: #fff;
       outline: none;
+      transition: border-color 0.3s ease;
+      font-size: 14px;
+    }
+
+    .kinkong-chat-input:focus {
+      border-color: #ffd700;
     }
 
     .kinkong-chat-send {
-      padding: 8px 15px;
-      background-color: #ffd700;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #e31837, #ffd700);
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
-      color: #1a1a1a;
+      color: white;
       font-weight: bold;
+      transition: all 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .kinkong-chat-send:hover {
-      background-color: #ffed4a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
     }
   `;
   document.head.appendChild(style);
@@ -134,24 +181,20 @@ function injectFloatingCopilot() {
     const message = input.value.trim();
     if (message) {
       messagesContainer.innerHTML += `
-        <div style="margin-bottom: 10px;">
-          <div style="color: #888;">You:</div>
-          <div>${message}</div>
-        </div>
+          <div class="kinkong-message user">
+              ${message}
+          </div>
       `;
       input.value = '';
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       
-      // TODO: Add actual chat API integration here
-      // For now, just show a mock response
       setTimeout(() => {
-        messagesContainer.innerHTML += `
-          <div style="margin-bottom: 10px;">
-            <div style="color: #ffd700;">KinKong:</div>
-            <div>I'm processing your question about "${message}". Integration with AI coming soon!</div>
-          </div>
-        `;
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          messagesContainer.innerHTML += `
+              <div class="kinkong-message bot">
+                  I'm processing your question about "${message}". Integration with AI coming soon!
+              </div>
+          `;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }, 1000);
     }
   }
