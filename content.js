@@ -20,39 +20,50 @@ async function makeApiCall(endpoint, data) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // Try no-cors mode first
-    const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Origin': window.location.origin,
-        // Add additional CORS headers
-        'Access-Control-Request-Method': 'POST',
-        'Access-Control-Request-Headers': 'content-type,accept,origin'
-      },
-      mode: 'no-cors', // Change to no-cors mode
-      signal: controller.signal,
-      body: JSON.stringify(data)
-    });
+    // Try with regular CORS first
+    try {
+      const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        signal: controller.signal,
+        body: JSON.stringify(data)
+      });
 
-    clearTimeout(timeoutId);
-
-    // Since we're using no-cors, we won't get response details
-    // but at least the request will go through
-    console.log('Response received in no-cors mode');
-
-    // Create a synthetic response since no-cors won't give us the real one
-    const syntheticResponse = new Response(JSON.stringify({
-      message: "Request sent successfully in no-cors mode. Response details not available."
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        return response;
       }
-    });
+    } catch (corsError) {
+      console.log('CORS request failed, falling back to extension background proxy');
+      
+      // Send message to background script to make the request
+      const proxyResponse = await chrome.runtime.sendMessage({
+        type: 'proxyRequest',
+        endpoint: `https://swarmtrade.ai/api/${endpoint}`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: data
+      });
 
-    return syntheticResponse;
+      if (proxyResponse.error) {
+        throw new Error(proxyResponse.error);
+      }
+
+      return new Response(JSON.stringify(proxyResponse.data), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
   } catch (error) {
     console.group('API Error Details');
@@ -68,39 +79,7 @@ async function makeApiCall(endpoint, data) {
     });
     console.groupEnd();
 
-    // Handle specific error cases
-    if (error.name === 'AbortError') {
-      throw new Error('Request timed out after 30 seconds. Please try again.');
-    }
-    
-    if (error.name === 'TypeError') {
-      if (error.message.includes('Failed to fetch')) {
-        if (!navigator.onLine) {
-          throw new Error('You appear to be offline. Please check your internet connection.');
-        } else {
-          // Create a synthetic success response even for errors in no-cors mode
-          return new Response(JSON.stringify({
-            message: "Request attempted in no-cors mode. Unable to verify success."
-          }), {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-        }
-      }
-    }
-
-    // If we get here, return a synthetic error response
-    return new Response(JSON.stringify({
-      error: 'Unable to complete request',
-      details: error.message
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    throw new Error('Unable to connect to SwarmTrade API. The service may be down or blocked by CORS policy.');
   }
 }
 
