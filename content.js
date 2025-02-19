@@ -204,7 +204,61 @@ function ensureChatInterface() {
   };
 }
 
-function addMessageToChatContainer(message, isUser = true) {
+// Function to save messages
+async function saveMessage(message, isUser) {
+  const currentUrl = window.location.href;
+  try {
+    // Get existing messages for this URL
+    const result = await chrome.storage.local.get('chatMessages');
+    const urlMessages = result.chatMessages || {};
+    
+    // Initialize array for this URL if it doesn't exist
+    if (!urlMessages[currentUrl]) {
+      urlMessages[currentUrl] = [];
+    }
+    
+    // Add new message
+    urlMessages[currentUrl].push({
+      content: message,
+      isUser: isUser,
+      timestamp: Date.now()
+    });
+    
+    // Save back to storage
+    await chrome.storage.local.set({ chatMessages: urlMessages });
+  } catch (error) {
+    console.error('Error saving message:', error);
+  }
+}
+
+// Function to load messages for current URL
+async function loadMessages() {
+  const currentUrl = window.location.href;
+  try {
+    const result = await chrome.storage.local.get('chatMessages');
+    const urlMessages = result.chatMessages || {};
+    return urlMessages[currentUrl] || [];
+  } catch (error) {
+    console.error('Error loading messages:', error);
+    return [];
+  }
+}
+
+// Function to display all messages
+async function displayStoredMessages() {
+  const messages = await loadMessages();
+  const { messagesContainer } = ensureChatInterface();
+  
+  // Clear existing messages
+  messagesContainer.innerHTML = '';
+  
+  // Display each message
+  messages.forEach(message => {
+    addMessageToChatContainer(message.content, message.isUser, false); // false means don't save again
+  });
+}
+
+function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
   const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
   
   if (messagesContainer) {
@@ -223,10 +277,15 @@ function addMessageToChatContainer(message, isUser = true) {
 
     messagesContainer.innerHTML += `
       <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
-        ${message}
+        ${formatMessage(message)}
       </div>
     `;
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Save message if needed
+    if (shouldSave) {
+      saveMessage(message, isUser);
+    }
   }
 }
 
