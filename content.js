@@ -3,13 +3,23 @@ let markedReady = false;
 
 async function makeApiCall(endpoint, data) {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': window.location.origin
       },
+      credentials: 'include', // Include cookies if needed
+      mode: 'cors', // Enable CORS
+      signal: controller.signal,
       body: JSON.stringify(data)
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -18,10 +28,27 @@ async function makeApiCall(endpoint, data) {
     return response;
 
   } catch (error) {
-    console.error('API Error:', error);
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('Unable to connect to the server. Please check your internet connection.');
+    console.error('API Error Details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      endpoint: endpoint,
+      data: data
+    });
+
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
     }
+    
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      // Add more specific error messaging
+      if (!navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your internet connection.');
+      } else {
+        throw new Error('Unable to connect to the server. The service may be temporarily unavailable.');
+      }
+    }
+
     throw error;
   }
 }
@@ -159,9 +186,29 @@ function addMessageToChatContainer(message, isUser = true) {
 }
 
 // Create a function to handle URL changes
+async function checkApiAvailability() {
+  try {
+    const response = await fetch('https://swarmtrade.ai/api/health', {
+      method: 'GET',
+      mode: 'cors'
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('API Health Check Failed:', error);
+    return false;
+  }
+}
+
 async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
     const { messagesContainer } = ensureChatInterface();
+    
+    // Check API availability first
+    const apiAvailable = await checkApiAvailability();
+    if (!apiAvailable) {
+      addMessageToChatContainer('Sorry, the service is temporarily unavailable. Please try again later.', false);
+      return;
+    }
     
     // Extract page content first
     const pageContent = extractVisibleContent();
