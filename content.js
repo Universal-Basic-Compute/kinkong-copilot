@@ -486,6 +486,10 @@ function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
       requestAnimationFrame(() => {
         chatContainer.classList.add('visible');
       });
+    } catch (error) {
+      reject(error);
+    }
+  });
       // Stop the floating animation when chat is open
       if (copilotImage) {
         copilotImage.style.animation = 'none';
@@ -864,7 +868,15 @@ async function injectFloatingCopilot() {
   img.className = 'kinkong-floating-copilot';
   img.alt = 'KinKong Copilot';
   img.style.display = copilotEnabled ? 'block' : 'none';
-  document.body.appendChild(img);
+  // Wait for image to load
+  img.onload = () => {
+    document.body.appendChild(img);
+    resolve();
+  };
+
+  img.onerror = (error) => {
+    reject(new Error('Failed to load copilot image: ' + error.message));
+  };
 
   // Add click handlers
   img.addEventListener('click', () => {
@@ -982,26 +994,47 @@ async function injectFloatingCopilot() {
   });
 }
 
+function waitForDOM() {
+  return new Promise(resolve => {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      resolve();
+    } else {
+      document.addEventListener('DOMContentLoaded', resolve);
+    }
+  });
+}
+
 // Initialize chat interface
-document.addEventListener('DOMContentLoaded', async () => {
+async function initialize() {
   try {
-    // Load saved preferences first
+    // Wait for DOM to be ready
+    await waitForDOM();
+    
+    // Load saved preferences
     const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
     
     // Create interface if enabled
     if (copilotEnabled) {
-      const elements = ensureChatInterface();
-      console.log('Chat interface created successfully:', elements);
+      await injectFloatingCopilot();
+      console.log('Chat interface created successfully');
+      
+      // Check initial page
+      const initialPageType = isSupportedPage();
+      if (initialPageType) {
+        console.log('Initial page is supported:', initialPageType);
+        await handleUrlChange();
+      }
     }
   } catch (error) {
     console.error('Error during initialization:', error);
   }
-});
+}
 
-// Listen for URL changes using both methods for better coverage
-let lastUrl = location.href; 
+// Start initialization
+initialize();
 
-// Method 1: MutationObserver for dynamic changes
+// Listen for URL changes
+let lastUrl = location.href;
 new MutationObserver(() => {
   const url = location.href;
   if (url !== lastUrl) {
@@ -1014,16 +1047,6 @@ new MutationObserver(() => {
     }
   }
 }).observe(document, {subtree: true, childList: true});
-
-// Method 2: Direct check on page load
-console.log('Initial URL check:', window.location.href);
-const initialPageType = isSupportedPage();
-if (initialPageType && copilotEnabled) {
-  console.log('Initial page is supported:', initialPageType);
-  handleUrlChange().catch(error => {
-    console.error('Error during initial URL check:', error);
-  });
-}
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
   // Only accept messages from our extension
