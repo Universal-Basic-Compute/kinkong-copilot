@@ -382,16 +382,17 @@ async function waitForDexScreenerElements() {
 async function handleUrlChange() {
   console.log('handleUrlChange called');
   
-  if (isDexScreenerTokenPage() || isXPage()) {
-    console.log('On supported page, waiting for elements...');
+  const pageType = isSupportedPage();
+  if (pageType) {
+    console.log('On supported page:', pageType);
     
     // Load and display any stored messages first
     await displayStoredMessages();
     
-    // Wait for page elements to load
-    const elementsLoaded = isDexScreenerTokenPage() ? 
+    // Wait for page elements to load if needed
+    const elementsLoaded = pageType === 'dexscreener' ? 
       await waitForDexScreenerElements() :
-      true; // X.com doesn't need special waiting
+      true; // Other pages don't need special waiting
     
     console.log('Elements loaded status:', elementsLoaded);
     
@@ -401,11 +402,11 @@ async function handleUrlChange() {
     // Extract page content
     const pageContent = extractVisibleContent();
     console.log('Page content extracted:', pageContent);
+
+    // Get appropriate initial message based on page type
+    const initialMessage = getInitialMessage(pageType);
     
     // Add user message to chat
-    const initialMessage = isXPage() ? 
-      'What do you think about this tweet or X page?' : 
-      'Opened this page, what do you think?';
     addMessageToChatContainer(initialMessage, true);
 
     // Add loading indicator
@@ -422,11 +423,10 @@ async function handleUrlChange() {
     try {
       // Make API call to KinKong Copilot
       const response = await makeApiCall('copilot', {
-        message: isXPage() ? 
-          'What do you think about this tweet or X page?' : 
-          'Opened this page, what do you think?',
+        message: initialMessage,
         url: window.location.href,
         pageContent: pageContent,
+        pageType: pageType,
         fullyLoaded: elementsLoaded
       });
 
