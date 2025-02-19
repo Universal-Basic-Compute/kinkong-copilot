@@ -860,8 +860,9 @@ new MutationObserver(() => {
 
 // Method 2: Direct check on page load
 console.log('Initial URL check:', window.location.href);
-if (isDexScreenerTokenPage()) {
-  console.log('Initial page is DexScreener token page');
+const initialPageType = isSupportedPage();
+if (initialPageType) {
+  console.log('Initial page is supported:', initialPageType);
   handleUrlChange();
 }
 // Add Phantom wallet bridge
