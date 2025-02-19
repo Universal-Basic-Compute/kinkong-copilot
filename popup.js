@@ -182,29 +182,20 @@ document.addEventListener('DOMContentLoaded', async function() {
   const connectWalletBtn = document.getElementById('connect-wallet');
   const walletStatus = document.getElementById('wallet-status');
 
-  connectWalletBtn.addEventListener('click', async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const account = accounts[0];
-        
-        // Update button state
-        connectWalletBtn.classList.add('wallet-connected');
-        connectWalletBtn.innerHTML = `
-          <span class="wallet-icon">✓</span>
-          ${account.slice(0, 6)}...${account.slice(-4)}
-        `;
-        
-        walletStatus.textContent = 'Wallet connected successfully';
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
-        walletStatus.textContent = 'Error connecting wallet. Please try again.';
-      }
-    } else {
-      walletStatus.textContent = 'Please install MetaMask to connect your wallet';
+  // Check if wallet was previously connected
+  chrome.storage.local.get(['walletConnected', 'walletAddress'], (result) => {
+    if (result.walletConnected && result.walletAddress) {
+      connectWalletBtn.classList.add('wallet-connected');
+      connectWalletBtn.innerHTML = `
+        <span class="wallet-icon">✓</span>
+        ${result.walletAddress.slice(0, 6)}...${result.walletAddress.slice(-4)}
+      `;
+      walletStatus.textContent = 'Phantom wallet connected';
+      walletStatus.style.color = '#2ecc71';
     }
   });
+
+  connectWalletBtn.addEventListener('click', connectPhantomWallet);
 
   const tradingSignals = document.getElementById('trading-signals');
   tradingSignals.innerHTML = '<div style="text-align: center;">Loading signals...</div>';
@@ -263,3 +254,55 @@ document.addEventListener('DOMContentLoaded', async function() {
     settingsPage.classList.remove('visible');
   });
 });
+async function connectPhantomWallet() {
+  const connectWalletBtn = document.getElementById('connect-wallet');
+  const walletStatus = document.getElementById('wallet-status');
+
+  try {
+    // Check if Phantom is installed
+    const provider = window?.solana;
+    
+    if (!provider?.isPhantom) {
+      walletStatus.textContent = 'Please install Phantom wallet';
+      walletStatus.style.color = '#e74c3c';
+      // Open Phantom install page
+      window.open('https://phantom.app/', '_blank');
+      return;
+    }
+
+    try {
+      // Connect to Phantom
+      const resp = await provider.connect();
+      const publicKey = resp.publicKey.toString();
+      
+      // Update button state
+      connectWalletBtn.classList.add('wallet-connected');
+      connectWalletBtn.innerHTML = `
+        <span class="wallet-icon">✓</span>
+        ${publicKey.slice(0, 6)}...${publicKey.slice(-4)}
+      `;
+      
+      walletStatus.textContent = 'Phantom wallet connected';
+      walletStatus.style.color = '#2ecc71';
+
+      // Save wallet connection state
+      chrome.storage.local.set({
+        walletConnected: true,
+        walletAddress: publicKey
+      });
+
+    } catch (err) {
+      if (err.code === 4001) {
+        // User rejected the connection
+        walletStatus.textContent = 'Connection rejected by user';
+      } else {
+        throw err;
+      }
+    }
+
+  } catch (error) {
+    console.error('Phantom connection error:', error);
+    walletStatus.textContent = 'Error connecting to Phantom wallet';
+    walletStatus.style.color = '#e74c3c';
+  }
+}

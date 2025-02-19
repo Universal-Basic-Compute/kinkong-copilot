@@ -17,6 +17,9 @@
     "webRequest",
     "cookies"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "host_permissions": [
     "https://api.airtable.com/*",
     "https://swarmtrade.ai/*"

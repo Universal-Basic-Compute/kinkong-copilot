@@ -840,3 +840,32 @@ if (isDexScreenerTokenPage()) {
   console.log('Initial page is DexScreener token page');
   handleUrlChange();
 }
+// Add Phantom wallet bridge
+window.addEventListener('message', async (event) => {
+  // Only accept messages from our extension
+  if (event.source !== window) return;
+  
+  if (event.data.type === 'PHANTOM_CONNECT_REQUEST') {
+    try {
+      const provider = window?.solana;
+      if (!provider?.isPhantom) {
+        window.postMessage({ 
+          type: 'PHANTOM_CONNECT_RESPONSE',
+          error: 'Phantom not installed'
+        }, '*');
+        return;
+      }
+
+      const resp = await provider.connect();
+      window.postMessage({ 
+        type: 'PHANTOM_CONNECT_RESPONSE',
+        publicKey: resp.publicKey.toString()
+      }, '*');
+    } catch (error) {
+      window.postMessage({ 
+        type: 'PHANTOM_CONNECT_RESPONSE',
+        error: error.message
+      }, '*');
+    }
+  }
+});
