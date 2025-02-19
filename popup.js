@@ -35,7 +35,25 @@ function getSignalColor(type, confidence) {
 }
 
 function formatDate(timestamp) {
-  return new Date(timestamp).toLocaleString();
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'Posted: Just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `Posted: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `Posted: ${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `Posted: ${days} ${days === 1 ? 'day' : 'days'} ago`;
+  } else {
+    // For older dates, show the full date
+    return `Posted: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  }
 }
 
 // Add metallic shine animation
