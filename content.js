@@ -290,10 +290,39 @@ function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
 }
 
 
+// Function to wait for DexScreener elements to be loaded
+async function waitForDexScreenerElements() {
+  const maxAttempts = 20; // Maximum number of attempts
+  const delayMs = 500; // Delay between attempts (500ms)
+  
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Check for key elements that indicate the page is loaded
+    const tokenName = document.querySelector('[data-cy="token-name"]');
+    const tokenSymbol = document.querySelector('[data-cy="token-symbol"]');
+    const price = document.querySelector('[data-cy="price"]');
+    
+    if (tokenName && tokenSymbol && price) {
+      return true; // Elements found
+    }
+    
+    // Wait before next attempt
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+  
+  return false; // Elements not found after all attempts
+}
+
 async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
     // Load and display any stored messages first
     await displayStoredMessages();
+    
+    // Wait for page elements to load
+    const elementsLoaded = await waitForDexScreenerElements();
+    if (!elementsLoaded) {
+      console.log('DexScreener elements failed to load in time');
+      return; // Don't proceed if elements aren't loaded
+    }
     
     const { messagesContainer } = ensureChatInterface();
     
