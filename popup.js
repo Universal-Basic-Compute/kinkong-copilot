@@ -1,15 +1,15 @@
-console.log('Config loaded:', config);
-
 async function fetchSignals() {
   try {
-    if (!config || !config.AIRTABLE_API_KEY || !config.AIRTABLE_BASE_ID) {
-      console.error('Config not properly loaded:', config);
+    const credentials = await chrome.storage.sync.get(['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID']);
+    
+    if (!credentials.AIRTABLE_API_KEY || !credentials.AIRTABLE_BASE_ID) {
+      console.error('Credentials not found in storage');
       throw new Error('Configuration missing');
     }
 
-    const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/SIGNALS?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
+    const response = await fetch(`https://api.airtable.com/v0/${credentials.AIRTABLE_BASE_ID}/SIGNALS?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
       headers: {
-        'Authorization': `Bearer ${config.AIRTABLE_API_KEY}`
+        'Authorization': `Bearer ${credentials.AIRTABLE_API_KEY}`
       }
     });
 
@@ -89,11 +89,12 @@ function renderSignal(signal) {
 
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Extension loaded');
-  console.log('Config loaded:', config);
-  console.log('Config values:', {
-    baseId: config?.AIRTABLE_BASE_ID,
-    tableName: config?.AIRTABLE_TABLE_NAME,
-    hasApiKey: !!config?.AIRTABLE_API_KEY
+  
+  // Log storage status
+  const credentials = await chrome.storage.sync.get(['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID']);
+  console.log('Storage status:', {
+    hasApiKey: !!credentials.AIRTABLE_API_KEY,
+    hasBaseId: !!credentials.AIRTABLE_BASE_ID
   });
 
   // Handle connect wallet button
