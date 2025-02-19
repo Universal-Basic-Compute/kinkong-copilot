@@ -93,6 +93,12 @@ function injectFloatingCopilot() {
       padding: 20px;
       overflow-y: auto;
       color: #fff;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+    }
+
+    .kinkong-chat-messages::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
     }
 
     .kinkong-message {
@@ -194,12 +200,13 @@ function injectFloatingCopilot() {
       gap: 4px;
       padding: 8px 12px;
       align-items: center;
+      margin-left: 12px; /* Add some left margin to align with bot messages */
     }
 
     .typing-dot {
       width: 6px;
       height: 6px;
-      background: #1a1a1a;
+      background: #ffd700; /* Change to gold color to match theme */
       border-radius: 50%;
       opacity: 0.7;
     }
@@ -279,7 +286,7 @@ function injectFloatingCopilot() {
       // Add loading indicator
       const loadingId = 'loading-' + Date.now();
       messagesContainer.innerHTML += `
-        <div id="${loadingId}" class="kinkong-message bot typing-indicator">
+        <div id="${loadingId}" class="typing-indicator">
             <div class="typing-dot"></div>
             <div class="typing-dot"></div>
             <div class="typing-dot"></div>
