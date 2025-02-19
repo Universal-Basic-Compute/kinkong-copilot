@@ -1,12 +1,12 @@
-# KinKong Assistant 🦍
+# KinKong Copilot 🦍
 
 Your AI trading copilot for smarter market decisions.
 
 ## Overview
 
-Transform your trading experience with KinKong Assistant, the smart Chrome extension that brings professional-grade trading insights directly to your browser.
+Transform your trading experience with KinKong Copilot, the smart Chrome extension that brings professional-grade trading insights directly to your browser.
 
-![KinKong Assistant](assets/copilot.png)
+![KinKong Copilot](assets/copilot.png)
 
 ## Key Features
 
@@ -38,13 +38,13 @@ Transform your trading experience with KinKong Assistant, the smart Chrome exten
 ## Installation
 
 1. Visit the Chrome Web Store
-2. Search for "KinKong Assistant"
+2. Search for "KinKong Copilot"
 3. Click "Add to Chrome"
 4. Start using your new trading copilot!
 
 ## Usage
 
-After installation, click the KinKong Assistant icon in your Chrome toolbar to:
+After installation, click the KinKong Copilot icon in your Chrome toolbar to:
 - View real-time market signals
 - Access your portfolio insights
 - Get AI-powered trading recommendations
@@ -62,12 +62,11 @@ Perfect for:
 
 Free to use. Premium features coming soon.
 
-## Support
+## Connect With Us
 
-For support, questions, or feedback:
-- Email: support@kinkong.ai
-- Twitter: @KinKongAI
-- Discord: [Join our community](https://discord.gg/kinkong)
+- 🌐 Website: [SwarmTrade.ai](https://swarmtrade.ai)
+- 🐦 Twitter: [@kinkong_ubc](https://twitter.com/kinkong_ubc)
+- 📱 Telegram: [t.me/kinkong_ubc](https://t.me/kinkong_ubc)
 
 ## Tags
 `#Trading` `#Investment` `#Finance` `#AI` `#PortfolioManagement` `#MarketAnalysis` `#TradingTools` `#StockMarket` `#Cryptocurrency`
@@ -75,10 +74,6 @@ For support, questions, or feedback:
 ## License
 
 [MIT License](LICENSE)
-
-## Contributing
-
-We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
 
 ---
 
