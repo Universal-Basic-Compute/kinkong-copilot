@@ -188,9 +188,20 @@ function formatMessage(text) {
 
 
 function isDexScreenerTokenPage() {
-  return window.location.hostname === 'dexscreener.com' && 
-         window.location.pathname.split('/').length >= 3 && // Check if there's a chain and token address
-         window.location.pathname !== '/'; // Exclude homepage
+  const isDex = window.location.hostname === 'dexscreener.com';
+  const hasPath = window.location.pathname.split('/').length >= 3;
+  const notHome = window.location.pathname !== '/';
+  
+  console.log('DexScreener check:', {
+    hostname: window.location.hostname,
+    pathname: window.location.pathname,
+    isDex,
+    hasPath,
+    notHome,
+    result: isDex && hasPath && notHome
+  });
+  
+  return isDex && hasPath && notHome;
 }
 
 function ensureChatInterface() {
@@ -715,18 +726,25 @@ function injectFloatingCopilot() {
   });
 }
 
-// Initialize chat interface
+// Initialize chat interface immediately
 ensureChatInterface();
 
-// Listen for URL changes
+// Listen for URL changes using both methods for better coverage
 let lastUrl = location.href; 
+
+// Method 1: MutationObserver for dynamic changes
 new MutationObserver(() => {
   const url = location.href;
   if (url !== lastUrl) {
+    console.log('URL changed to:', url);
     lastUrl = url;
     handleUrlChange();
   }
 }).observe(document, {subtree: true, childList: true});
 
-// Also check when the script first loads
-handleUrlChange();
+// Method 2: Direct check on page load
+console.log('Initial URL check:', window.location.href);
+if (isDexScreenerTokenPage()) {
+  console.log('Initial page is DexScreener token page');
+  handleUrlChange();
+}
