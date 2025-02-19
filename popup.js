@@ -1,29 +1,20 @@
 async function fetchSignals() {
   try {
-    const response = await fetch('https://swarmtrade.ai/api/airtable/SIGNALS');
+    const response = await fetch('https://swarmtrade.ai/api/signals');
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Add debugging to see what we're getting back
-    const responseText = await response.text();
-    console.log('Raw response:', responseText);
+    const data = await response.json();
     
-    try {
-      const data = JSON.parse(responseText);
-      
-      if (!data || !data.records) {
-        console.error('Unexpected API response format:', data);
-        return [];
-      }
-
-      return data.records.map(record => record.fields);
-    } catch (parseError) {
-      console.error('JSON Parse Error:', parseError);
-      console.error('Response was:', responseText.substring(0, 200) + '...'); // Show first 200 chars
+    if (!Array.isArray(data)) {
+      console.error('Unexpected API response format:', data);
       return [];
     }
+
+    // The data is already in the format we need, just return it
+    return data;
 
   } catch (error) {
     console.error('Fetch Error:', error);
