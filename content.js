@@ -102,14 +102,18 @@ function injectFloatingCopilot() {
     }
 
     .kinkong-message {
-      margin-bottom: 15px;
-      padding: 12px 16px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
       border-radius: 18px;
       max-width: 85%;
       transition: transform 0.2s ease;
       white-space: pre-wrap;
       word-wrap: break-word;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-size: 13px;
+      line-height: 1.3;
+      display: inline-block;
+      width: auto;
     }
 
     .kinkong-message code {
@@ -117,13 +121,15 @@ function injectFloatingCopilot() {
       padding: 2px 4px;
       border-radius: 3px;
       font-family: monospace;
+      font-size: 12px;
     }
 
     .kinkong-message pre {
       background: rgba(0,0,0,0.1);
-      padding: 10px;
+      padding: 8px;
       border-radius: 5px;
       overflow-x: auto;
+      font-size: 12px;
     }
 
     .kinkong-message a {
