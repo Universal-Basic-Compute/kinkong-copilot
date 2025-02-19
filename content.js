@@ -1,4 +1,18 @@
 function injectFloatingCopilot() {
+  // Add marked library
+  const markedScript = document.createElement('script');
+  markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+  document.head.appendChild(markedScript);
+
+  // Configure marked options once it's loaded
+  markedScript.onload = () => {
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      sanitize: true
+    });
+  };
+
   const style = document.createElement('style');
   style.textContent = `
     .kinkong-floating-copilot {
@@ -84,6 +98,35 @@ function injectFloatingCopilot() {
       border-radius: 10px;
       max-width: 85%;
       transition: transform 0.2s ease;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .kinkong-message code {
+      background: rgba(0,0,0,0.1);
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+
+    .kinkong-message pre {
+      background: rgba(0,0,0,0.1);
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+
+    .kinkong-message a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+
+    .kinkong-message a:hover {
+      text-decoration: underline;
+    }
+
+    .kinkong-message ul, .kinkong-message ol {
+      padding-left: 20px;
     }
 
     .kinkong-message:hover {
@@ -239,7 +282,7 @@ function injectFloatingCopilot() {
       // Add user message to chat
       messagesContainer.innerHTML += `
         <div class="kinkong-message user">
-            ${message}
+            ${marked.parse(message)}
         </div>
       `;
       input.value = '';
@@ -293,7 +336,7 @@ function injectFloatingCopilot() {
           // Decode and append new chunk
           const chunk = decoder.decode(value, {stream: true});
           responseText += chunk;
-          responseDiv.innerHTML = responseText;
+          responseDiv.innerHTML = marked.parse(responseText);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       } catch (error) {
@@ -305,7 +348,7 @@ function injectFloatingCopilot() {
         // Show error message
         messagesContainer.innerHTML += `
           <div class="kinkong-message bot" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-              Sorry, I'm having trouble connecting right now. Please try again later.
+              ${marked.parse('Sorry, I\'m having trouble connecting right now. Please try again later.')}
           </div>
         `;
       }
