@@ -314,12 +314,7 @@ function injectFloatingCopilot() {
         // Remove loading message
         document.getElementById(loadingId).remove();
 
-        // Create a new message div for the streaming response
-        const responseDiv = document.createElement('div');
-        responseDiv.className = 'kinkong-message bot';
-        messagesContainer.appendChild(responseDiv);
-
-        // Create message div and add the formatted response text
+        // Create and append the response message
         const responseDiv = document.createElement('div');
         responseDiv.className = 'kinkong-message bot';
         const data = await response.json();
