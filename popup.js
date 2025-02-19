@@ -113,21 +113,32 @@ async function checkSubscriptionStatus() {
 
 async function connectPhantom() {
   try {
-    // First check if Phantom is installed
-    if (typeof window.solana === 'undefined') {
+    // Wait for Phantom to be injected
+    let attempts = 0;
+    while (typeof window.solana === 'undefined' && attempts < 10) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    // Check if window.solana exists
+    const provider = window?.solana;
+    
+    if (!provider) {
       throw new Error('Please install Phantom wallet');
     }
 
-    // Check if it's actually Phantom
-    if (!window.solana.isPhantom) {
+    // Check if it's Phantom
+    if (!provider.isPhantom) {
       throw new Error('Please install Phantom wallet');
     }
 
     // Request connection
-    const resp = await window.solana.connect();
+    const resp = await provider.connect();
+    console.log("Connected to Phantom!", resp.publicKey.toString());
     return resp.publicKey.toString();
   } catch (error) {
-    if (error.code === 4001) { // User rejected the request
+    console.error("Phantom connection error:", error);
+    if (error.code === 4001) {
       throw new Error('Please connect your wallet');
     }
     throw error;
@@ -176,6 +187,8 @@ async function makePayment() {
 
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Extension loaded');
+  console.log('Solana object:', window.solana);
+  console.log('Phantom object:', window?.phantom?.solana);
   await checkSubscriptionStatus();
 
   const subscribeButton = document.getElementById('subscribe-button');
