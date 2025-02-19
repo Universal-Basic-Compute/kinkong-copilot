@@ -112,79 +112,71 @@ function findContent(selectors) {
 }
 
 function extractVisibleContent() {
-  // Get all text content from the main container
-  const mainContent = document.body;
-  let textContent = '';
-  
-  if (mainContent) {
-    // Get all visible text nodes
-    const textNodes = [];
-    const walker = document.createTreeWalker(
-      mainContent,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: function(node) {
-          // Check if the node's parent is visible
-          const style = window.getComputedStyle(node.parentElement);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return NodeFilter.FILTER_REJECT;
-          }
-          // Ignore script and style tags
-          if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
+  // Get main content elements in order of likely relevance
+  const mainSelectors = [
+    'main',
+    'article',
+    '[role="main"]',
+    '#content',
+    '.content',
+    '.main-content',
+    'body'
+  ];
 
-    while (walker.nextNode()) {
-      const text = walker.currentNode.textContent.trim();
-      if (text) {
-        textNodes.push(text);
-      }
-    }
-    
-    textContent = textNodes.join(' ');
+  let mainContent = null;
+  for (const selector of mainSelectors) {
+    mainContent = document.querySelector(selector);
+    if (mainContent) break;
   }
 
-  // Create base content object
+  // Fallback to body if no main content found
+  mainContent = mainContent || document.body;
+
+  // Get all visible text nodes
+  const textNodes = [];
+  const walker = document.createTreeWalker(
+    mainContent,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        // Skip if parent is hidden
+        const style = window.getComputedStyle(node.parentElement);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        // Skip script, style, and other non-content tags
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'LINK'].includes(node.parentElement.tagName)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  while (walker.nextNode()) {
+    const text = walker.currentNode.textContent.trim();
+    if (text) {
+      textNodes.push(text);
+    }
+  }
+
+  // Get page title and meta description
+  const title = document.title || '';
+  const description = document.querySelector('meta[name="description"]')?.content || '';
+
+  // Create content object
   const content = {
     url: window.location.href,
     pageContent: {
-      fullText: textContent
+      title: title,
+      description: description,
+      mainContent: textNodes.join(' ').trim()
     }
   };
 
-  // Add DexScreener-specific content if on DexScreener
-  if (isDexScreenerTokenPage()) {
-    content.pageContent = {
-      ...content.pageContent,
-      tokenName: findContent([
-        '[data-cy="token-name"]',
-        'h1',
-        '[role="heading"]',
-        '.chakra-text'
-      ]),
-      tokenSymbol: findContent([
-        '[data-cy="token-symbol"]',
-        'h2',
-        '.chakra-text'
-      ]),
-      price: findContent([
-        '[data-cy="price"]',
-        '[role="heading"]'
-      ]),
-      possiblePrices: findPrices(textContent)
-    };
-  }
-
   // Remove empty values
   Object.keys(content.pageContent).forEach(key => {
-    if (!content.pageContent[key] || 
-        content.pageContent[key] === 'Loading...' ||
-        content.pageContent[key] === '' ||
-        (Array.isArray(content.pageContent[key]) && content.pageContent[key].length === 0)) {
+    if (!content.pageContent[key]) {
       delete content.pageContent[key];
     }
   });
