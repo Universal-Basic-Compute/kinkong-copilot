@@ -661,11 +661,14 @@ async function handleUrlChange() {
 }
 
 async function injectFloatingCopilot() {
-  // Get saved preference
-  const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-  
-  const style = document.createElement('style');
-  style.textContent = `
+  return new Promise((resolve, reject) => {
+    try {
+      // Get saved preference
+      chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
+        const copilotEnabled = items.copilotEnabled;
+        
+        const style = document.createElement('style');
+        style.textContent = `
     .kinkong-floating-copilot {
       position: fixed;
       bottom: 30px;
