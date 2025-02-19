@@ -86,66 +86,112 @@ async function makeApiCall(endpoint, data) {
 
 function extractVisibleContent() {
   if (isDexScreenerTokenPage()) {
+    // Get all text content from the main container
+    const mainContent = document.querySelector('#__next') || document.querySelector('#root');
+    let textContent = '';
+    
+    if (mainContent) {
+      // Get all text nodes that are visible
+      const walker = document.createTreeWalker(
+        mainContent,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function(node) {
+            // Check if the node's parent is visible
+            const style = window.getComputedStyle(node.parentElement);
+            if (style.display === 'none' || style.visibility === 'hidden') {
+              return NodeFilter.FILTER_REJECT;
+            }
+            // Check if the text has content
+            if (!node.textContent.trim()) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            // Ignore script and style tags
+            if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        }
+      );
+
+      // Collect all visible text
+      let node;
+      while (node = walker.nextNode()) {
+        const text = node.textContent.trim();
+        if (text) {
+          textContent += text + ' ';
+        }
+      }
+    }
+
+    // Try to find specific data points
     const content = {
       url: window.location.href,
       pageContent: {
-        // Get token info with fallbacks
-        tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim() 
-          || document.querySelector('.chakra-text')?.textContent?.trim()
-          || 'Loading...',
-        tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim()
-          || document.querySelector('h1')?.textContent?.trim()
-          || 'Loading...',
-        price: document.querySelector('[data-cy="price"]')?.textContent?.trim()
-          || document.querySelector('[role="heading"]')?.textContent?.trim()
-          || 'Loading...',
-        // Get chart data if available
-        marketCap: document.querySelector('[data-cy="market-cap"]')?.textContent?.trim(),
-        liquidity: document.querySelector('[data-cy="liquidity"]')?.textContent?.trim(),
-        volume: document.querySelector('[data-cy="volume"]')?.textContent?.trim(),
+        // Get all visible text
+        fullText: textContent.trim(),
+        
+        // Try multiple selectors for token info
+        tokenName: findContent([
+          '[data-cy="token-name"]',
+          '.chakra-text:contains("Token")',
+          'h1',
+          '[role="heading"]'
+        ]),
+        
+        tokenSymbol: findContent([
+          '[data-cy="token-symbol"]',
+          '.chakra-text:contains("Symbol")',
+          'h2'
+        ]),
+        
+        price: findContent([
+          '[data-cy="price"]',
+          '.chakra-text:contains("$")',
+          '[role="heading"]:contains("$")'
+        ]),
+        
+        // Get any numbers that look like prices
+        possiblePrices: findPrices(textContent)
       }
     };
-    
-    // Filter out Loading... and undefined values
+
+    // Remove empty values
     Object.keys(content.pageContent).forEach(key => {
-      if (!content.pageContent[key] || content.pageContent[key] === 'Loading...') {
+      if (!content.pageContent[key] || 
+          content.pageContent[key] === 'Loading...' ||
+          content.pageContent[key] === '') {
         delete content.pageContent[key];
       }
     });
 
     return content;
   }
-
-  // For other pages, keep the general text extraction
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: function(node) {
-        if (node.parentElement.offsetHeight === 0) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        if (!node.textContent.trim()) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    }
-  );
-
-  let content = '';
-  let node;
-  while (node = walker.nextNode()) {
-    content += node.textContent.trim() + ' ';
-  }
-
+  
   return {
     url: window.location.href,
-    pageContent: content.trim()
+    pageContent: {}
   };
+}
+
+// Helper function to find content using multiple selectors
+function findContent(selectors) {
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (element) {
+      const text = element.textContent.trim();
+      if (text) return text;
+    }
+  }
+  return '';
+}
+
+// Helper function to find price-like numbers in text
+function findPrices(text) {
+  const priceRegex = /\$\s*\d+(?:[.,]\d+)?/g;
+  const matches = text.match(priceRegex);
+  return matches || [];
 }
 
 // First inject the marked library
