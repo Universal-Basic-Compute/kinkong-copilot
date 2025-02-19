@@ -209,25 +209,71 @@ function injectFloatingCopilot() {
   const sendButton = chatContainer.querySelector('.kinkong-chat-send');
   const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
 
-  function sendMessage() {
+  async function sendMessage() {
     const message = input.value.trim();
     if (message) {
+      // Add user message to chat
       messagesContainer.innerHTML += `
-          <div class="kinkong-message user">
-              ${message}
-          </div>
+        <div class="kinkong-message user">
+            ${message}
+        </div>
       `;
       input.value = '';
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      // Add loading indicator
+      const loadingId = 'loading-' + Date.now();
+      messagesContainer.innerHTML += `
+        <div id="${loadingId}" class="kinkong-message bot" style="opacity: 0.7">
+            Thinking...
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      try {
+        // Make API call to KinKong Copilot
+        const response = await fetch('https://swarmtrade.ai/api/kinkong-copilot', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message,
+            url: window.location.href, // Send current page URL for context
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Remove loading message
+        document.getElementById(loadingId).remove();
+
+        // Add bot response
+        messagesContainer.innerHTML += `
+          <div class="kinkong-message bot">
+              ${data.response}
+          </div>
+        `;
+      } catch (error) {
+        console.error('API Error:', error);
+        
+        // Remove loading message
+        document.getElementById(loadingId).remove();
+
+        // Show error message
+        messagesContainer.innerHTML += `
+          <div class="kinkong-message bot" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+              Sorry, I'm having trouble connecting right now. Please try again later.
+          </div>
+        `;
+      }
       
-      setTimeout(() => {
-          messagesContainer.innerHTML += `
-              <div class="kinkong-message bot">
-                  I'm processing your question about "${message}". Integration with AI coming soon!
-              </div>
-          `;
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }, 1000);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
   }
 
