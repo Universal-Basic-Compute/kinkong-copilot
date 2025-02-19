@@ -88,18 +88,78 @@ function renderSignal(signal) {
   return signalElement;
 }
 
+const SUBSCRIPTION_PRICE_SOL = 1.5;
+const RECEIVER_WALLET = 'YOUR_SOLANA_WALLET_ADDRESS';
+
+async function connectPhantom() {
+  try {
+    const { solana } = window;
+    if (!solana?.isPhantom) {
+      throw new Error('Phantom wallet is not installed!');
+    }
+    const connection = await solana.connect();
+    return connection.publicKey.toString();
+  } catch (error) {
+    console.error('Phantom connection error:', error);
+    throw error;
+  }
+}
+
+async function makePayment() {
+  try {
+    const { solana } = window;
+    if (!solana?.isPhantom) {
+      throw new Error('Please install Phantom wallet');
+    }
+
+    const transaction = new solana.Transaction().add(
+      solana.SystemProgram.transfer({
+        fromPubkey: solana.publicKey,
+        toPubkey: new solana.PublicKey(RECEIVER_WALLET),
+        lamports: SUBSCRIPTION_PRICE_SOL * solana.LAMPORTS_PER_SOL
+      })
+    );
+
+    const signature = await solana.signAndSendTransaction(transaction);
+    await connection.confirmTransaction(signature);
+    await recordSubscription(solana.publicKey.toString());
+    return signature;
+  } catch (error) {
+    console.error('Payment error:', error);
+    throw error;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Extension loaded');
 
-  // Handle connect wallet button
-  const connectButton = document.querySelector('.button');
-  connectButton.addEventListener('click', function() {
-    // Add wallet connection logic here
-    this.textContent = 'Connecting...';
-    setTimeout(() => {
-      this.textContent = 'Connected';
-      this.style.backgroundColor = '#2ecc71';
-    }, 1500);
+  const subscribeButton = document.getElementById('subscribe-button');
+  const statusDiv = document.querySelector('.subscription-status');
+  let walletConnected = false;
+
+  subscribeButton.addEventListener('click', async () => {
+    try {
+      if (!walletConnected) {
+        subscribeButton.textContent = 'Connecting...';
+        await connectPhantom();
+        walletConnected = true;
+        subscribeButton.textContent = 'Pay 1.5 SOL';
+      } else {
+        subscribeButton.textContent = 'Processing...';
+        subscribeButton.disabled = true;
+        
+        const signature = await makePayment();
+        
+        subscribeButton.textContent = 'Subscribed ✓';
+        subscribeButton.classList.add('subscribed');
+        statusDiv.textContent = 'Premium access activated for 3 months';
+      }
+    } catch (error) {
+      console.error(error);
+      subscribeButton.textContent = 'Connect Phantom';
+      subscribeButton.disabled = false;
+      statusDiv.textContent = `Error: ${error.message}`;
+    }
   });
 
   const tradingSignals = document.getElementById('trading-signals');

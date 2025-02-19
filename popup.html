@@ -68,6 +68,16 @@
       cursor: wait;
     }
 
+    .button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .button.subscribed {
+      background-color: #2ecc71;
+      cursor: default;
+    }
+
     .subscription-status {
       color: #888;
       font-size: 12px;
@@ -136,15 +146,15 @@
   <div class="container">
     <div class="stats-grid">
       <div class="stat-box">
-        <div class="stat-value">Premium</div>
-        <div class="stat-label">$49.99/month</div>
+        <div class="stat-value">3 Months</div>
+        <div class="stat-label">Premium Access</div>
       </div>
       <div class="stat-box">
-        <div class="stat-value">AI Copilot</div>
-        <div class="stat-label">Unlimited Access</div>
+        <div class="stat-value">1.5 SOL</div>
+        <div class="stat-label">≈ $49.99/month</div>
       </div>
     </div>
-    <button id="subscribe-button" class="button">Subscribe Now</button>
+    <button id="subscribe-button" class="button">Connect Phantom</button>
     <div class="subscription-status"></div>
   </div>
 
