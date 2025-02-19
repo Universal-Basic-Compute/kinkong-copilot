@@ -113,34 +113,29 @@ async function checkSubscriptionStatus() {
 
 async function connectPhantom() {
   try {
-    // Wait for Phantom to be injected
-    let attempts = 0;
-    while (typeof window.solana === 'undefined' && attempts < 10) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
+    // First check if Phantom is installed via the new method
+    const isPhantomInstalled = window.phantom?.solana || window.solana?.isPhantom;
 
-    // Check if window.solana exists
-    const provider = window?.solana;
-    
-    if (!provider) {
+    if (!isPhantomInstalled) {
+      window.open('https://phantom.app/', '_blank');
       throw new Error('Please install Phantom wallet');
     }
 
-    // Check if it's Phantom
-    if (!provider.isPhantom) {
-      throw new Error('Please install Phantom wallet');
-    }
+    const provider = window.phantom?.solana || window.solana;
 
     // Request connection
-    const resp = await provider.connect();
-    console.log("Connected to Phantom!", resp.publicKey.toString());
-    return resp.publicKey.toString();
+    try {
+      const resp = await provider.connect();
+      console.log("Connected to Phantom!", resp.publicKey.toString());
+      return resp.publicKey.toString();
+    } catch (err) {
+      if (err.code === 4001) {
+        throw new Error('Please approve the connection request');
+      }
+      throw err;
+    }
   } catch (error) {
     console.error("Phantom connection error:", error);
-    if (error.code === 4001) {
-      throw new Error('Please connect your wallet');
-    }
     throw error;
   }
 }
