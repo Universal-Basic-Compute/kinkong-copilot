@@ -23,7 +23,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://*.tradingview.com/*",
+        "https://*.binance.com/*",
+        "https://*.bybit.com/*",
+        "https://*.kucoin.com/*",
+        "https://*.okx.com/*",
+        "https://*.coinbase.com/*",
+        "https://*.kraken.com/*",
+        "https://*.deribit.com/*"
+      ],
       "js": ["content.js"]
     }
   ],
