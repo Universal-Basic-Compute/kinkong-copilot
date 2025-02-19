@@ -3,3 +3,5 @@ const config = {
   AIRTABLE_BASE_ID: 'your_base_id',
   AIRTABLE_TABLE_NAME: 'your_table_name'
 };
+
+window.config = config; // Make config globally available

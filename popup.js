@@ -2,15 +2,35 @@ console.log('Config loaded:', config);
 
 async function fetchSignals() {
   try {
+    if (!config || !config.AIRTABLE_API_KEY || !config.AIRTABLE_BASE_ID || !config.AIRTABLE_TABLE_NAME) {
+      console.error('Config not properly loaded:', config);
+      throw new Error('Configuration missing');
+    }
+
     const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/${config.AIRTABLE_TABLE_NAME}?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
       headers: {
         'Authorization': `Bearer ${config.AIRTABLE_API_KEY}`
       }
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
+    
+    if (!data || !data.records) {
+      console.error('Unexpected API response format:', data);
+      return [];
+    }
+
     return data.records.map(record => record.fields);
   } catch (error) {
     console.error('Error fetching signals:', error);
+    const tradingSignals = document.getElementById('trading-signals');
+    tradingSignals.innerHTML = `<div style="color: #e74c3c; padding: 15px; text-align: center;">
+      Error loading signals. Please check your configuration and try again.
+    </div>`;
     return [];
   }
 }
@@ -68,6 +88,14 @@ function renderSignal(signal) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+  console.log('Extension loaded');
+  console.log('Config loaded:', config);
+  console.log('Config values:', {
+    baseId: config?.AIRTABLE_BASE_ID,
+    tableName: config?.AIRTABLE_TABLE_NAME,
+    hasApiKey: !!config?.AIRTABLE_API_KEY
+  });
+
   // Handle connect wallet button
   const connectButton = document.querySelector('.button');
   connectButton.addEventListener('click', function() {
