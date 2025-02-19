@@ -2,7 +2,6 @@
 let markedReady = false;
 
 async function makeApiCall(endpoint, data) {
-  // Log the request details
   console.group('API Request Details');
   console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
   console.log('Request Headers:', {
@@ -14,20 +13,8 @@ async function makeApiCall(endpoint, data) {
   console.groupEnd();
 
   try {
-    // First check if we're online
     if (!navigator.onLine) {
       throw new Error('Browser is offline. Please check your internet connection.');
-    }
-
-    // Test the API endpoint with a preflight request
-    try {
-      const preflightResponse = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
-        method: 'OPTIONS',
-        mode: 'cors'
-      });
-      console.log('Preflight response:', preflightResponse);
-    } catch (preflightError) {
-      console.error('Preflight request failed:', preflightError);
     }
 
     const controller = new AbortController();
@@ -40,7 +27,6 @@ async function makeApiCall(endpoint, data) {
         'Accept': 'application/json',
         'Origin': window.location.origin
       },
-      credentials: 'include',
       mode: 'cors',
       signal: controller.signal,
       body: JSON.stringify(data)
@@ -99,15 +85,20 @@ async function makeApiCall(endpoint, data) {
 }
 
 function extractVisibleContent() {
-  // If we're on dexscreener, get specific elements
   if (isDexScreenerTokenPage()) {
     const content = {
       url: window.location.href,
       pageContent: {
-        // Get token info
-        tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim(),
-        tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim(),
-        price: document.querySelector('[data-cy="price"]')?.textContent?.trim(),
+        // Get token info with fallbacks
+        tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim() 
+          || document.querySelector('.chakra-text')?.textContent?.trim()
+          || 'Loading...',
+        tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim()
+          || document.querySelector('h1')?.textContent?.trim()
+          || 'Loading...',
+        price: document.querySelector('[data-cy="price"]')?.textContent?.trim()
+          || document.querySelector('[role="heading"]')?.textContent?.trim()
+          || 'Loading...',
         // Get chart data if available
         marketCap: document.querySelector('[data-cy="market-cap"]')?.textContent?.trim(),
         liquidity: document.querySelector('[data-cy="liquidity"]')?.textContent?.trim(),
@@ -115,9 +106,9 @@ function extractVisibleContent() {
       }
     };
     
-    // Filter out undefined/null values
+    // Filter out Loading... and undefined values
     Object.keys(content.pageContent).forEach(key => {
-      if (!content.pageContent[key]) {
+      if (!content.pageContent[key] || content.pageContent[key] === 'Loading...') {
         delete content.pageContent[key];
       }
     });
