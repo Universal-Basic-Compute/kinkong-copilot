@@ -1,6 +1,65 @@
 // Track when marked is loaded
 let markedReady = false;
 
+function extractVisibleContent() {
+  // If we're on dexscreener, get specific elements
+  if (isDexScreenerTokenPage()) {
+    const content = {
+      url: window.location.href,
+      pageContent: {
+        // Get token info
+        tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim(),
+        tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim(),
+        price: document.querySelector('[data-cy="price"]')?.textContent?.trim(),
+        // Get chart data if available
+        marketCap: document.querySelector('[data-cy="market-cap"]')?.textContent?.trim(),
+        liquidity: document.querySelector('[data-cy="liquidity"]')?.textContent?.trim(),
+        volume: document.querySelector('[data-cy="volume"]')?.textContent?.trim(),
+      }
+    };
+    
+    // Filter out undefined/null values
+    Object.keys(content.pageContent).forEach(key => {
+      if (!content.pageContent[key]) {
+        delete content.pageContent[key];
+      }
+    });
+
+    return content;
+  }
+
+  // For other pages, keep the general text extraction
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        if (node.parentElement.offsetHeight === 0) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (!node.textContent.trim()) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  let content = '';
+  let node;
+  while (node = walker.nextNode()) {
+    content += node.textContent.trim() + ' ';
+  }
+
+  return {
+    url: window.location.href,
+    pageContent: content.trim()
+  };
+}
+
 // First inject the marked library
 const markedScript = document.createElement('script');
 markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
@@ -391,64 +450,6 @@ function injectFloatingCopilot() {
   const sendButton = chatContainer.querySelector('.kinkong-chat-send');
   const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
 
-  function extractVisibleContent() {
-    // If we're on dexscreener, get specific elements
-    if (isDexScreenerTokenPage()) {
-      const content = {
-        url: window.location.href,
-        pageContent: {
-          // Get token info
-          tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim(),
-          tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim(),
-          price: document.querySelector('[data-cy="price"]')?.textContent?.trim(),
-          // Get chart data if available
-          marketCap: document.querySelector('[data-cy="market-cap"]')?.textContent?.trim(),
-          liquidity: document.querySelector('[data-cy="liquidity"]')?.textContent?.trim(),
-          volume: document.querySelector('[data-cy="volume"]')?.textContent?.trim(),
-        }
-      };
-      
-      // Filter out undefined/null values
-      Object.keys(content.pageContent).forEach(key => {
-        if (!content.pageContent[key]) {
-          delete content.pageContent[key];
-        }
-      });
-
-      return content;
-    }
-
-    // For other pages, keep the general text extraction
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: function(node) {
-          if (node.parentElement.offsetHeight === 0) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (!node.textContent.trim()) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
-
-    let content = '';
-    let node;
-    while (node = walker.nextNode()) {
-      content += node.textContent.trim() + ' ';
-    }
-
-    return {
-      url: window.location.href,
-      pageContent: content.trim()
-    };
-  }
 
   async function sendMessage() {
     const message = input.value.trim();
