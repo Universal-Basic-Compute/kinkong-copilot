@@ -1,6 +1,31 @@
 // Track when marked is loaded
 let markedReady = false;
 
+async function makeApiCall(endpoint, data) {
+  try {
+    const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+
+  } catch (error) {
+    console.error('API Error:', error);
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('Unable to connect to the server. Please check your internet connection.');
+    }
+    throw error;
+  }
+}
+
 function extractVisibleContent() {
   // If we're on dexscreener, get specific elements
   if (isDexScreenerTokenPage()) {
@@ -67,17 +92,7 @@ document.head.appendChild(markedScript);
 
 // Then create a bridge script to set up our formatter
 const bridgeScript = document.createElement('script');
-bridgeScript.textContent = `
-  window.addEventListener('marked-ready', () => {
-    window.formatMarkdown = (text) => {
-      return marked.parse(text, {
-        breaks: true,
-        gfm: true,
-        sanitize: true
-      });
-    };
-  });
-`;
+bridgeScript.src = chrome.runtime.getURL('lib/marked-bridge.js');
 document.head.appendChild(bridgeScript);
 
 markedScript.onload = () => {
@@ -157,21 +172,11 @@ async function handleUrlChange() {
 
     try {
       // Make API call to KinKong Copilot
-      const response = await fetch('https://swarmtrade.ai/api/copilot', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'Opened this page, what do you think?',
-          url: window.location.href,
-          pageContent: pageContent
-        })
+      const response = await makeApiCall('copilot', {
+        message: 'Opened this page, what do you think?',
+        url: window.location.href,
+        pageContent: pageContent
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       // Remove loading message
       document.getElementById(loadingId).remove();
@@ -479,21 +484,11 @@ function injectFloatingCopilot() {
 
       try {
         // Make API call to KinKong Copilot
-        const response = await fetch('https://swarmtrade.ai/api/copilot', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: message,
-            url: window.location.href,
-            pageContent: pageContent
-          })
+        const response = await makeApiCall('copilot', {
+          message: message,
+          url: window.location.href,
+          pageContent: pageContent
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
 
         // Remove loading message
         document.getElementById(loadingId).remove();
