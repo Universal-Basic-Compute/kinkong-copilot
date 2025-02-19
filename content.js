@@ -319,12 +319,10 @@ function injectFloatingCopilot() {
         responseDiv.className = 'kinkong-message bot';
         messagesContainer.appendChild(responseDiv);
 
-        // Parse the JSON response
-        const data = await response.json();
-        
         // Create message div and add the formatted response text
         const responseDiv = document.createElement('div');
         responseDiv.className = 'kinkong-message bot';
+        const data = await response.json();
         responseDiv.innerHTML = formatMessage(data.response);
         messagesContainer.appendChild(responseDiv);
         
