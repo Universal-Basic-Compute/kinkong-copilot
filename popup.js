@@ -51,7 +51,7 @@ function renderSignal(signal) {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
       <span style="color: var(--primary-gold); font-weight: bold;">${signal.token}</span>
       <span style="color: ${getSignalColor(signal.type, signal.confidence)}">
-        ${signal.type} • ${signal.timeframe}
+        ${signal.type} &bull; ${signal.timeframe}
       </span>
     </div>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px;">
