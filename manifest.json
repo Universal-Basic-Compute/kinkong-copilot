@@ -14,7 +14,8 @@
   "permissions": [
     "activeTab",
     "storage",
-    "webRequest"
+    "webRequest",
+    "cookies"
   ],
   "host_permissions": [
     "https://api.airtable.com/*",

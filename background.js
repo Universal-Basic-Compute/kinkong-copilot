@@ -1,5 +1,16 @@
 chrome.runtime.onInstalled.addListener(() => {
   console.log('KinKong Copilot Extension Installed');
+  
+  // Check if third-party cookies are enabled
+  chrome.cookies.get({
+    url: 'https://swarmtrade.ai',
+    name: 'test_cookie'
+  }, function(cookie) {
+    if (!cookie) {
+      console.log('Third-party cookies may be disabled');
+      // Could show a notification to the user here
+    }
+  });
 });
 
 // Handle proxy requests from content script

@@ -1,6 +1,13 @@
 // Track when marked is loaded
 let markedReady = false;
 
+// Suppress ResizeObserver errors
+const consoleError = console.error;
+console.error = function(...args) {
+  if (args[0]?.includes?.('ResizeObserver')) return;
+  consoleError.apply(console, args);
+};
+
 async function makeApiCall(endpoint, data) {
   console.group('API Request Details');
   console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
@@ -12,58 +19,29 @@ async function makeApiCall(endpoint, data) {
   console.log('Request Body:', JSON.stringify(data, null, 2));
   console.groupEnd();
 
+  // Always use the background proxy instead of trying direct CORS first
   try {
-    if (!navigator.onLine) {
-      throw new Error('Browser is offline. Please check your internet connection.');
+    const proxyResponse = await chrome.runtime.sendMessage({
+      type: 'proxyRequest',
+      endpoint: `https://swarmtrade.ai/api/${endpoint}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/plain, application/json'
+      },
+      body: data
+    });
+
+    if (proxyResponse.error) {
+      throw new Error(proxyResponse.error);
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    // Try with regular CORS first
-    try {
-      const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/plain, application/json'
-        },
-        mode: 'cors',
-        signal: controller.signal,
-        body: JSON.stringify(data)
-      });
-
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        return response;
+    return new Response(proxyResponse.data, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain'
       }
-    } catch (corsError) {
-      console.log('CORS request failed, falling back to extension background proxy');
-      
-      // Send message to background script to make the request
-      const proxyResponse = await chrome.runtime.sendMessage({
-        type: 'proxyRequest',
-        endpoint: `https://swarmtrade.ai/api/${endpoint}`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/plain, application/json'
-        },
-        body: data
-      });
-
-      if (proxyResponse.error) {
-        throw new Error(proxyResponse.error);
-      }
-
-      return new Response(proxyResponse.data, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain'
-        }
-      });
-    }
+    });
 
   } catch (error) {
     console.group('API Error Details');
@@ -410,28 +388,39 @@ async function waitForDexScreenerElements() {
 }
 
 async function handleUrlChange() {
-  console.log('handleUrlChange called');
-  
-  const pageType = isSupportedPage();
-  if (pageType) {
+  try {
+    console.log('handleUrlChange called');
+    
+    const pageType = isSupportedPage();
+    if (!pageType) return;
+
     console.log('On supported page:', pageType);
     
-    // Load and display any stored messages first
-    await displayStoredMessages();
+    // Ensure chat interface exists before proceeding
+    const { messagesContainer } = ensureChatInterface();
+    if (!messagesContainer) {
+      throw new Error('Failed to create chat interface');
+    }
+
+    // Load stored messages
+    await displayStoredMessages().catch(err => {
+      console.warn('Failed to load stored messages:', err);
+    });
     
-    // Wait for page elements to load if needed
+    // Wait for elements with timeout
     const elementsLoaded = pageType === 'dexscreener' ? 
-      await waitForDexScreenerElements() :
-      true; // Other pages don't need special waiting
+      await Promise.race([
+        waitForDexScreenerElements(),
+        new Promise(resolve => setTimeout(() => resolve(false), 10000))
+      ]) : true;
     
     console.log('Elements loaded status:', elementsLoaded);
     
-    const { messagesContainer } = ensureChatInterface();
-    console.log('Chat interface ready:', !!messagesContainer);
-    
-    // Extract page content
+    // Extract content
     const pageContent = extractVisibleContent();
-    console.log('Page content extracted:', pageContent);
+    if (!pageContent) {
+      throw new Error('Failed to extract page content');
+    }
 
     // Get appropriate initial message based on page type
     const initialMessage = getInitialMessage(pageType);
@@ -487,6 +476,21 @@ async function handleUrlChange() {
       // Show error message
       const errorMessage = 'Sorry, I\'m having trouble connecting right now. Please try again later.';
       addMessageToChatContainer(errorMessage, false);
+    }
+  } catch (error) {
+    console.error('Error in handleUrlChange:', error);
+    
+    // Show error in chat if possible
+    try {
+      const { messagesContainer } = ensureChatInterface();
+      if (messagesContainer) {
+        addMessageToChatContainer(
+          'Sorry, something went wrong. Please try refreshing the page.',
+          false
+        );
+      }
+    } catch (e) {
+      console.error('Failed to show error message:', e);
     }
   }
 }
