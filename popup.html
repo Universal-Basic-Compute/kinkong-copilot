@@ -84,27 +84,6 @@
       transform: translateX(4px);
     }
 
-    .floating-copilot {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      z-index: 1000;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
 
     .stats-grid {
       display: grid;
@@ -158,6 +137,5 @@
   </div>
 
   <script src="popup.js"></script>
-  <img src="assets/copilot.png" alt="KinKong Copilot" class="floating-copilot">
 </body>
 </html>

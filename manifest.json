@@ -12,7 +12,8 @@
     }
   },
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://api.airtable.com/*"
@@ -20,6 +21,16 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["assets/copilot.png"],
+    "matches": ["<all_urls>"]
+  }],
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",
