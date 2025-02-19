@@ -256,6 +256,36 @@ function isDexScreenerTokenPage() {
   return isDex && hasPath && notHome;
 }
 
+function isSolscanPage() {
+  const hostname = window.location.hostname;
+  return hostname === 'solscan.io';
+}
+
+function isSupportedPage() {
+  // Check URL and return appropriate type
+  if (isDexScreenerTokenPage()) {
+    return 'dexscreener';
+  } else if (isXPage()) {
+    return 'x';
+  } else if (isSolscanPage()) {
+    return 'solscan';
+  }
+  return null;
+}
+
+function getInitialMessage(pageType) {
+  switch (pageType) {
+    case 'dexscreener':
+      return 'Analyzing this token, what do you think?';
+    case 'x':
+      return 'What do you think about this tweet or X page?';
+    case 'solscan':
+      return 'Analyzing this Solana token, what do you see?';
+    default:
+      return 'What do you think about this page?';
+  }
+}
+
 function ensureChatInterface() {
   if (!document.querySelector('.kinkong-chat-container')) {
     injectFloatingCopilot();
