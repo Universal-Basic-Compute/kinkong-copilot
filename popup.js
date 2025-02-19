@@ -1,17 +1,6 @@
 async function fetchSignals() {
   try {
-    const credentials = await chrome.storage.sync.get(['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID']);
-    
-    if (!credentials.AIRTABLE_API_KEY || !credentials.AIRTABLE_BASE_ID) {
-      console.error('Credentials not found in storage');
-      throw new Error('Configuration missing');
-    }
-
-    const response = await fetch(`https://api.airtable.com/v0/${credentials.AIRTABLE_BASE_ID}/SIGNALS?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
-      headers: {
-        'Authorization': `Bearer ${credentials.AIRTABLE_API_KEY}`
-      }
-    });
+    const response = await fetch('https://swarmtrade.ai/api/airtable/SIGNALS');
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,7 +18,7 @@ async function fetchSignals() {
     console.error('Error fetching signals:', error);
     const tradingSignals = document.getElementById('trading-signals');
     tradingSignals.innerHTML = `<div style="color: #e74c3c; padding: 15px; text-align: center;">
-      Error loading signals. Please check your configuration and try again.
+      Error loading signals. Please try again later.
     </div>`;
     return [];
   }
@@ -89,13 +78,6 @@ function renderSignal(signal) {
 
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('Extension loaded');
-  
-  // Log storage status
-  const credentials = await chrome.storage.sync.get(['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID']);
-  console.log('Storage status:', {
-    hasApiKey: !!credentials.AIRTABLE_API_KEY,
-    hasBaseId: !!credentials.AIRTABLE_BASE_ID
-  });
 
   // Handle connect wallet button
   const connectButton = document.querySelector('.button');
