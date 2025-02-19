@@ -1,24 +1,26 @@
 // Track when marked is loaded
 let markedReady = false;
 
-// Load marked.min.js
-const markedScript = document.createElement('script');
-markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
-markedScript.onload = () => {
+// Load marked.min.js into the content script context
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL('lib/marked.min.js');
+script.onload = () => {
+  // Create a wrapper function to access marked in the window context
+  window.formatMarkdown = (text) => {
+    return window.marked.parse(text, {
+      breaks: true,
+      gfm: true,
+      sanitize: true
+    });
+  };
   markedReady = true;
-  // Configure marked options
-  marked.setOptions({
-    breaks: true,
-    gfm: true,
-    sanitize: true
-  });
 };
-document.head.appendChild(markedScript);
+(document.head || document.documentElement).appendChild(script);
 
 // Helper function for markdown formatting
 function formatMessage(text) {
-  if (markedReady) {
-    return marked.parse(text);
+  if (markedReady && window.formatMarkdown) {
+    return window.formatMarkdown(text);
   }
   return text; // Fallback if marked isn't loaded yet
 }
