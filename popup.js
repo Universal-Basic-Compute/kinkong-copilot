@@ -2,12 +2,12 @@ console.log('Config loaded:', config);
 
 async function fetchSignals() {
   try {
-    if (!config || !config.AIRTABLE_API_KEY || !config.AIRTABLE_BASE_ID || !config.AIRTABLE_TABLE_NAME) {
+    if (!config || !config.AIRTABLE_API_KEY || !config.AIRTABLE_BASE_ID) {
       console.error('Config not properly loaded:', config);
       throw new Error('Configuration missing');
     }
 
-    const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/${config.AIRTABLE_TABLE_NAME}?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
+    const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/SIGNALS?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
       headers: {
         'Authorization': `Bearer ${config.AIRTABLE_API_KEY}`
       }
