@@ -1,3 +1,8 @@
+// Load marked.min.js
+const markedScript = document.createElement('script');
+markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
+document.head.appendChild(markedScript);
+
 function simpleMarkdown(text) {
   // Basic markdown parsing
   return text
