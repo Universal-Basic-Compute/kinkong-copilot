@@ -1,3 +1,5 @@
+import { ensureChatInterface, addMessageToChatContainer } from './src/chat/chat-interface.js';
+
 // Track when marked is loaded
 let markedReady = false;
 let copilotEnabled = true;
