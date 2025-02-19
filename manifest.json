@@ -32,7 +32,10 @@
     }
   ],
   "web_accessible_resources": [{
-    "resources": ["assets/copilot.png"],
+    "resources": [
+      "assets/copilot.png",
+      "lib/marked.min.js"
+    ],
     "matches": ["<all_urls>"]
   }],
   "icons": {
