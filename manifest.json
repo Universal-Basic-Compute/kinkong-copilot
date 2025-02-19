@@ -15,10 +15,6 @@
     "activeTab",
     "storage"
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';",
-    "sandbox": "allow-scripts"
-  },
   "host_permissions": [
     "https://api.airtable.com/*"
   ],
