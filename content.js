@@ -40,14 +40,15 @@ function injectFloatingCopilot() {
     }
 
     .kinkong-chat-header {
-      padding: 20px;
-      background: linear-gradient(135deg, #e31837, #ffd700);
+      padding: 12px 20px;
+      background: linear-gradient(135deg, rgba(227, 24, 55, 0.8), rgba(255, 215, 0, 0.8));
       color: white;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
       align-items: center;
       text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      height: 24px;
     }
 
     .kinkong-chat-close {
@@ -163,8 +164,15 @@ function injectFloatingCopilot() {
 
   // Add click handlers
   img.addEventListener('click', () => {
-    chatContainer.style.display = 'flex';
-    img.style.animation = 'none'; // Stop floating when chat is open
+    if (chatContainer.style.display === 'flex') {
+      // If chat is open, close it
+      chatContainer.style.display = 'none';
+      img.style.animation = 'kinkong-float 3s ease-in-out infinite';
+    } else {
+      // If chat is closed, open it
+      chatContainer.style.display = 'flex';
+      img.style.animation = 'none';
+    }
   });
 
   const closeButton = chatContainer.querySelector('.kinkong-chat-close');
