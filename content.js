@@ -37,18 +37,27 @@ function injectFloatingCopilot() {
       flex-direction: column;
       overflow: hidden;
       border: 1px solid rgba(255, 215, 0, 0.2);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+
+    .kinkong-chat-container.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .kinkong-chat-header {
-      padding: 12px 20px;
-      background: linear-gradient(135deg, rgba(227, 24, 55, 0.8), rgba(255, 215, 0, 0.8));
+      padding: 8px 20px;
+      background: linear-gradient(135deg, rgba(227, 24, 55, 0.6), rgba(255, 215, 0, 0.6));
       color: white;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
       align-items: center;
       text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      height: 24px;
+      height: 20px;
+      backdrop-filter: blur(5px);
     }
 
     .kinkong-chat-close {
@@ -164,21 +173,36 @@ function injectFloatingCopilot() {
 
   // Add click handlers
   img.addEventListener('click', () => {
-    if (chatContainer.style.display === 'flex') {
+    if (chatContainer.classList.contains('visible')) {
       // If chat is open, close it
-      chatContainer.style.display = 'none';
+      chatContainer.style.display = 'flex';
+      // Wait a tiny bit for display:flex to take effect
+      requestAnimationFrame(() => {
+        chatContainer.classList.remove('visible');
+      });
+      // Wait for animation to complete before hiding
+      setTimeout(() => {
+        chatContainer.style.display = 'none';
+      }, 300);
       img.style.animation = 'kinkong-float 3s ease-in-out infinite';
     } else {
       // If chat is closed, open it
       chatContainer.style.display = 'flex';
+      // Wait a tiny bit for display:flex to take effect
+      requestAnimationFrame(() => {
+        chatContainer.classList.add('visible');
+      });
       img.style.animation = 'none';
     }
   });
 
   const closeButton = chatContainer.querySelector('.kinkong-chat-close');
   closeButton.addEventListener('click', () => {
-    chatContainer.style.display = 'none';
-    img.style.animation = 'kinkong-float 3s ease-in-out infinite'; // Resume floating
+    chatContainer.classList.remove('visible');
+    setTimeout(() => {
+      chatContainer.style.display = 'none';
+    }, 300);
+    img.style.animation = 'kinkong-float 3s ease-in-out infinite';
   });
 
   const input = chatContainer.querySelector('.kinkong-chat-input');
