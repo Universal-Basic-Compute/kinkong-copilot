@@ -217,6 +217,16 @@ function isXPage() {
   return hostname === 'x.com' || hostname === 'twitter.com';
 }
 
+function isSwarmTradePage() {
+  const hostname = window.location.hostname;
+  return hostname === 'swarmtrade.ai';
+}
+
+function isUBCPage() {
+  const hostname = window.location.hostname;
+  return hostname === 'universalbasiccompute.ai';
+}
+
 function isDexScreenerTokenPage() {
   const isDex = window.location.hostname === 'dexscreener.com';
   const hasPath = window.location.pathname.split('/').length >= 3;
@@ -247,6 +257,10 @@ function isSupportedPage() {
     return 'x';
   } else if (isSolscanPage()) {
     return 'solscan';
+  } else if (isSwarmTradePage()) {
+    return 'swarmtrade';
+  } else if (isUBCPage()) {
+    return 'ubc';
   }
   return null;
 }
@@ -256,13 +270,23 @@ function getInitialMessage(pageType) {
   const siteName = {
     'dexscreener': 'DexScreener',
     'x': 'X/Twitter', 
-    'solscan': 'Solscan'
+    'solscan': 'Solscan',
+    'swarmtrade': 'SwarmTrade',
+    'ubc': 'Universal Basic Compute'
   }[pageType] || 'this site';
 
   // Clean up the path
   const cleanPath = path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, '');
 
-  return `On ${cleanPath} on ${siteName}, what do you think?`;
+  // Customize message based on site
+  switch(pageType) {
+    case 'swarmtrade':
+      return `On ${cleanPath} at SwarmTrade, what would you like to know?`;
+    case 'ubc':
+      return `On ${cleanPath} at UBC, how can I help you understand Universal Basic Compute?`;
+    default:
+      return `On ${cleanPath} on ${siteName}, what do you think?`;
+  }
 }
 
 function ensureChatInterface() {
