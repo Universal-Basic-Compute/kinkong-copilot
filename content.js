@@ -489,9 +489,8 @@ function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
     }
     
     // Stop the floating animation when chat is open
-      if (copilotImage) {
-        copilotImage.style.animation = 'none';
-      }
+    if (copilotImage) {
+      copilotImage.style.animation = 'none';
     }
 
     messagesContainer.innerHTML += `
