@@ -14,6 +14,22 @@ async function makeApiCall(endpoint, data) {
   console.groupEnd();
 
   try {
+    // First check if we're online
+    if (!navigator.onLine) {
+      throw new Error('Browser is offline. Please check your internet connection.');
+    }
+
+    // Test the API endpoint with a preflight request
+    try {
+      const preflightResponse = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
+        method: 'OPTIONS',
+        mode: 'cors'
+      });
+      console.log('Preflight response:', preflightResponse);
+    } catch (preflightError) {
+      console.error('Preflight request failed:', preflightError);
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -54,24 +70,31 @@ async function makeApiCall(endpoint, data) {
     console.error('Error Message:', error.message);
     console.error('Error Stack:', error.stack);
     console.error('Request Data:', {
-      endpoint: endpoint,
-      data: data
+      endpoint,
+      data,
+      origin: window.location.origin,
+      online: navigator.onLine,
+      userAgent: navigator.userAgent
     });
     console.groupEnd();
 
+    // Handle specific error cases
     if (error.name === 'AbortError') {
-      throw new Error('Request timed out. Please try again.');
+      throw new Error('Request timed out after 30 seconds. Please try again.');
     }
     
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      if (!navigator.onLine) {
-        throw new Error('You appear to be offline. Please check your internet connection.');
-      } else {
-        throw new Error('Unable to connect to the server. The service may be temporarily unavailable.');
+    if (error.name === 'TypeError') {
+      if (error.message.includes('Failed to fetch')) {
+        if (!navigator.onLine) {
+          throw new Error('You appear to be offline. Please check your internet connection.');
+        } else {
+          throw new Error('Unable to connect to SwarmTrade API. The service may be down or blocked by CORS policy.');
+        }
       }
     }
 
-    throw error;
+    // If we get here, it's an unknown error
+    throw new Error(`API call failed: ${error.message}`);
   }
 }
 
