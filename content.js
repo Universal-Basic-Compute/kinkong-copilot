@@ -43,14 +43,11 @@ function injectFloatingCopilot() {
       right: 30px;
       width: 380px;
       height: 500px;
-      background-color: #1a1a1a;
       border-radius: 15px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.4);
       z-index: 999998;
       display: none;
       flex-direction: column;
       overflow: hidden;
-      border: 1px solid rgba(255, 215, 0, 0.2);
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s ease;
@@ -63,7 +60,6 @@ function injectFloatingCopilot() {
 
     .kinkong-chat-header {
       padding: 8px 20px;
-      background: linear-gradient(135deg, rgba(227, 24, 55, 0.6), rgba(255, 215, 0, 0.6));
       color: white;
       font-weight: bold;
       display: flex;
@@ -71,7 +67,6 @@ function injectFloatingCopilot() {
       align-items: center;
       text-shadow: 0 1px 2px rgba(0,0,0,0.2);
       height: 20px;
-      backdrop-filter: blur(5px);
     }
 
     .kinkong-chat-close {
@@ -100,6 +95,7 @@ function injectFloatingCopilot() {
       transition: transform 0.2s ease;
       white-space: pre-wrap;
       word-wrap: break-word;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     .kinkong-message code {
@@ -148,10 +144,8 @@ function injectFloatingCopilot() {
 
     .kinkong-chat-input-container {
       padding: 20px;
-      background-color: #2d2d2d;
       display: flex;
       gap: 12px;
-      border-top: 1px solid rgba(255, 215, 0, 0.1);
     }
 
     .kinkong-chat-input {
