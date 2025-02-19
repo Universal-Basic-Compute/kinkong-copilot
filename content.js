@@ -1,5 +1,36 @@
 // Track when marked is loaded
 let markedReady = false;
+let copilotEnabled = true;
+
+// Add message listener
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'updateCopilotState') {
+    copilotEnabled = message.enabled;
+    const copilotImage = document.querySelector('.kinkong-floating-copilot');
+    const chatContainer = document.querySelector('.kinkong-chat-container');
+    
+    if (copilotImage) {
+      copilotImage.style.display = message.enabled ? 'block' : 'none';
+    }
+    if (chatContainer) {
+      chatContainer.style.display = 'none';
+      chatContainer.classList.remove('visible');
+    }
+  }
+});
+
+// Initialize copilot state
+document.addEventListener('DOMContentLoaded', async () => {
+  chrome.storage.sync.get({
+    copilotEnabled: true
+  }, (items) => {
+    copilotEnabled = items.copilotEnabled;
+    const copilotImage = document.querySelector('.kinkong-floating-copilot');
+    if (copilotImage) {
+      copilotImage.style.display = copilotEnabled ? 'block' : 'none';
+    }
+  });
+});
 
 // Suppress ResizeObserver errors
 const consoleError = console.error;
@@ -465,6 +496,10 @@ async function waitForDexScreenerElements() {
 
 async function handleUrlChange() {
   try {
+    if (!copilotEnabled) {
+      console.log('Copilot disabled, skipping');
+      return;
+    }
     console.log('handleUrlChange called');
     
     const pageType = isSupportedPage();
@@ -576,7 +611,10 @@ async function handleUrlChange() {
   }
 }
 
-function injectFloatingCopilot() {
+async function injectFloatingCopilot() {
+  // Get saved preference
+  const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
+  
   const style = document.createElement('style');
   style.textContent = `
     .kinkong-floating-copilot {
@@ -780,6 +818,7 @@ function injectFloatingCopilot() {
   img.src = chrome.runtime.getURL('assets/copilot.png');
   img.className = 'kinkong-floating-copilot';
   img.alt = 'KinKong Copilot';
+  img.style.display = copilotEnabled ? 'block' : 'none';
   document.body.appendChild(img);
 
   // Add click handlers

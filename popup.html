@@ -252,6 +252,51 @@
       transform: translateX(4px);
     }
 
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-left: auto;
+      margin-right: 10px;
+    }
+
+    .toggle-switch input {
+      display: none;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--secondary-black);
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      left: 2px;
+      top: 2px;
+      background: white;
+      transition: 0.3s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--primary-gold);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
 
     .stats-grid {
       display: grid;
@@ -282,6 +327,10 @@
 <body>
   <div class="header">
     <h2>KinKong Copilot</h2>
+    <label class="toggle-switch">
+      <input type="checkbox" id="copilot-enabled" checked>
+      <span class="toggle-slider"></span>
+    </label>
     <div class="settings-icon" id="settings-icon">⚙️</div>
   </div>
 

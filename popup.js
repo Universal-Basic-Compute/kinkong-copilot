@@ -179,6 +179,29 @@ async function checkSubscriptionStatus() {
 document.addEventListener('DOMContentLoaded', async function() {
   // await checkSubscriptionStatus();
 
+  // Add toggle control
+  const copilotToggle = document.getElementById('copilot-enabled');
+
+  // Load saved preference
+  chrome.storage.sync.get({
+    copilotEnabled: true
+  }, (items) => {
+    copilotToggle.checked = items.copilotEnabled;
+  });
+
+  // Save preference when changed
+  copilotToggle.addEventListener('change', () => {
+    const enabled = copilotToggle.checked;
+    chrome.storage.sync.set({ copilotEnabled: enabled });
+    // Send message to content script to update state
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        type: 'updateCopilotState',
+        enabled: enabled
+      });
+    });
+  });
+
   const connectWalletBtn = document.getElementById('connect-wallet');
   const walletStatus = document.getElementById('wallet-status');
 
