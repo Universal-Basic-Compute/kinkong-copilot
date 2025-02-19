@@ -185,30 +185,10 @@ function addMessageToChatContainer(message, isUser = true) {
   }
 }
 
-// Create a function to handle URL changes
-async function checkApiAvailability() {
-  try {
-    const response = await fetch('https://swarmtrade.ai/api/health', {
-      method: 'GET',
-      mode: 'cors'
-    });
-    return response.ok;
-  } catch (error) {
-    console.error('API Health Check Failed:', error);
-    return false;
-  }
-}
 
 async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
     const { messagesContainer } = ensureChatInterface();
-    
-    // Check API availability first
-    const apiAvailable = await checkApiAvailability();
-    if (!apiAvailable) {
-      addMessageToChatContainer('Sorry, the service is temporarily unavailable. Please try again later.', false);
-      return;
-    }
     
     // Extract page content first
     const pageContent = extractVisibleContent();
