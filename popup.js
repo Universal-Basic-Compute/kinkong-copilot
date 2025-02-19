@@ -1,8 +1,8 @@
 async function fetchSignals() {
   try {
-    const response = await fetch(`https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
+    const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/${config.AIRTABLE_TABLE_NAME}?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
       headers: {
-        'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`
+        'Authorization': `Bearer ${config.AIRTABLE_API_KEY}`
       }
     });
     const data = await response.json();
