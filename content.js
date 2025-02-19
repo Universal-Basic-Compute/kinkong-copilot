@@ -387,14 +387,38 @@ function getInitialMessage(pageType) {
 }
 
 function ensureChatInterface() {
-  if (!document.querySelector('.kinkong-chat-container')) {
-    injectFloatingCopilot();
-  }
-  return {
+  // Check if interface already exists
+  const existing = {
     messagesContainer: document.querySelector('.kinkong-chat-messages'),
     chatContainer: document.querySelector('.kinkong-chat-container'),
     copilotImage: document.querySelector('.kinkong-floating-copilot')
   };
+
+  if (existing.messagesContainer && existing.chatContainer && existing.copilotImage) {
+    return existing;
+  }
+
+  // If not exists, create it
+  try {
+    injectFloatingCopilot();
+    
+    // Get references to newly created elements
+    const elements = {
+      messagesContainer: document.querySelector('.kinkong-chat-messages'),
+      chatContainer: document.querySelector('.kinkong-chat-container'),
+      copilotImage: document.querySelector('.kinkong-floating-copilot')
+    };
+
+    // Verify all elements were created
+    if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
+      throw new Error('Failed to create one or more chat interface elements');
+    }
+
+    return elements;
+  } catch (error) {
+    console.error('Error creating chat interface:', error);
+    throw new Error('Failed to create chat interface: ' + error.message);
+  }
 }
 
 // Function to save messages
@@ -523,9 +547,15 @@ async function handleUrlChange() {
     console.log('On supported page:', pageType);
     
     // Ensure chat interface exists before proceeding
-    const { messagesContainer } = ensureChatInterface();
-    if (!messagesContainer) {
-      throw new Error('Failed to create chat interface');
+    let interfaceElements;
+    try {
+      interfaceElements = ensureChatInterface();
+      if (!interfaceElements.messagesContainer) {
+        throw new Error('Messages container not found');
+      }
+    } catch (error) {
+      console.error('Failed to create chat interface:', error);
+      return; // Exit gracefully instead of throwing
     }
 
     // Load stored messages
@@ -952,8 +982,21 @@ async function injectFloatingCopilot() {
   });
 }
 
-// Initialize chat interface immediately
-ensureChatInterface();
+// Initialize chat interface
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Load saved preferences first
+    const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
+    
+    // Create interface if enabled
+    if (copilotEnabled) {
+      const elements = ensureChatInterface();
+      console.log('Chat interface created successfully:', elements);
+    }
+  } catch (error) {
+    console.error('Error during initialization:', error);
+  }
+});
 
 // Listen for URL changes using both methods for better coverage
 let lastUrl = location.href; 
@@ -964,16 +1007,22 @@ new MutationObserver(() => {
   if (url !== lastUrl) {
     console.log('URL changed to:', url);
     lastUrl = url;
-    handleUrlChange();
+    if (copilotEnabled) {
+      handleUrlChange().catch(error => {
+        console.error('Error handling URL change:', error);
+      });
+    }
   }
 }).observe(document, {subtree: true, childList: true});
 
 // Method 2: Direct check on page load
 console.log('Initial URL check:', window.location.href);
 const initialPageType = isSupportedPage();
-if (initialPageType) {
+if (initialPageType && copilotEnabled) {
   console.log('Initial page is supported:', initialPageType);
-  handleUrlChange();
+  handleUrlChange().catch(error => {
+    console.error('Error during initial URL check:', error);
+  });
 }
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
