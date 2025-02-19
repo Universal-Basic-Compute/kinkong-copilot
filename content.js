@@ -2,9 +2,20 @@
 let markedReady = false;
 
 async function makeApiCall(endpoint, data) {
+  // Log the request details
+  console.group('API Request Details');
+  console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
+  console.log('Request Headers:', {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Origin': window.location.origin
+  });
+  console.log('Request Body:', JSON.stringify(data, null, 2));
+  console.groupEnd();
+
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     const response = await fetch(`https://swarmtrade.ai/api/${endpoint}`, {
       method: 'POST',
@@ -13,13 +24,22 @@ async function makeApiCall(endpoint, data) {
         'Accept': 'application/json',
         'Origin': window.location.origin
       },
-      credentials: 'include', // Include cookies if needed
-      mode: 'cors', // Enable CORS
+      credentials: 'include',
+      mode: 'cors',
       signal: controller.signal,
       body: JSON.stringify(data)
     });
 
     clearTimeout(timeoutId);
+
+    // Log the response details
+    console.group('API Response Details');
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', Object.fromEntries([...response.headers]));
+    if (!response.ok) {
+      console.error('Response Error:', response.statusText);
+    }
+    console.groupEnd();
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -28,20 +48,22 @@ async function makeApiCall(endpoint, data) {
     return response;
 
   } catch (error) {
-    console.error('API Error Details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
+    // Log error details
+    console.group('API Error Details');
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    console.error('Request Data:', {
       endpoint: endpoint,
       data: data
     });
+    console.groupEnd();
 
     if (error.name === 'AbortError') {
       throw new Error('Request timed out. Please try again.');
     }
     
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      // Add more specific error messaging
       if (!navigator.onLine) {
         throw new Error('You appear to be offline. Please check your internet connection.');
       } else {
