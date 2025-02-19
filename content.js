@@ -234,6 +234,11 @@ function formatMessage(text) {
 }
 
 
+function isXPage() {
+  const hostname = window.location.hostname;
+  return hostname === 'x.com' || hostname === 'twitter.com';
+}
+
 function isDexScreenerTokenPage() {
   const isDex = window.location.hostname === 'dexscreener.com';
   const hasPath = window.location.pathname.split('/').length >= 3;
@@ -377,14 +382,17 @@ async function waitForDexScreenerElements() {
 async function handleUrlChange() {
   console.log('handleUrlChange called');
   
-  if (isDexScreenerTokenPage()) {
-    console.log('Is DexScreener page, waiting for elements...');
+  if (isDexScreenerTokenPage() || isXPage()) {
+    console.log('On supported page, waiting for elements...');
     
     // Load and display any stored messages first
     await displayStoredMessages();
     
-    // Wait for page elements to load (but proceed after 5 seconds regardless)
-    const elementsLoaded = await waitForDexScreenerElements();
+    // Wait for page elements to load
+    const elementsLoaded = isDexScreenerTokenPage() ? 
+      await waitForDexScreenerElements() :
+      true; // X.com doesn't need special waiting
+    
     console.log('Elements loaded status:', elementsLoaded);
     
     const { messagesContainer } = ensureChatInterface();
@@ -395,7 +403,10 @@ async function handleUrlChange() {
     console.log('Page content extracted:', pageContent);
     
     // Add user message to chat
-    addMessageToChatContainer('Opened this page, what do you think?', true);
+    const initialMessage = isXPage() ? 
+      'What do you think about this tweet or X page?' : 
+      'Opened this page, what do you think?';
+    addMessageToChatContainer(initialMessage, true);
 
     // Add loading indicator
     const loadingId = 'loading-' + Date.now();
@@ -411,7 +422,9 @@ async function handleUrlChange() {
     try {
       // Make API call to KinKong Copilot
       const response = await makeApiCall('copilot', {
-        message: 'Opened this page, what do you think?',
+        message: isXPage() ? 
+          'What do you think about this tweet or X page?' : 
+          'Opened this page, what do you think?',
         url: window.location.href,
         pageContent: pageContent,
         fullyLoaded: elementsLoaded
