@@ -324,21 +324,29 @@ async function waitForDexScreenerElements() {
 }
 
 async function handleUrlChange() {
+  console.log('handleUrlChange called');
+  
   if (isDexScreenerTokenPage()) {
+    console.log('Is DexScreener page, waiting for elements...');
+    
     // Load and display any stored messages first
     await displayStoredMessages();
     
     // Wait for page elements to load
     const elementsLoaded = await waitForDexScreenerElements();
+    console.log('Elements loaded:', elementsLoaded);
+    
     if (!elementsLoaded) {
       console.log('DexScreener elements failed to load in time');
-      return; // Don't proceed if elements aren't loaded
+      return;
     }
     
     const { messagesContainer } = ensureChatInterface();
+    console.log('Chat interface ready:', !!messagesContainer);
     
     // Extract page content
     const pageContent = extractVisibleContent();
+    console.log('Page content extracted:', pageContent);
     
     // Add user message to chat
     addMessageToChatContainer('Opened this page, what do you think?', true);
