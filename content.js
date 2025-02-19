@@ -662,7 +662,7 @@ async function injectFloatingCopilot() {
     try {
       // Get saved preference
       chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
-        const copilotEnabled = items.copilotEnabled;
+        copilotEnabled = items.copilotEnabled;
         
         const style = document.createElement('style');
         style.textContent = `
@@ -993,8 +993,6 @@ async function injectFloatingCopilot() {
     }
   });
 }
-
-
 function waitForDOM() {
   return new Promise(resolve => {
     if (document.readyState === 'loading') {
