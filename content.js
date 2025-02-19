@@ -212,6 +212,74 @@ function formatMessage(text) {
 }
 
 
+async function waitForXContent() {
+  const maxWaitTime = 5000; // 5 seconds maximum wait
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < maxWaitTime) {
+    // Check for main timeline or profile content
+    const timeline = document.querySelector('[data-testid="primaryColumn"]');
+    const tweets = document.querySelectorAll('[data-testid="tweet"]');
+    const profileInfo = document.querySelector('[data-testid="UserName"]');
+    
+    if ((timeline && tweets.length > 0) || profileInfo) {
+      return true;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  
+  return false;
+}
+
+function extractXContent() {
+  const content = {
+    url: window.location.href,
+    pageContent: {}
+  };
+
+  try {
+    // Get profile info if on profile page
+    const profileName = document.querySelector('[data-testid="UserName"]')?.textContent;
+    const profileBio = document.querySelector('[data-testid="UserDescription"]')?.textContent;
+    const profileLocation = document.querySelector('[data-testid="UserLocation"]')?.textContent;
+    
+    if (profileName) {
+      content.pageContent.profile = {
+        name: profileName,
+        bio: profileBio,
+        location: profileLocation
+      };
+    }
+
+    // Get tweets
+    const tweets = Array.from(document.querySelectorAll('[data-testid="tweet"]'));
+    if (tweets.length > 0) {
+      content.pageContent.tweets = tweets.map(tweet => ({
+        text: tweet.querySelector('[data-testid="tweetText"]')?.textContent,
+        time: tweet.querySelector('time')?.getAttribute('datetime'),
+        engagement: {
+          replies: tweet.querySelector('[data-testid="reply"]')?.textContent,
+          retweets: tweet.querySelector('[data-testid="retweet"]')?.textContent,
+          likes: tweet.querySelector('[data-testid="like"]')?.textContent
+        }
+      })).filter(tweet => tweet.text); // Only include tweets with text content
+    }
+
+    // If no specific content found, get general page content
+    if (!content.pageContent.profile && !content.pageContent.tweets) {
+      content.pageContent.mainContent = document.querySelector('[data-testid="primaryColumn"]')?.textContent;
+    }
+
+  } catch (error) {
+    console.error('Error extracting X content:', error);
+    // Fallback to basic content
+    content.pageContent.mainContent = document.body.textContent;
+  }
+
+  return content;
+}
+
 function isXPage() {
   const hostname = window.location.hostname;
   return hostname === 'x.com' || hostname === 'twitter.com';
@@ -415,17 +483,22 @@ async function handleUrlChange() {
       console.warn('Failed to load stored messages:', err);
     });
     
-    // Wait for elements with timeout
-    const elementsLoaded = pageType === 'dexscreener' ? 
-      await Promise.race([
-        waitForDexScreenerElements(),
-        new Promise(resolve => setTimeout(() => resolve(false), 10000))
-      ]) : true;
+    // Wait for content based on page type
+    let elementsLoaded = false;
+    if (pageType === 'dexscreener') {
+      elementsLoaded = await waitForDexScreenerElements();
+    } else if (pageType === 'x') {
+      elementsLoaded = await waitForXContent();
+    } else {
+      elementsLoaded = true;
+    }
     
     console.log('Elements loaded status:', elementsLoaded);
     
-    // Extract content
-    const pageContent = extractVisibleContent();
+    // Extract content using appropriate method
+    const pageContent = pageType === 'x' ? 
+      extractXContent() : 
+      extractVisibleContent();
     if (!pageContent) {
       throw new Error('Failed to extract page content');
     }
