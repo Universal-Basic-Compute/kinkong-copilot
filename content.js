@@ -319,21 +319,44 @@ function injectFloatingCopilot() {
   const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
 
   function extractVisibleContent() {
-    // Get all text nodes in the document
+    // If we're on dexscreener, get specific elements
+    if (isDexScreenerTokenPage()) {
+      const content = {
+        url: window.location.href,
+        pageContent: {
+          // Get token info
+          tokenName: document.querySelector('[data-cy="token-name"]')?.textContent?.trim(),
+          tokenSymbol: document.querySelector('[data-cy="token-symbol"]')?.textContent?.trim(),
+          price: document.querySelector('[data-cy="price"]')?.textContent?.trim(),
+          // Get chart data if available
+          marketCap: document.querySelector('[data-cy="market-cap"]')?.textContent?.trim(),
+          liquidity: document.querySelector('[data-cy="liquidity"]')?.textContent?.trim(),
+          volume: document.querySelector('[data-cy="volume"]')?.textContent?.trim(),
+        }
+      };
+      
+      // Filter out undefined/null values
+      Object.keys(content.pageContent).forEach(key => {
+        if (!content.pageContent[key]) {
+          delete content.pageContent[key];
+        }
+      });
+
+      return content;
+    }
+
+    // For other pages, keep the general text extraction
     const walker = document.createTreeWalker(
       document.body,
       NodeFilter.SHOW_TEXT,
       {
         acceptNode: function(node) {
-          // Skip if parent is hidden
           if (node.parentElement.offsetHeight === 0) {
             return NodeFilter.FILTER_REJECT;
           }
-          // Skip if empty text or just whitespace
           if (!node.textContent.trim()) {
             return NodeFilter.FILTER_REJECT;
           }
-          // Skip script and style tags
           if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
             return NodeFilter.FILTER_REJECT;
           }
@@ -348,8 +371,10 @@ function injectFloatingCopilot() {
       content += node.textContent.trim() + ' ';
     }
 
-    // Clean up and return
-    return content.trim();
+    return {
+      url: window.location.href,
+      pageContent: content.trim()
+    };
   }
 
   async function sendMessage() {
