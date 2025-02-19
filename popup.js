@@ -27,6 +27,21 @@ async function fetchSignals() {
   }
 }
 
+function getSignalEmoji(timeframe) {
+  switch(timeframe.toUpperCase()) {
+    case 'POSITION':
+      return '🎯';
+    case 'SWING':
+      return '🌊';
+    case 'INTRADAY':
+      return '📅';
+    case 'SCALP':
+      return '⚡';
+    default:
+      return '';
+  }
+}
+
 function getSignalColor(type, confidence) {
   if (type === 'BUY') {
     return confidence === 'HIGH' ? '#2ecc71' : '#27ae60';
@@ -108,7 +123,7 @@ function renderSignal(signal) {
         ${signal.virtual ? '<span style="background: #2d3436; color: #74b9ff; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">VIRTUAL</span>' : ''}
       </div>
       <span style="color: ${getSignalColor(signal.type, signal.confidence)}; font-weight: 600; font-size: 14px;">
-        ${signal.type} <span style="color: #666;">&bull;</span> ${signal.timeframe}
+        ${signal.type} <span style="color: #666;">&bull;</span> ${getSignalEmoji(signal.timeframe)} ${signal.timeframe}
       </span>
     </div>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px;">
