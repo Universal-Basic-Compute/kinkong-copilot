@@ -112,91 +112,85 @@ function findContent(selectors) {
 }
 
 function extractVisibleContent() {
-  if (isDexScreenerTokenPage()) {
-    // Get all text content from the main container
-    const mainContent = document.querySelector('#__next') || document.querySelector('#root');
-    let textContent = '';
-    
-    if (mainContent) {
-      // Get all visible text nodes
-      const textNodes = [];
-      const walker = document.createTreeWalker(
-        mainContent,
-        NodeFilter.SHOW_TEXT,
-        {
-          acceptNode: function(node) {
-            // Check if the node's parent is visible
-            const style = window.getComputedStyle(node.parentElement);
-            if (style.display === 'none' || style.visibility === 'hidden') {
-              return NodeFilter.FILTER_REJECT;
-            }
-            // Ignore script and style tags
-            if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
-              return NodeFilter.FILTER_REJECT;
-            }
-            return NodeFilter.FILTER_ACCEPT;
-          }
-        }
-      );
-
-      while (walker.nextNode()) {
-        const text = walker.currentNode.textContent.trim();
-        if (text) {
-          textNodes.push(text);
-        }
-      }
-      
-      textContent = textNodes.join(' ');
-    }
-
-    const content = {
-      url: window.location.href,
-      pageContent: {
-        // Get all visible text
-        fullText: textContent,
-        
-        // Try multiple selectors for token info
-        tokenName: findContent([
-          '[data-cy="token-name"]',
-          'h1',
-          '[role="heading"]',
-          '.chakra-text'
-        ]),
-        
-        tokenSymbol: findContent([
-          '[data-cy="token-symbol"]',
-          'h2',
-          '.chakra-text'
-        ]),
-        
-        price: findContent([
-          '[data-cy="price"]',
-          '[role="heading"]'
-        ]),
-        
-        // Get any numbers that look like prices
-        possiblePrices: findPrices(textContent)
-      }
-    };
-
-    // Remove empty values
-    Object.keys(content.pageContent).forEach(key => {
-      if (!content.pageContent[key] || 
-          content.pageContent[key] === 'Loading...' ||
-          content.pageContent[key] === '' ||
-          (Array.isArray(content.pageContent[key]) && content.pageContent[key].length === 0)) {
-        delete content.pageContent[key];
-      }
-    });
-
-    console.log('Extracted content:', content);
-    return content;
-  }
+  // Get all text content from the main container
+  const mainContent = document.body;
+  let textContent = '';
   
-  return {
+  if (mainContent) {
+    // Get all visible text nodes
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+      mainContent,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          // Check if the node's parent is visible
+          const style = window.getComputedStyle(node.parentElement);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // Ignore script and style tags
+          if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    while (walker.nextNode()) {
+      const text = walker.currentNode.textContent.trim();
+      if (text) {
+        textNodes.push(text);
+      }
+    }
+    
+    textContent = textNodes.join(' ');
+  }
+
+  // Create base content object
+  const content = {
     url: window.location.href,
-    pageContent: {}
+    pageContent: {
+      fullText: textContent
+    }
   };
+
+  // Add DexScreener-specific content if on DexScreener
+  if (isDexScreenerTokenPage()) {
+    content.pageContent = {
+      ...content.pageContent,
+      tokenName: findContent([
+        '[data-cy="token-name"]',
+        'h1',
+        '[role="heading"]',
+        '.chakra-text'
+      ]),
+      tokenSymbol: findContent([
+        '[data-cy="token-symbol"]',
+        'h2',
+        '.chakra-text'
+      ]),
+      price: findContent([
+        '[data-cy="price"]',
+        '[role="heading"]'
+      ]),
+      possiblePrices: findPrices(textContent)
+    };
+  }
+
+  // Remove empty values
+  Object.keys(content.pageContent).forEach(key => {
+    if (!content.pageContent[key] || 
+        content.pageContent[key] === 'Loading...' ||
+        content.pageContent[key] === '' ||
+        (Array.isArray(content.pageContent[key]) && content.pageContent[key].length === 0)) {
+      delete content.pageContent[key];
+    }
+  });
+
+  console.log('Extracted content:', content);
+  return content;
 }
 
 // Helper function to find content using multiple selectors
