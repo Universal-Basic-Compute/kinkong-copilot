@@ -143,6 +143,30 @@ function injectFloatingCopilot() {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
     }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px;
+      align-items: center;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #1a1a1a;
+      border-radius: 50%;
+      opacity: 0.7;
+    }
+
+    .typing-dot:nth-child(1) { animation: typingDot 1s infinite 0s; }
+    .typing-dot:nth-child(2) { animation: typingDot 1s infinite 0.2s; }
+    .typing-dot:nth-child(3) { animation: typingDot 1s infinite 0.4s; }
+
+    @keyframes typingDot {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
   `;
   document.head.appendChild(style);
 
@@ -224,8 +248,10 @@ function injectFloatingCopilot() {
       // Add loading indicator
       const loadingId = 'loading-' + Date.now();
       messagesContainer.innerHTML += `
-        <div id="${loadingId}" class="kinkong-message bot" style="opacity: 0.7">
-            Thinking...
+        <div id="${loadingId}" class="kinkong-message bot typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
         </div>
       `;
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
