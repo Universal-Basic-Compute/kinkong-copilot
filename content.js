@@ -236,11 +236,14 @@ function injectFloatingCopilot() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
-            message: message,
-            url: window.location.href, // Send current page URL for context
-            timestamp: new Date().toISOString()
+            query: message,
+            context: {
+              url: window.location.href,
+              timestamp: new Date().toISOString()
+            }
           })
         });
 
