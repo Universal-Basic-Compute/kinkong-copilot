@@ -58,27 +58,6 @@ function injectFloatingCopilot() {
       transform: translateY(0);
     }
 
-    .kinkong-chat-header {
-      padding: 8px 20px;
-      color: white;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      height: 20px;
-    }
-
-    .kinkong-chat-close {
-      cursor: pointer;
-      color: white;
-      font-size: 24px;
-      transition: transform 0.3s ease;
-    }
-
-    .kinkong-chat-close:hover {
-      transform: rotate(90deg);
-    }
 
     .kinkong-chat-messages {
       flex-grow: 1;
@@ -211,13 +190,7 @@ function injectFloatingCopilot() {
   const chatContainer = document.createElement('div');
   chatContainer.className = 'kinkong-chat-container';
   chatContainer.innerHTML = `
-    <div class="kinkong-chat-header">
-      <span>KinKong Copilot</span>
-      <span class="kinkong-chat-close">×</span>
-    </div>
-    <div class="kinkong-chat-messages">
-      <div style="color: #888;">Ask me anything about trading...</div>
-    </div>
+    <div class="kinkong-chat-messages"></div>
     <div class="kinkong-chat-input-container">
       <input type="text" class="kinkong-chat-input" placeholder="Type your message...">
       <button class="kinkong-chat-send">Send</button>
@@ -257,14 +230,6 @@ function injectFloatingCopilot() {
     }
   });
 
-  const closeButton = chatContainer.querySelector('.kinkong-chat-close');
-  closeButton.addEventListener('click', () => {
-    chatContainer.classList.remove('visible');
-    setTimeout(() => {
-      chatContainer.style.display = 'none';
-    }, 300);
-    img.style.animation = 'kinkong-float 3s ease-in-out infinite';
-  });
 
   const input = chatContainer.querySelector('.kinkong-chat-input');
   const sendButton = chatContainer.querySelector('.kinkong-chat-send');
