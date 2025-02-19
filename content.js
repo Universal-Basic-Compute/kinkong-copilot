@@ -141,7 +141,7 @@ function extractVisibleContent() {
   // Fallback to body if no main content found
   mainContent = mainContent || document.body;
 
-  // Get all visible text nodes
+  // Get all visible text nodes, excluding our chat interface
   const textNodes = [];
   const walker = document.createTreeWalker(
     mainContent,
@@ -153,10 +153,25 @@ function extractVisibleContent() {
         if (style.display === 'none' || style.visibility === 'hidden') {
           return NodeFilter.FILTER_REJECT;
         }
+
+        // Skip our own chat interface elements
+        if (node.parentElement.closest('.kinkong-chat-container') || 
+            node.parentElement.closest('.kinkong-floating-copilot') ||
+            node.parentElement.closest('.kinkong-message')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
         // Skip script, style, and other non-content tags
         if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'LINK'].includes(node.parentElement.tagName)) {
           return NodeFilter.FILTER_REJECT;
         }
+
+        // Skip empty text nodes and whitespace
+        const text = node.textContent.trim();
+        if (!text) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
         return NodeFilter.FILTER_ACCEPT;
       }
     }
