@@ -121,10 +121,19 @@ function isDexScreenerTokenPage() {
          window.location.pathname !== '/'; // Exclude homepage
 }
 
+function ensureChatInterface() {
+  if (!document.querySelector('.kinkong-chat-container')) {
+    injectFloatingCopilot();
+  }
+  return {
+    messagesContainer: document.querySelector('.kinkong-chat-messages'),
+    chatContainer: document.querySelector('.kinkong-chat-container'),
+    copilotImage: document.querySelector('.kinkong-floating-copilot')
+  };
+}
+
 function addMessageToChatContainer(message, isUser = true) {
-  const messagesContainer = document.querySelector('.kinkong-chat-messages');
-  const chatContainer = document.querySelector('.kinkong-chat-container');
-  const copilotImage = document.querySelector('.kinkong-floating-copilot');
+  const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
   
   if (messagesContainer) {
     // If chat is closed, open it
@@ -152,6 +161,8 @@ function addMessageToChatContainer(message, isUser = true) {
 // Create a function to handle URL changes
 async function handleUrlChange() {
   if (isDexScreenerTokenPage()) {
+    const { messagesContainer } = ensureChatInterface();
+    
     // Extract page content first
     const pageContent = extractVisibleContent();
     
@@ -160,7 +171,6 @@ async function handleUrlChange() {
 
     // Add loading indicator
     const loadingId = 'loading-' + Date.now();
-    const messagesContainer = document.querySelector('.kinkong-chat-messages');
     messagesContainer.innerHTML += `
       <div id="${loadingId}" class="typing-indicator">
         <div class="typing-dot"></div>
@@ -179,7 +189,7 @@ async function handleUrlChange() {
       });
 
       // Remove loading message
-      document.getElementById(loadingId).remove();
+      document.getElementById(loadingId)?.remove();
 
       // Create response bubble
       const responseDiv = document.createElement('div');
@@ -207,7 +217,7 @@ async function handleUrlChange() {
       console.error('API Error:', error);
       
       // Remove loading message
-      document.getElementById(loadingId).remove();
+      document.getElementById(loadingId)?.remove();
 
       // Show error message
       messagesContainer.innerHTML += `
@@ -541,7 +551,8 @@ function injectFloatingCopilot() {
   });
 }
 
-injectFloatingCopilot();
+// Initialize chat interface
+ensureChatInterface();
 
 // Listen for URL changes
 let lastUrl = location.href; 
