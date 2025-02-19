@@ -486,11 +486,9 @@ function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
       requestAnimationFrame(() => {
         chatContainer.classList.add('visible');
       });
-    } catch (error) {
-      reject(error);
     }
-  });
-      // Stop the floating animation when chat is open
+    
+    // Stop the floating animation when chat is open
       if (copilotImage) {
         copilotImage.style.animation = 'none';
       }
@@ -997,15 +995,6 @@ async function injectFloatingCopilot() {
   });
 }
 
-function waitForDOM() {
-  return new Promise(resolve => {
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      resolve();
-    } else {
-      document.addEventListener('DOMContentLoaded', resolve);
-    }
-  });
-}
 
 // Initialize chat interface
 async function initialize() {
