@@ -50,7 +50,16 @@ function renderSignal(signal) {
   signalElement.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <div>
-        <span style="color: var(--primary-gold); font-weight: bold; font-size: 16px;">${signal.token}</span>
+        <span style="
+          color: var(--primary-gold); 
+          font-weight: 300; 
+          font-size: 16px;
+          background: linear-gradient(135deg, #ffd700 0%, #b8860b 50%, #ffd700 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0px 1px 1px rgba(0,0,0,0.1);
+          letter-spacing: 0.5px;
+        ">$${signal.token}</span>
         ${signal.virtual ? '<span style="background: #2d3436; color: #74b9ff; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">VIRTUAL</span>' : ''}
       </div>
       <span style="color: ${getSignalColor(signal.type, signal.confidence)}; font-weight: 600; font-size: 14px;">
