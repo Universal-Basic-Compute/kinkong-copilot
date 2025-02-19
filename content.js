@@ -49,7 +49,23 @@ function isDexScreenerTokenPage() {
 
 function addMessageToChatContainer(message, isUser = true) {
   const messagesContainer = document.querySelector('.kinkong-chat-messages');
+  const chatContainer = document.querySelector('.kinkong-chat-container');
+  const copilotImage = document.querySelector('.kinkong-floating-copilot');
+  
   if (messagesContainer) {
+    // If chat is closed, open it
+    if (!chatContainer.classList.contains('visible')) {
+      chatContainer.style.display = 'flex';
+      // Wait a tiny bit for display:flex to take effect
+      requestAnimationFrame(() => {
+        chatContainer.classList.add('visible');
+      });
+      // Stop the floating animation when chat is open
+      if (copilotImage) {
+        copilotImage.style.animation = 'none';
+      }
+    }
+
     messagesContainer.innerHTML += `
       <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
         ${message}
