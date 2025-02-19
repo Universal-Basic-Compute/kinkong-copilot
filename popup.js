@@ -28,18 +28,15 @@ async function fetchSignals() {
 }
 
 function getSignalEmoji(timeframe) {
-  switch(timeframe.toUpperCase()) {
-    case 'POSITION':
-      return '🎯';
-    case 'SWING':
-      return '🌊';
-    case 'INTRADAY':
-      return '📅';
-    case 'SCALP':
-      return '⚡';
-    default:
-      return '';
-  }
+  // Use the actual emoji characters directly
+  const emojis = {
+    'POSITION': '\u{1F3AF}', // 🎯
+    'SWING': '\u{1F30A}',    // 🌊
+    'INTRADAY': '\u{1F4C5}', // 📅
+    'SCALP': '\u{26A1}'      // ⚡
+  };
+  
+  return emojis[timeframe.toUpperCase()] || '';
 }
 
 function getSignalColor(type, confidence) {
