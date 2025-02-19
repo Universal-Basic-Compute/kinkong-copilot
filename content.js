@@ -312,21 +312,16 @@ function injectFloatingCopilot() {
         responseDiv.className = 'kinkong-message bot';
         messagesContainer.appendChild(responseDiv);
 
-        // Set up the stream reader
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let responseText = '';
-
-        while (true) {
-          const {value, done} = await reader.read();
-          if (done) break;
-          
-          // Decode and append new chunk
-          const chunk = decoder.decode(value, {stream: true});
-          responseText += chunk;
-          responseDiv.innerHTML = formatMessage(responseText);
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+        // Parse the JSON response
+        const data = await response.json();
+        
+        // Create message div and add the formatted response text
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'kinkong-message bot';
+        responseDiv.innerHTML = formatMessage(data.response);
+        messagesContainer.appendChild(responseDiv);
+        
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       } catch (error) {
         console.error('API Error:', error);
         
