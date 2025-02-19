@@ -215,4 +215,51 @@ document.addEventListener('DOMContentLoaded', async function() {
   signals.forEach(signal => {
     tradingSignals.appendChild(renderSignal(signal));
   });
+
+  // Settings functionality
+  const settingsIcon = document.getElementById('settings-icon');
+  const settingsPage = document.getElementById('settings-page');
+  const backButton = document.getElementById('back-from-settings');
+  const autoOpenChat = document.getElementById('auto-open-chat');
+  const notificationSounds = document.getElementById('notification-sounds');
+  const themeSelect = document.getElementById('theme-select');
+
+  // Load saved settings
+  chrome.storage.sync.get({
+    autoOpenChat: true,
+    notificationSounds: true,
+    theme: 'dark'
+  }, (items) => {
+    autoOpenChat.checked = items.autoOpenChat;
+    notificationSounds.checked = items.notificationSounds;
+    themeSelect.value = items.theme;
+  });
+
+  // Save settings when changed
+  autoOpenChat.addEventListener('change', () => {
+    chrome.storage.sync.set({
+      autoOpenChat: autoOpenChat.checked
+    });
+  });
+
+  notificationSounds.addEventListener('change', () => {
+    chrome.storage.sync.set({
+      notificationSounds: notificationSounds.checked
+    });
+  });
+
+  themeSelect.addEventListener('change', () => {
+    chrome.storage.sync.set({
+      theme: themeSelect.value
+    });
+  });
+
+  // Toggle settings page
+  settingsIcon.addEventListener('click', () => {
+    settingsPage.classList.add('visible');
+  });
+
+  backButton.addEventListener('click', () => {
+    settingsPage.classList.remove('visible');
+  });
 });

@@ -64,6 +64,116 @@
       background-color: #2ecc71;
     }
 
+    .header {
+      position: relative;
+    }
+
+    .settings-icon {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 5px;
+      transition: transform 0.3s ease;
+    }
+
+    .settings-icon:hover {
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .settings-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary-black);
+      display: none;
+      z-index: 1000;
+    }
+
+    .settings-page.visible {
+      display: block;
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid var(--primary-gold);
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      color: var(--primary-gold);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 10px;
+      margin-right: 10px;
+    }
+
+    .back-button:hover {
+      transform: translateX(-2px);
+    }
+
+    .settings-content {
+      padding: 15px;
+    }
+
+    .setting-item {
+      margin-bottom: 20px;
+    }
+
+    .setting-item label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-white);
+    }
+
+    .setting-item input[type="checkbox"] {
+      width: 40px;
+      height: 20px;
+      appearance: none;
+      background: var(--secondary-black);
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .setting-item input[type="checkbox"]:checked {
+      background: var(--primary-gold);
+    }
+
+    .setting-item input[type="checkbox"]::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s ease;
+    }
+
+    .setting-item input[type="checkbox"]:checked::before {
+      transform: translateX(20px);
+    }
+
+    .setting-item select {
+      background: var(--secondary-black);
+      color: var(--text-white);
+      border: 1px solid var(--primary-gold);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
     .button.loading {
       opacity: 0.7;
       cursor: wait;
@@ -172,6 +282,40 @@
 <body>
   <div class="header">
     <h2>KinKong Copilot</h2>
+    <div class="settings-icon" id="settings-icon">⚙️</div>
+  </div>
+
+  <div id="settings-page" class="settings-page">
+    <div class="settings-header">
+      <button class="back-button" id="back-from-settings">←</button>
+      <h3>Settings</h3>
+    </div>
+    
+    <div class="settings-content">
+      <div class="setting-item">
+        <label>
+          <span>Auto-open chat on signals</span>
+          <input type="checkbox" id="auto-open-chat">
+        </label>
+      </div>
+      
+      <div class="setting-item">
+        <label>
+          <span>Notification sounds</span>
+          <input type="checkbox" id="notification-sounds">
+        </label>
+      </div>
+      
+      <div class="setting-item">
+        <label>
+          <span>Theme</span>
+          <select id="theme-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
+      </div>
+    </div>
   </div>
 
   <div class="container">
