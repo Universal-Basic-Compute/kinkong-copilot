@@ -277,9 +277,46 @@ function injectFloatingCopilot() {
   const sendButton = chatContainer.querySelector('.kinkong-chat-send');
   const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
 
+  function extractVisibleContent() {
+    // Get all text nodes in the document
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          // Skip if parent is hidden
+          if (node.parentElement.offsetHeight === 0) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // Skip if empty text or just whitespace
+          if (!node.textContent.trim()) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // Skip script and style tags
+          if (['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    let content = '';
+    let node;
+    while (node = walker.nextNode()) {
+      content += node.textContent.trim() + ' ';
+    }
+
+    // Clean up and return
+    return content.trim();
+  }
+
   async function sendMessage() {
     const message = input.value.trim();
     if (message) {
+      // Extract visible content
+      const pageContent = extractVisibleContent();
+    
       // Add user message to chat
       messagesContainer.innerHTML += `
         <div class="kinkong-message user">
@@ -309,7 +346,8 @@ function injectFloatingCopilot() {
           },
           body: JSON.stringify({
             message: message,
-            url: window.location.href
+            url: window.location.href,
+            pageContent: pageContent
           })
         });
 
