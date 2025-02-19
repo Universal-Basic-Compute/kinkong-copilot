@@ -252,16 +252,17 @@ function isSupportedPage() {
 }
 
 function getInitialMessage(pageType) {
-  switch (pageType) {
-    case 'dexscreener':
-      return 'Analyzing this token, what do you think?';
-    case 'x':
-      return 'What do you think about this tweet or X page?';
-    case 'solscan':
-      return 'Analyzing this Solana token, what do you see?';
-    default:
-      return 'What do you think about this page?';
-  }
+  const path = window.location.pathname;
+  const siteName = {
+    'dexscreener': 'DexScreener',
+    'x': 'X/Twitter', 
+    'solscan': 'Solscan'
+  }[pageType] || 'this site';
+
+  // Clean up the path
+  const cleanPath = path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, '');
+
+  return `On ${cleanPath} on ${siteName}, what do you think?`;
 }
 
 function ensureChatInterface() {
