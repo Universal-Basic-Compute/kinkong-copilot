@@ -1,3 +1,5 @@
+console.log('Config loaded:', config);
+
 async function fetchSignals() {
   try {
     const response = await fetch(`https://api.airtable.com/v0/${config.AIRTABLE_BASE_ID}/${config.AIRTABLE_TABLE_NAME}?maxRecords=20&sort%5B0%5D%5Bfield%5D=timestamp&sort%5B0%5D%5Bdirection%5D=desc`, {
