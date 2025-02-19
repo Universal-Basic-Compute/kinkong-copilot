@@ -6,19 +6,31 @@ async function fetchSignals() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    // Add debugging to see what we're getting back
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
     
-    if (!data || !data.records) {
-      console.error('Unexpected API response format:', data);
+    try {
+      const data = JSON.parse(responseText);
+      
+      if (!data || !data.records) {
+        console.error('Unexpected API response format:', data);
+        return [];
+      }
+
+      return data.records.map(record => record.fields);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError);
+      console.error('Response was:', responseText.substring(0, 200) + '...'); // Show first 200 chars
       return [];
     }
 
-    return data.records.map(record => record.fields);
   } catch (error) {
-    console.error('Error fetching signals:', error);
+    console.error('Fetch Error:', error);
     const tradingSignals = document.getElementById('trading-signals');
     tradingSignals.innerHTML = `<div style="color: #e74c3c; padding: 15px; text-align: center;">
-      Error loading signals. Please try again later.
+      Error loading signals. Please try again later.<br>
+      <small style="color: #888;">${error.message}</small>
     </div>`;
     return [];
   }
