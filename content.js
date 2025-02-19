@@ -1,7 +1,27 @@
+// Track when marked is loaded
+let markedReady = false;
+
 // Load marked.min.js
 const markedScript = document.createElement('script');
 markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
+markedScript.onload = () => {
+  markedReady = true;
+  // Configure marked options
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    sanitize: true
+  });
+};
 document.head.appendChild(markedScript);
+
+// Helper function for markdown formatting
+function formatMessage(text) {
+  if (markedReady) {
+    return marked.parse(text);
+  }
+  return text; // Fallback if marked isn't loaded yet
+}
 
 
 function injectFloatingCopilot() {
@@ -233,7 +253,7 @@ function injectFloatingCopilot() {
       // Add user message to chat
       messagesContainer.innerHTML += `
         <div class="kinkong-message user">
-            ${marked.parse(message)}
+            ${formatMessage(message)}
         </div>
       `;
       input.value = '';
@@ -287,7 +307,7 @@ function injectFloatingCopilot() {
           // Decode and append new chunk
           const chunk = decoder.decode(value, {stream: true});
           responseText += chunk;
-          responseDiv.innerHTML = marked.parse(responseText);
+          responseDiv.innerHTML = formatMessage(responseText);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       } catch (error) {
