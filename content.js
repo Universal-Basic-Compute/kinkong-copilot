@@ -48,7 +48,7 @@ async function makeApiCall(endpoint, data) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'text/plain, application/json'
         },
         body: data
       });
