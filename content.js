@@ -3,24 +3,6 @@ const markedScript = document.createElement('script');
 markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
 document.head.appendChild(markedScript);
 
-function simpleMarkdown(text) {
-  // Basic markdown parsing
-  return text
-    // Code blocks
-    .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Bold
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    // Lists
-    .replace(/^\s*-\s+(.+)/gm, '<li>$1</li>')
-    // Line breaks
-    .replace(/\n/g, '<br>');
-}
 
 function injectFloatingCopilot() {
   const style = document.createElement('style');
@@ -251,7 +233,7 @@ function injectFloatingCopilot() {
       // Add user message to chat
       messagesContainer.innerHTML += `
         <div class="kinkong-message user">
-            ${simpleMarkdown(message)}
+            ${marked.parse(message)}
         </div>
       `;
       input.value = '';
@@ -305,7 +287,7 @@ function injectFloatingCopilot() {
           // Decode and append new chunk
           const chunk = decoder.decode(value, {stream: true});
           responseText += chunk;
-          responseDiv.innerHTML = simpleMarkdown(responseText);
+          responseDiv.innerHTML = marked.parse(responseText);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       } catch (error) {
@@ -317,7 +299,7 @@ function injectFloatingCopilot() {
         // Show error message
         messagesContainer.innerHTML += `
           <div class="kinkong-message bot" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-              ${simpleMarkdown('Sorry, I\'m having trouble connecting right now. Please try again later.')}
+              ${marked.parse('Sorry, I\'m having trouble connecting right now. Please try again later.')}
           </div>
         `;
       }
