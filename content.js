@@ -303,24 +303,28 @@ function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
 
 // Function to wait for DexScreener elements to be loaded
 async function waitForDexScreenerElements() {
-  const maxAttempts = 20; // Maximum number of attempts
-  const delayMs = 500; // Delay between attempts (500ms)
+  const maxWaitTime = 5000; // 5 seconds maximum wait
+  const startTime = Date.now();
   
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Check for key elements that indicate the page is loaded
+  while (Date.now() - startTime < maxWaitTime) {
+    console.log(`Checking elements... Time elapsed: ${Date.now() - startTime}ms`);
+    
+    // Check for key elements
     const tokenName = document.querySelector('[data-cy="token-name"]');
     const tokenSymbol = document.querySelector('[data-cy="token-symbol"]');
     const price = document.querySelector('[data-cy="price"]');
     
     if (tokenName && tokenSymbol && price) {
-      return true; // Elements found
+      console.log('Found all DexScreener elements');
+      return true;
     }
     
-    // Wait before next attempt
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    // Wait 500ms before next check
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
   
-  return false; // Elements not found after all attempts
+  console.log('Timeout reached, proceeding with partial content');
+  return false;
 }
 
 async function handleUrlChange() {
@@ -332,14 +336,9 @@ async function handleUrlChange() {
     // Load and display any stored messages first
     await displayStoredMessages();
     
-    // Wait for page elements to load
+    // Wait for page elements to load (but proceed after 5 seconds regardless)
     const elementsLoaded = await waitForDexScreenerElements();
-    console.log('Elements loaded:', elementsLoaded);
-    
-    if (!elementsLoaded) {
-      console.log('DexScreener elements failed to load in time');
-      return;
-    }
+    console.log('Elements loaded status:', elementsLoaded);
     
     const { messagesContainer } = ensureChatInterface();
     console.log('Chat interface ready:', !!messagesContainer);
@@ -367,7 +366,8 @@ async function handleUrlChange() {
       const response = await makeApiCall('copilot', {
         message: 'Opened this page, what do you think?',
         url: window.location.href,
-        pageContent: pageContent
+        pageContent: pageContent,
+        fullyLoaded: elementsLoaded
       });
 
       // Remove loading message
