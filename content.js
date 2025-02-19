@@ -110,8 +110,8 @@ function injectFloatingCopilot() {
       white-space: pre-wrap;
       word-wrap: break-word;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      font-size: 13px;
-      line-height: 1.3;
+      font-size: 14px;
+      line-height: 1.4;
       display: inline-block;
       width: auto;
     }
@@ -121,7 +121,7 @@ function injectFloatingCopilot() {
       padding: 2px 4px;
       border-radius: 3px;
       font-family: monospace;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .kinkong-message pre {
@@ -129,7 +129,7 @@ function injectFloatingCopilot() {
       padding: 8px;
       border-radius: 5px;
       overflow-x: auto;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .kinkong-message a {
