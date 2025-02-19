@@ -79,6 +79,36 @@
       cursor: default;
     }
 
+    .wallet-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: linear-gradient(135deg, #ffd700, #ffa502);
+      color: var(--primary-black);
+      font-weight: 600;
+    }
+
+    .wallet-button:hover {
+      background: linear-gradient(135deg, #ffa502, #ffd700);
+    }
+
+    .wallet-icon {
+      font-size: 16px;
+    }
+
+    .wallet-status {
+      color: #888;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .wallet-connected {
+      background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    }
+
     .subscription-status {
       color: #888;
       font-size: 12px;
@@ -142,6 +172,14 @@
 <body>
   <div class="header">
     <h2>KinKong Copilot</h2>
+  </div>
+
+  <div class="container">
+    <button id="connect-wallet" class="button wallet-button">
+      <span class="wallet-icon">👛</span>
+      Connect Wallet
+    </button>
+    <div id="wallet-status" class="wallet-status"></div>
   </div>
 
   <div class="container">

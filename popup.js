@@ -179,6 +179,33 @@ async function checkSubscriptionStatus() {
 document.addEventListener('DOMContentLoaded', async function() {
   // await checkSubscriptionStatus();
 
+  const connectWalletBtn = document.getElementById('connect-wallet');
+  const walletStatus = document.getElementById('wallet-status');
+
+  connectWalletBtn.addEventListener('click', async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        // Request account access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        
+        // Update button state
+        connectWalletBtn.classList.add('wallet-connected');
+        connectWalletBtn.innerHTML = `
+          <span class="wallet-icon">✓</span>
+          ${account.slice(0, 6)}...${account.slice(-4)}
+        `;
+        
+        walletStatus.textContent = 'Wallet connected successfully';
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+        walletStatus.textContent = 'Error connecting wallet. Please try again.';
+      }
+    } else {
+      walletStatus.textContent = 'Please install MetaMask to connect your wallet';
+    }
+  });
+
   const tradingSignals = document.getElementById('trading-signals');
   tradingSignals.innerHTML = '<div style="text-align: center;">Loading signals...</div>';
 
