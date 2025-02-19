@@ -993,6 +993,7 @@ async function injectFloatingCopilot() {
     }
   });
 }
+
 function waitForDOM() {
   return new Promise(resolve => {
     if (document.readyState === 'loading') {
