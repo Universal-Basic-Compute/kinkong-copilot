@@ -41,6 +41,31 @@ function formatMessage(text) {
 }
 
 
+function isDexScreenerTokenPage() {
+  return window.location.hostname === 'dexscreener.com' && 
+         window.location.pathname.split('/').length >= 3 && // Check if there's a chain and token address
+         window.location.pathname !== '/'; // Exclude homepage
+}
+
+function addMessageToChatContainer(message, isUser = true) {
+  const messagesContainer = document.querySelector('.kinkong-chat-messages');
+  if (messagesContainer) {
+    messagesContainer.innerHTML += `
+      <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
+        ${message}
+      </div>
+    `;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+}
+
+// Create a function to handle URL changes
+function handleUrlChange() {
+  if (isDexScreenerTokenPage()) {
+    addMessageToChatContainer('Opened this page, what do you think?');
+  }
+}
+
 function injectFloatingCopilot() {
   const style = document.createElement('style');
   style.textContent = `
@@ -407,3 +432,16 @@ function injectFloatingCopilot() {
 }
 
 injectFloatingCopilot();
+
+// Listen for URL changes
+let lastUrl = location.href; 
+new MutationObserver(() => {
+  const url = location.href;
+  if (url !== lastUrl) {
+    lastUrl = url;
+    handleUrlChange();
+  }
+}).observe(document, {subtree: true, childList: true});
+
+// Also check when the script first loads
+handleUrlChange();
