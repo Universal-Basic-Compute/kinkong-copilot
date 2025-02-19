@@ -38,6 +38,23 @@ function formatDate(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
+// Add metallic shine animation
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes metallicShine {
+    0% {
+      background-position: -100px;
+    }
+    40% {
+      background-position: 200px;
+    }
+    100% {
+      background-position: 200px;
+    }
+  }
+`;
+document.head.appendChild(styleSheet);
+
 function renderSignal(signal) {
   const signalElement = document.createElement('div');
   signalElement.className = 'signal-card';
@@ -51,14 +68,24 @@ function renderSignal(signal) {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <div>
         <span style="
-          color: var(--primary-gold); 
           font-weight: 300; 
           font-size: 16px;
-          background: linear-gradient(135deg, #ffd700 0%, #b8860b 50%, #ffd700 100%);
+          background: linear-gradient(
+            90deg, 
+            #8e8e8e 0%, 
+            #d4d4d4 20%, 
+            #ffffff 45%, 
+            #d4d4d4 70%, 
+            #8e8e8e 100%
+          );
+          background-size: 200px 100%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          text-shadow: 0px 1px 1px rgba(0,0,0,0.1);
+          text-shadow: 0px 1px 1px rgba(0,0,0,0.2);
           letter-spacing: 0.5px;
+          animation: metallicShine 4s ease-in-out infinite;
+          display: inline-block;
+          position: relative;
         ">$${signal.token}</span>
         ${signal.virtual ? '<span style="background: #2d3436; color: #74b9ff; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">VIRTUAL</span>' : ''}
       </div>
