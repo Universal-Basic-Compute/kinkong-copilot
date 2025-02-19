@@ -10,9 +10,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       headers: request.headers,
       body: JSON.stringify(request.body)
     })
-    .then(response => response.json())
-    .then(data => {
-      sendResponse({ data });
+    .then(async response => {
+      // Get response as text instead of trying to parse JSON
+      const text = await response.text();
+      sendResponse({ data: text });
     })
     .catch(error => {
       sendResponse({ error: error.message });

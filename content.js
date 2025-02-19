@@ -26,7 +26,7 @@ async function makeApiCall(endpoint, data) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'text/plain, application/json'
         },
         mode: 'cors',
         signal: controller.signal,
@@ -57,10 +57,10 @@ async function makeApiCall(endpoint, data) {
         throw new Error(proxyResponse.error);
       }
 
-      return new Response(JSON.stringify(proxyResponse.data), {
+      return new Response(proxyResponse.data, {
         status: 200,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain'
         }
       });
     }
@@ -439,23 +439,12 @@ async function handleUrlChange() {
       responseDiv.className = 'kinkong-message bot';
       messagesContainer.appendChild(responseDiv);
 
-      // Get the response reader
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let responseText = '';
-
-      while (true) {
-        const {value, done} = await reader.read();
-        if (done) break;
-        
-        // Decode and append new chunk
-        const chunk = decoder.decode(value, {stream: true});
-        responseText += chunk;
-        
-        // Update the response bubble with formatted text
-        responseDiv.innerHTML = formatMessage(responseText);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+      // Get the response as text
+      const responseText = await response.text();
+      
+      // Update the response bubble with formatted text
+      responseDiv.innerHTML = formatMessage(responseText);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
       
       // Save the bot's response
       saveMessage(responseText, false);
