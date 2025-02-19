@@ -88,9 +88,6 @@ function renderSignal(signal) {
   return signalElement;
 }
 
-const SUBSCRIPTION_PRICE_SOL = 1.5;
-const RECEIVER_WALLET = 'YOUR_SOLANA_WALLET_ADDRESS';
-
 async function checkSubscriptionStatus() {
   try {
     const response = await fetch('https://swarmtrade.ai/api/subscription/status');
@@ -111,125 +108,9 @@ async function checkSubscriptionStatus() {
   }
 }
 
-async function connectPhantom() {
-  try {
-    // Inject script into active tab to access window.solana
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    const result = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      function: () => {
-        // This runs in the context of the webpage
-        if (!window.solana?.isPhantom && !window.phantom?.solana) {
-          return { error: 'no-phantom' };
-        }
-        
-        const provider = window.phantom?.solana || window.solana;
-        return provider.connect()
-          .then(resp => ({ 
-            success: true, 
-            publicKey: resp.publicKey.toString() 
-          }))
-          .catch(err => ({ 
-            error: err.code === 4001 ? 'user-rejected' : 'connection-failed' 
-          }));
-      }
-    });
-
-    const response = result[0].result;
-    
-    if (response.error === 'no-phantom') {
-      window.open('https://phantom.app/', '_blank');
-      throw new Error('Please install Phantom wallet');
-    } else if (response.error === 'user-rejected') {
-      throw new Error('Please approve the connection request');
-    } else if (response.error) {
-      throw new Error('Failed to connect to Phantom');
-    }
-
-    console.log("Connected to Phantom!", response.publicKey);
-    return response.publicKey;
-
-  } catch (error) {
-    console.error("Phantom connection error:", error);
-    throw error;
-  }
-}
-
-async function makePayment() {
-  try {
-    const { solana } = window;
-    if (!solana?.isPhantom) {
-      throw new Error('Please install Phantom wallet');
-    }
-
-    const transaction = new solana.Transaction().add(
-      solana.SystemProgram.transfer({
-        fromPubkey: solana.publicKey,
-        toPubkey: new solana.PublicKey(RECEIVER_WALLET),
-        lamports: SUBSCRIPTION_PRICE_SOL * solana.LAMPORTS_PER_SOL
-      })
-    );
-
-    const signature = await solana.signAndSendTransaction(transaction);
-    
-    // Notify backend about the payment
-    const response = await fetch('https://swarmtrade.ai/api/subscription/activate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        signature,
-        wallet: solana.publicKey.toString()
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to activate subscription');
-    }
-
-    return signature;
-  } catch (error) {
-    console.error('Payment error:', error);
-    throw error;
-  }
-}
 
 document.addEventListener('DOMContentLoaded', async function() {
-  console.log('Extension loaded');
-  console.log('Solana object:', window.solana);
-  console.log('Phantom object:', window?.phantom?.solana);
   await checkSubscriptionStatus();
-
-  const subscribeButton = document.getElementById('subscribe-button');
-  const statusDiv = document.querySelector('.subscription-status');
-  let walletConnected = false;
-
-  subscribeButton.addEventListener('click', async () => {
-    try {
-      if (!walletConnected) {
-        subscribeButton.textContent = 'Connecting...';
-        await connectPhantom();
-        walletConnected = true;
-        subscribeButton.textContent = 'Pay 1.5 SOL';
-      } else {
-        subscribeButton.textContent = 'Processing...';
-        subscribeButton.disabled = true;
-        
-        const signature = await makePayment();
-        
-        subscribeButton.textContent = 'Subscribed ✓';
-        subscribeButton.classList.add('subscribed');
-        statusDiv.textContent = 'Premium access activated for 3 months';
-      }
-    } catch (error) {
-      console.error(error);
-      subscribeButton.textContent = 'Connect Phantom';
-      subscribeButton.disabled = false;
-      statusDiv.textContent = `Error: ${error.message}`;
-    }
-  });
 
   const tradingSignals = document.getElementById('trading-signals');
   tradingSignals.innerHTML = '<div style="text-align: center;">Loading signals...</div>';
