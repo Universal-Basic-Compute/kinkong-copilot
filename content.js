@@ -273,17 +273,29 @@ function injectFloatingCopilot() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        
         // Remove loading message
         document.getElementById(loadingId).remove();
 
-        // Add bot response
-        messagesContainer.innerHTML += `
-          <div class="kinkong-message bot">
-              ${data.response}
-          </div>
-        `;
+        // Create a new message div for the streaming response
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'kinkong-message bot';
+        messagesContainer.appendChild(responseDiv);
+
+        // Set up the stream reader
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let responseText = '';
+
+        while (true) {
+          const {value, done} = await reader.read();
+          if (done) break;
+          
+          // Decode and append new chunk
+          const chunk = decoder.decode(value, {stream: true});
+          responseText += chunk;
+          responseDiv.innerHTML = responseText;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
       } catch (error) {
         console.error('API Error:', error);
         
