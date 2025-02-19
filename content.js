@@ -1,28 +1,43 @@
 // Track when marked is loaded
 let markedReady = false;
 
-// Load marked.min.js into the content script context
-const script = document.createElement('script');
-script.src = chrome.runtime.getURL('lib/marked.min.js');
-script.onload = () => {
-  // Create a wrapper function to access marked in the window context
-  window.formatMarkdown = (text) => {
-    return window.marked.parse(text, {
-      breaks: true,
-      gfm: true,
-      sanitize: true
-    });
-  };
+// First inject the marked library
+const markedScript = document.createElement('script');
+markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
+document.head.appendChild(markedScript);
+
+// Then create a bridge script to set up our formatter
+const bridgeScript = document.createElement('script');
+bridgeScript.textContent = `
+  window.addEventListener('marked-ready', () => {
+    window.formatMarkdown = (text) => {
+      return marked.parse(text, {
+        breaks: true,
+        gfm: true,
+        sanitize: true
+      });
+    };
+  });
+`;
+document.head.appendChild(bridgeScript);
+
+markedScript.onload = () => {
   markedReady = true;
+  // Dispatch event to notify the bridge script
+  window.dispatchEvent(new Event('marked-ready'));
 };
-(document.head || document.documentElement).appendChild(script);
 
 // Helper function for markdown formatting
 function formatMessage(text) {
   if (markedReady && window.formatMarkdown) {
-    return window.formatMarkdown(text);
+    try {
+      return window.formatMarkdown(text);
+    } catch (e) {
+      console.error('Error formatting markdown:', e);
+      return text;
+    }
   }
-  return text; // Fallback if marked isn't loaded yet
+  return text; // Fallback if marked isn't ready yet
 }
 
 
