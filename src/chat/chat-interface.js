@@ -346,6 +346,13 @@ async function initializeChatInterface(shadow) {
   const sendMessage = async () => {
     const message = input.value.trim();
     if (message) {
+      // Get interface elements first
+      const { messagesContainer } = await ensureChatInterface();
+      if (!messagesContainer) {
+        console.error('Messages container not found');
+        return;
+      }
+
       // Add user message to chat
       addMessageToChatContainer(message, true);
       input.value = '';
