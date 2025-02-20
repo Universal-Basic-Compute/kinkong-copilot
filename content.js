@@ -79,15 +79,6 @@ function formatMessage(text) {
 
 
 
-function isSwarmTradePage() {
-  const hostname = window.location.hostname;
-  return hostname === 'swarmtrade.ai';
-}
-
-function isUBCPage() {
-  const hostname = window.location.hostname;
-  return hostname === 'universalbasiccompute.ai';
-}
 
 function isDexScreenerTokenPage() {
   const isDex = window.location.hostname === 'dexscreener.com';
