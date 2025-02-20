@@ -42,5 +42,3 @@ new MutationObserver(() => {
   }
 }).observe(document, {subtree: true, childList: true});
 
-// Export initialize but don't call it directly
-export { initialize };
