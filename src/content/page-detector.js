@@ -23,7 +23,15 @@ export function isSolscanPage() {
 }
 
 export function isTelegram() {
-  return window.location.hostname === 'web.telegram.org';
+  // Check if we're on telegram web
+  if (window.location.hostname !== 'web.telegram.org') return false;
+  
+  // Check if we're in a group chat by looking for negative numbers in the URL
+  // Group chat IDs are negative numbers
+  const path = window.location.hash;
+  const matches = path.match(/#-\d+/);
+  
+  return matches !== null;
 }
 
 export function isSupportedPage() {
