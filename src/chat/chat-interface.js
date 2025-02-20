@@ -8,6 +8,8 @@ let userActivityTimeout;
 let messageInterval;
 let isTabVisible = !document.hidden;
 let isTabFocused = document.hasFocus();
+let autoMessageCount = 0;
+const MAX_AUTO_MESSAGES = 20;
 const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes of inactivity before stopping
 const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
@@ -483,8 +485,8 @@ async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
 }
 
 function handleUserActivity() {
-  // Only proceed if tab is visible and focused
-  if (!isTabVisible || !isTabFocused) {
+  // Only proceed if tab is visible and focused and we haven't hit the message limit
+  if (!isTabVisible || !isTabFocused || autoMessageCount >= MAX_AUTO_MESSAGES) {
     if (messageInterval) {
       clearInterval(messageInterval);
       messageInterval = null;
@@ -509,6 +511,18 @@ function handleUserActivity() {
   // Start interval if not already running
   if (!messageInterval) {
     messageInterval = setInterval(async () => {
+      // Check message limit before sending
+      if (autoMessageCount >= MAX_AUTO_MESSAGES) {
+        clearInterval(messageInterval);
+        messageInterval = null;
+        addMessageToChatContainer(
+          "I've reached my automatic message limit. Feel free to continue chatting with me directly!",
+          false
+        );
+        return;
+      }
+
+      autoMessageCount++;
       const message = "what else?";
       addMessageToChatContainer(message, true);
 
