@@ -2,19 +2,23 @@ import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
 
 export function ensureChatInterface() {
+  const INTERFACE_ID = 'kinkong-chat-interface';
+  
   // Check if interface already exists
-  const existing = {
-    messagesContainer: document.querySelector('.kinkong-chat-messages'),
-    chatContainer: document.querySelector('.kinkong-chat-container'),
-    copilotImage: document.querySelector('.kinkong-floating-copilot')
-  };
-
-  if (existing.messagesContainer && existing.chatContainer && existing.copilotImage) {
-    return existing;
+  if (document.getElementById(INTERFACE_ID)) {
+    return {
+      messagesContainer: document.querySelector('.kinkong-chat-messages'),
+      chatContainer: document.querySelector('.kinkong-chat-container'),
+      copilotImage: document.querySelector('.kinkong-floating-copilot')
+    };
   }
 
   // If not exists, create it
   try {
+    const interfaceContainer = document.createElement('div');
+    interfaceContainer.id = INTERFACE_ID;
+    document.body.appendChild(interfaceContainer);
+    
     injectFloatingCopilot();
     
     // Get references to newly created elements
@@ -126,6 +130,43 @@ export async function injectFloatingCopilot() {
             color: #1a1a1a;
             margin-right: auto;
             border-bottom-left-radius: 4px;
+          }
+
+          .kinkong-chat-input-container {
+            display: flex;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            gap: 10px;
+          }
+
+          .kinkong-chat-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+          }
+
+          .kinkong-chat-input:focus {
+            outline: none;
+            border-color: var(--primary-gold, #ffd700);
+          }
+
+          .kinkong-chat-send {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffa502);
+            color: #1a1a1a;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+          }
+
+          .kinkong-chat-send:hover {
+            transform: scale(1.05);
           }
         `;
         document.head.appendChild(style);
