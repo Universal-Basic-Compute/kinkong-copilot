@@ -1,3 +1,5 @@
+import { ensureChatInterface, addMessageToChatContainer } from './chat-interface.js';
+
 export async function saveMessage(message, isUser) {
   const currentUrl = window.location.href;
   try {
