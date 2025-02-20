@@ -30,7 +30,22 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "*://*.dexscreener.com/*",
+        "*://*.x.com/*", 
+        "*://*.twitter.com/*",
+        "*://*.solscan.io/*",
+        "*://*.swarmtrade.ai/*",
+        "*://*.universalbasiccompute.ai/*",
+        "*://*.raydium.io/*",
+        "*://*.birdeye.so/*",
+        "*://*.jup.ag/*",
+        "*://*.tensor.trade/*",
+        "*://*.magiceden.io/*",
+        "*://*.orca.so/*",
+        "*://*.coingecko.com/*",
+        "*://*.coinmarketcap.com/*"
+      ],
       "js": ["content.js"],
       "type": "module",
       "run_at": "document_end"
