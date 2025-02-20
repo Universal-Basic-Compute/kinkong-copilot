@@ -4,9 +4,75 @@ import { makeApiCall } from '../api/api-client.js';
 import { showMessageParagraphs } from '../handlers/url-handler.js';
 import { isSupportedPage } from '../content/page-detector.js';
 
+const RATE_LIMIT_RESET_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+
 // Message queue system
 let messageQueue = [];
 let isProcessingQueue = false;
+
+// Function to manage rate limit state
+async function manageRateLimitState(isLimited = true) {
+  try {
+    if (isLimited) {
+      // Set rate limit state with timestamp
+      await chrome.storage.local.set({
+        rateLimitState: {
+          isLimited: true,
+          timestamp: Date.now()
+        }
+      });
+    } else {
+      // Clear rate limit state
+      await chrome.storage.local.remove('rateLimitState');
+      
+      // Re-enable chat interface
+      const elements = await ensureChatInterface();
+      if (elements && elements.chatContainer) {
+        const input = elements.chatContainer.querySelector('.kinkong-chat-input');
+        const sendButton = elements.chatContainer.querySelector('.kinkong-chat-send');
+        
+        if (input) {
+          input.disabled = false;
+          input.placeholder = 'Type your message...';
+        }
+        
+        if (sendButton) {
+          sendButton.disabled = false;
+          sendButton.style.opacity = '1';
+        }
+        
+        // Remove rate limit message if it exists
+        const rateLimitMessage = elements.messagesContainer.querySelector('.rate-limit-message');
+        if (rateLimitMessage) {
+          rateLimitMessage.remove();
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error managing rate limit state:', error);
+  }
+}
+
+// Function to check and reset rate limit
+async function checkAndResetRateLimit() {
+  try {
+    const result = await chrome.storage.local.get('rateLimitState');
+    if (result.rateLimitState) {
+      const { timestamp } = result.rateLimitState;
+      const now = Date.now();
+      
+      // If 4 hours have passed, reset the rate limit
+      if (now - timestamp >= RATE_LIMIT_RESET_INTERVAL) {
+        await manageRateLimitState(false);
+      }
+    }
+  } catch (error) {
+    console.error('Error checking rate limit:', error);
+  }
+}
+
+// Set up periodic check
+setInterval(checkAndResetRateLimit, 60000); // Check every minute
 
 async function processMessageQueue() {
   if (isProcessingQueue || messageQueue.length === 0) return;
@@ -170,6 +236,32 @@ export async function ensureChatInterface() {
 
     console.log('Interface ready');
     console.groupEnd();
+    // Check rate limit state when initializing
+    const result = await chrome.storage.local.get('rateLimitState');
+    if (result.rateLimitState) {
+      const { timestamp } = result.rateLimitState;
+      const now = Date.now();
+      
+      if (now - timestamp < RATE_LIMIT_RESET_INTERVAL) {
+        // Still rate limited
+        const input = interfaceElements.chatContainer.querySelector('.kinkong-chat-input');
+        const sendButton = interfaceElements.chatContainer.querySelector('.kinkong-chat-send');
+        
+        if (input) {
+          input.disabled = true;
+          input.placeholder = 'Chat will be re-enabled in 4 hours...';
+        }
+        
+        if (sendButton) {
+          sendButton.disabled = true;
+          sendButton.style.opacity = '0.5';
+        }
+      } else {
+        // Reset has passed
+        await manageRateLimitState(false);
+      }
+    }
+
     return interfaceElements;
 
   } catch (error) {
@@ -543,15 +635,18 @@ async function initializeChatInterface(shadow) {
         document.getElementById(loadingId)?.remove();
         
         if (error.message === 'RATE_LIMIT_EXCEEDED') {
+          // Set rate limit state
+          await manageRateLimitState(true);
+            
           // Create rate limit message element
           const rateLimitMessage = document.createElement('div');
           rateLimitMessage.className = 'kinkong-message bot rate-limit-message';
           rateLimitMessage.innerHTML = `
             <div style="margin-bottom: 10px;">
-              ⚠️ You've reached your free message limit for today.
+              ⚠️ You've reached your free message limit.
             </div>
             <div style="margin-bottom: 15px;">
-              Upgrade to Premium for unlimited messages and exclusive features:
+              Your limit will reset in 4 hours, or upgrade to Premium for:
               <ul style="margin-top: 8px; padding-left: 20px;">
                 <li>Unlimited AI interactions</li>
                 <li>Priority response time</li>
@@ -576,15 +671,15 @@ async function initializeChatInterface(shadow) {
               Upgrade to Premium
             </a>
           `;
-          
+            
           messagesContainer.appendChild(rateLimitMessage);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
           // Disable input and update placeholder
           const input = chatContainer.querySelector('.kinkong-chat-input');
           input.disabled = true;
-          input.placeholder = 'Upgrade to Premium to continue chatting...';
-          
+          input.placeholder = 'Chat will be re-enabled in 4 hours...';
+            
           // Disable send button
           const sendButton = chatContainer.querySelector('.kinkong-chat-send');
           sendButton.disabled = true;
