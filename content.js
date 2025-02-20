@@ -1,5 +1,6 @@
 const base = chrome.runtime.getURL('');
 let modules;
+let urlObserver = null;
 
 async function initializeModules() {
   if (window.kinkongModules) {
@@ -11,12 +12,11 @@ async function initializeModules() {
   try {
     // Import all required modules dynamically with explicit paths
     const modules = {
-      chatInterface: await import(chrome.runtime.getURL('src/chat/chat-interface.js')),
-      domUtils: await import(chrome.runtime.getURL('src/utils/dom-utils.js')),
-      contentExtractor: await import(chrome.runtime.getURL('src/content/content-extractor.js')),
-      pageDetector: await import(chrome.runtime.getURL('src/content/page-detector.js')),
-      initModule: await import(chrome.runtime.getURL('src/init.js')),
-      urlHandler: await import(chrome.runtime.getURL('src/handlers/url-handler.js'))
+      chatInterface: await import(base + 'src/chat/chat-interface.js'),
+      domUtils: await import(base + 'src/utils/dom-utils.js'),
+      contentExtractor: await import(base + 'src/content/content-extractor.js'),
+      pageDetector: await import(base + 'src/content/page-detector.js'),
+      urlHandler: await import(base + 'src/handlers/url-handler.js')
     };
     
     window.kinkongModules = modules;
@@ -28,11 +28,44 @@ async function initializeModules() {
   }
 }
 
+function setupUrlObserver() {
+  // Remove existing observer if any
+  if (urlObserver) {
+    urlObserver.disconnect();
+  }
+
+  let lastUrl = location.href;
+  urlObserver = new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+      console.log('URL changed to:', url);
+      lastUrl = url;
+      handleUrlChangeIfEnabled();
+    }
+  });
+  
+  urlObserver.observe(document, {subtree: true, childList: true});
+}
+
+async function handleUrlChangeIfEnabled() {
+  try {
+    const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
+    if (copilotEnabled && modules.pageDetector.isSupportedPage()) {
+      await modules.urlHandler.handleUrlChange();
+    }
+  } catch (error) {
+    console.error('Error handling URL change:', error);
+  }
+}
+
 // Initialize once
 initializeModules().then(loadedModules => {
   modules = loadedModules;
-  modules.initModule.initialize().catch(error => {
-    console.error('Error during initialization:', error);
+  setupUrlObserver();
+  
+  // Initial URL check
+  handleUrlChangeIfEnabled().catch(error => {
+    console.error('Error during initial URL check:', error);
   });
 }).catch(error => {
   console.error('Failed to initialize modules:', error);

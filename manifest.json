@@ -43,7 +43,6 @@
       "lib/marked.min.js",
       "lib/marked-bridge.js",
       "src/*",
-      "src/init.js",
       "src/utils/*",
       "src/content/*", 
       "src/chat/*",
