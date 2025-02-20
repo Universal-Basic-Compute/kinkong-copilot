@@ -1,10 +1,17 @@
 const base = chrome.runtime.getURL('');
 
-import { ensureChatInterface, addMessageToChatContainer } from `${base}src/chat/chat-interface.js`;
-import { findContent } from `${base}src/utils/dom-utils.js`;
-import { extractXContent } from `${base}src/content/content-extractor.js`;
-import { isXPage, isSupportedPage } from `${base}src/content/page-detector.js`;
+// Initialize modules
+let chatInterface, domUtils, contentExtractor, pageDetector;
 
+async function initializeModules() {
+  // Import all required modules dynamically
+  chatInterface = await import(base + 'src/chat/chat-interface.js');
+  domUtils = await import(base + 'src/utils/dom-utils.js');
+  contentExtractor = await import(base + 'src/content/content-extractor.js');
+  pageDetector = await import(base + 'src/content/page-detector.js');
+}
+
+// Initialize copilot state
 let copilotEnabled = true;
 
 // Add message listener 
@@ -49,23 +56,39 @@ console.error = function(...args) {
 
 
 
-// Start initialization
-initialize();
+// Initialize everything after modules are loaded
+initializeModules().then(() => {
+  // Initialize copilot state
+  document.addEventListener('DOMContentLoaded', async () => {
+    chrome.storage.sync.get({
+      copilotEnabled: true
+    }, (items) => {
+      copilotEnabled = items.copilotEnabled;
+      const copilotImage = document.querySelector('.kinkong-floating-copilot');
+      if (copilotImage) {
+        copilotImage.style.display = copilotEnabled ? 'block' : 'none';
+      }
+    });
+  });
 
-// Listen for URL changes 
-let lastUrl = location.href;
-new MutationObserver(() => {
-  const url = location.href;
-  if (url !== lastUrl) {
-    console.log('URL changed to:', url);
-    lastUrl = url;
-    if (copilotEnabled) {
-      handleUrlChange().catch(error => {
-        console.error('Error handling URL change:', error);
-      });
+  // Start initialization
+  initialize();
+
+  // Listen for URL changes 
+  let lastUrl = location.href;
+  new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+      console.log('URL changed to:', url);
+      lastUrl = url;
+      if (copilotEnabled) {
+        handleUrlChange().catch(error => {
+          console.error('Error handling URL change:', error);
+        });
+      }
     }
-  }
-}).observe(document, {subtree: true, childList: true});
+  }).observe(document, {subtree: true, childList: true});
+});
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
   // Only accept messages from our extension
