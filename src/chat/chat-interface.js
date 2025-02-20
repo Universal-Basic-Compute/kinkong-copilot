@@ -327,52 +327,73 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
       copilotImage.style.animation = 'none';
     }
 
+    // Function to smoothly scroll to an element
+    const smoothScrollToElement = (element) => {
+      const targetPosition = element.offsetTop;
+      const startPosition = messagesContainer.scrollTop;
+      const distance = targetPosition - startPosition;
+      const duration = 300; // ms
+      let start = null;
+      
+      const animation = (currentTime) => {
+        if (!start) start = currentTime;
+        const progress = currentTime - start;
+        const percentage = Math.min(progress / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOutCubic = percentage => 1 - Math.pow(1 - percentage, 3);
+        
+        messagesContainer.scrollTop = startPosition + distance * easeOutCubic(percentage);
+        
+        if (percentage < 1) {
+          requestAnimationFrame(animation);
+        }
+      };
+      
+      requestAnimationFrame(animation);
+    };
+
     // Split messages only for bot responses (non-user messages)
     if (!isUser) {
-      // Split on double line breaks to preserve intended paragraphs
       const paragraphs = message.split(/\n\s*\n/);
-      
-      // Calculate reading time based on average reading speed (250 words per minute)
       const WORDS_PER_MINUTE = 250;
       const MILLISECONDS_PER_WORD = (60 * 1000) / WORDS_PER_MINUTE;
       
       for (const paragraph of paragraphs) {
         if (paragraph.trim()) {
-          // Add the message bubble
           messagesContainer.innerHTML += `
             <div class="kinkong-message ${isUser ? 'user' : 'bot'}" style="opacity: 0; transform: translateY(10px); transition: all 0.3s ease">
               ${formatMessage(paragraph.trim())}
             </div>
           `;
           
-          // Get the newly added message bubble
           const newBubble = messagesContainer.lastElementChild;
           
-          // Trigger animation
+          // Trigger fade-in animation and scroll
           await new Promise(resolve => setTimeout(() => {
             newBubble.style.opacity = '1';
             newBubble.style.transform = 'translateY(0)';
+            smoothScrollToElement(newBubble);
             resolve();
           }, 100));
 
-          // Calculate delay based on word count
           const wordCount = paragraph.trim().split(/\s+/).length;
           const readingDelay = Math.max(500, wordCount * MILLISECONDS_PER_WORD);
-          
-          // Wait for reading time before showing next bubble
           await new Promise(resolve => setTimeout(resolve, readingDelay));
         }
       }
     } else {
-      // User messages remain unchanged - single bubble
+      // User messages
       messagesContainer.innerHTML += `
         <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
           ${formatMessage(message)}
         </div>
       `;
+      
+      // Scroll to the new user message
+      const newMessage = messagesContainer.lastElementChild;
+      smoothScrollToElement(newMessage);
     }
-
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     if (shouldSave) {
       saveMessage(message, isUser);
