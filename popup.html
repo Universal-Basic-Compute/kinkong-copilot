@@ -400,25 +400,49 @@
 
     .app-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 8px;
-      padding: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      padding: 15px;
     }
 
     .app-item {
       background: rgba(0, 0, 0, 0.2);
-      padding: 8px;
+      padding: 12px;
       border-radius: 8px;
       text-align: center;
-      font-size: 12px;
-      color: #bbb;
       transition: all 0.2s ease;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .app-item:hover {
       background: rgba(255, 215, 0, 0.1);
-      color: var(--primary-gold);
       transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    .app-name {
+      color: #bbb;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .app-item:hover .app-name {
+      color: var(--primary-gold);
+    }
+
+    .domain {
+      color: #666;
+      font-weight: normal;
+    }
+
+    .app-desc {
+      color: #666;
+      font-size: 10px;
+      line-height: 1.2;
+      margin-top: 2px;
     }
 
     .settings-content {
