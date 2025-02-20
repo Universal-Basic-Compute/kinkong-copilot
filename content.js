@@ -134,8 +134,8 @@ window.addEventListener('message', async (event) => {
   
   if (event.data.type === 'PHANTOM_CONNECT_REQUEST') {
     try {
-      const hasPhantom = await waitForPhantom();
-      if (!hasPhantom) {
+      // Check if Phantom is installed
+      if (!window.solana || !window.solana.isPhantom) {
         window.postMessage({ 
           type: 'PHANTOM_CONNECT_RESPONSE',
           error: 'Phantom not installed'
@@ -143,6 +143,19 @@ window.addEventListener('message', async (event) => {
         return;
       }
 
+      // Check if already connected
+      try {
+        const resp = await window.solana.connect({ onlyIfTrusted: true });
+        window.postMessage({ 
+          type: 'PHANTOM_CONNECT_RESPONSE',
+          publicKey: resp.publicKey.toString()
+        }, '*');
+        return;
+      } catch (e) {
+        // Not already connected, proceed with connect request
+      }
+
+      // Request new connection
       try {
         const resp = await window.solana.connect();
         window.postMessage({ 
@@ -150,11 +163,13 @@ window.addEventListener('message', async (event) => {
           publicKey: resp.publicKey.toString()
         }, '*');
       } catch (error) {
+        // Handle user rejection or other errors
         window.postMessage({ 
           type: 'PHANTOM_CONNECT_RESPONSE',
-          error: error.message || 'Failed to connect'
+          error: error.message || 'User rejected the request'
         }, '*');
       }
+
     } catch (error) {
       window.postMessage({ 
         type: 'PHANTOM_CONNECT_RESPONSE',

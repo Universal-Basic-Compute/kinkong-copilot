@@ -293,6 +293,7 @@ async function connectPhantomWallet() {
     }
 
     // Show connecting status
+    connectWalletBtn.disabled = true;
     walletStatus.textContent = 'Connecting...';
     walletStatus.style.color = '#f39c12';
 
@@ -300,8 +301,18 @@ async function connectPhantomWallet() {
     const response = await new Promise((resolve) => {
       chrome.tabs.sendMessage(tab.id, { 
         type: 'PHANTOM_CONNECT_REQUEST' 
-      }, resolve);
+      }, (response) => {
+        // Handle potential undefined response
+        if (chrome.runtime.lastError) {
+          resolve({ error: 'Content script not ready' });
+        } else {
+          resolve(response);
+        }
+      });
     });
+
+    // Re-enable button
+    connectWalletBtn.disabled = false;
 
     if (!response) {
       throw new Error('No response from content script');
@@ -311,7 +322,11 @@ async function connectPhantomWallet() {
       if (response.error === 'Phantom not installed') {
         walletStatus.textContent = 'Please install Phantom wallet';
         walletStatus.style.color = '#e74c3c';
+        // Open Phantom website in new tab
         window.open('https://phantom.app/', '_blank');
+      } else if (response.error === 'Content script not ready') {
+        walletStatus.textContent = 'Please refresh the page';
+        walletStatus.style.color = '#e74c3c';
       } else {
         walletStatus.textContent = response.error;
         walletStatus.style.color = '#e74c3c';
@@ -339,6 +354,7 @@ async function connectPhantomWallet() {
 
   } catch (error) {
     console.error('Phantom connection error:', error);
+    connectWalletBtn.disabled = false;
     walletStatus.textContent = 'Error connecting to Phantom wallet';
     walletStatus.style.color = '#e74c3c';
   }
