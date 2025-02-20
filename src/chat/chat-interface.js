@@ -77,7 +77,7 @@ let isTabVisible = !document.hidden;
 let isTabFocused = document.hasFocus();
 let autoMessageCount = 0;
 const MAX_AUTO_MESSAGES = 20;
-const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes of inactivity before stopping
+const ACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutes of inactivity before stopping
 const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
 // Cache for interface elements
