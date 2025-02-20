@@ -370,6 +370,76 @@
       transform: translateX(20px);
     }
 
+    .app-list {
+      margin-top: 15px;
+    }
+
+    .app-category {
+      margin-bottom: 20px;
+      background: var(--secondary-black);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .category-header {
+      padding: 12px 15px;
+      background: rgba(255, 215, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .category-icon {
+      font-size: 18px;
+    }
+
+    .category-title {
+      font-weight: 600;
+      color: var(--primary-gold);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .app-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #bbb;
+      transition: all 0.2s ease;
+    }
+
+    .app-item:hover {
+      background: rgba(255, 215, 0, 0.1);
+      color: var(--primary-gold);
+      transform: translateY(-2px);
+    }
+
+    .settings-content {
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+    }
+
+    /* Custom scrollbar for settings content */
+    .settings-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .settings-content::-webkit-scrollbar-track {
+      background: var(--secondary-black);
+    }
+
+    .settings-content::-webkit-scrollbar-thumb {
+      background: var(--primary-gold);
+      border-radius: 3px;
+    }
 
     .stats-grid {
       display: grid;
@@ -416,50 +486,62 @@
     <div class="settings-content">
       <div class="setting-item">
         <h4 class="settings-heading">Activated Websites</h4>
-        <div class="activated-sites">
-          <div class="site-group">
-            <h5 class="site-group-heading">DEX & Trading</h5>
-            <ul>
-              <li>dexscreener.com</li>
-              <li>raydium.io</li>
-              <li>birdeye.so</li>
-              <li>jup.ag</li>
-              <li>tensor.trade</li>
-              <li>magiceden.io</li>
-              <li>orca.so</li>
-              <li>app.meteora.ag</li>
-            </ul>
-          </div>
-          
-          <div class="site-group">
-            <h5 class="site-group-heading">CEX</h5>
-            <ul>
-              <li>binance.com</li>
-              <li>kucoin.com</li>
-              <li>okx.com</li>
-              <li>bybit.com</li>
-              <li>gate.io</li>
-              <li>mexc.com</li>
-            </ul>
+        <div class="app-list">
+          <div class="app-category">
+            <div class="category-header">
+              <span class="category-icon">💱</span>
+              <span class="category-title">DEX & Trading</span>
+            </div>
+            <div class="app-grid">
+              <div class="app-item">dexscreener</div>
+              <div class="app-item">raydium</div>
+              <div class="app-item">birdeye</div>
+              <div class="app-item">jupiter</div>
+              <div class="app-item">tensor</div>
+              <div class="app-item">magiceden</div>
+              <div class="app-item">orca</div>
+              <div class="app-item">meteora</div>
+            </div>
           </div>
 
-          <div class="site-group">
-            <h5 class="site-group-heading">Info & Social</h5>
-            <ul>
-              <li>x.com / twitter.com</li>
-              <li>web.telegram.org</li>
-              <li>coingecko.com</li>
-              <li>coinmarketcap.com</li>
-              <li>solscan.io</li>
-            </ul>
+          <div class="app-category">
+            <div class="category-header">
+              <span class="category-icon">🏢</span>
+              <span class="category-title">CEX</span>
+            </div>
+            <div class="app-grid">
+              <div class="app-item">binance</div>
+              <div class="app-item">kucoin</div>
+              <div class="app-item">okx</div>
+              <div class="app-item">bybit</div>
+              <div class="app-item">gate.io</div>
+              <div class="app-item">mexc</div>
+            </div>
           </div>
 
-          <div class="site-group">
-            <h5 class="site-group-heading">Official Sites</h5>
-            <ul>
-              <li>swarmtrade.ai</li>
-              <li>universalbasiccompute.ai</li>
-            </ul>
+          <div class="app-category">
+            <div class="category-header">
+              <span class="category-icon">📱</span>
+              <span class="category-title">Social & Info</span>
+            </div>
+            <div class="app-grid">
+              <div class="app-item">twitter</div>
+              <div class="app-item">telegram</div>
+              <div class="app-item">coingecko</div>
+              <div class="app-item">cmc</div>
+              <div class="app-item">solscan</div>
+            </div>
+          </div>
+
+          <div class="app-category">
+            <div class="category-header">
+              <span class="category-icon">⭐</span>
+              <span class="category-title">Official</span>
+            </div>
+            <div class="app-grid">
+              <div class="app-item">swarmtrade</div>
+              <div class="app-item">ubc</div>
+            </div>
           </div>
         </div>
       </div>
