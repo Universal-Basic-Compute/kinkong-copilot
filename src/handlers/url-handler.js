@@ -142,7 +142,7 @@ function getReadingTime(text) {
   return Math.max(2000, Math.min(6000, (text.length / charsPerSecond) * 1000));
 }
 
-async function showMessageParagraphs(responseText, shadow) {
+export async function showMessageParagraphs(responseText, shadow) {
   // Split message into paragraphs (split by double newline or markdown headers)
   const paragraphs = responseText.split(/\n\n|(?=#{1,6}\s)/g)
     .filter(p => p.trim().length > 0);
