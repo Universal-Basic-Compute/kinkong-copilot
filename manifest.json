@@ -42,10 +42,15 @@
   ],
   "web_accessible_resources": [{
     "resources": [
-      "assets/copilot.png",
-      "lib/marked.min.js",
-      "lib/marked-bridge.js",
-      "src/**/*.js"
+      "assets/*",
+      "lib/*",
+      "src/*",
+      "src/init.js",
+      "src/utils/*",
+      "src/content/*", 
+      "src/chat/*",
+      "src/handlers/*",
+      "src/api/*"
     ],
     "matches": ["<all_urls>"]
   }],

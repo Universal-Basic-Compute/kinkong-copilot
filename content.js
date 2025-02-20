@@ -4,13 +4,20 @@ const base = chrome.runtime.getURL('');
 let chatInterface, domUtils, contentExtractor, pageDetector, initModule, urlHandler;
 
 async function initializeModules() {
-  // Import all required modules dynamically
-  chatInterface = await import(base + 'src/chat/chat-interface.js');
-  domUtils = await import(base + 'src/utils/dom-utils.js');
-  contentExtractor = await import(base + 'src/content/content-extractor.js');
-  pageDetector = await import(base + 'src/content/page-detector.js');
-  initModule = await import(base + 'src/init.js');
-  urlHandler = await import(base + 'src/handlers/url-handler.js');
+  try {
+    // Import all required modules dynamically with explicit paths
+    chatInterface = await import(chrome.runtime.getURL('src/chat/chat-interface.js'));
+    domUtils = await import(chrome.runtime.getURL('src/utils/dom-utils.js'));
+    contentExtractor = await import(chrome.runtime.getURL('src/content/content-extractor.js'));
+    pageDetector = await import(chrome.runtime.getURL('src/content/page-detector.js'));
+    initModule = await import(chrome.runtime.getURL('src/init.js'));
+    urlHandler = await import(chrome.runtime.getURL('src/handlers/url-handler.js'));
+    
+    console.log('All modules loaded successfully');
+  } catch (error) {
+    console.error('Error loading modules:', error);
+    throw error;
+  }
 }
 
 // Initialize copilot state
@@ -60,6 +67,8 @@ console.error = function(...args) {
 
 // Initialize everything after modules are loaded
 initializeModules().then(() => {
+  console.log('Modules initialized, starting app...');
+  
   // Initialize copilot state
   document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.sync.get({
@@ -74,7 +83,9 @@ initializeModules().then(() => {
   });
 
   // Start initialization
-  initModule.initialize();
+  initModule.initialize().catch(error => {
+    console.error('Error during initialization:', error);
+  });
 
   // Listen for URL changes 
   let lastUrl = location.href;
@@ -90,6 +101,8 @@ initializeModules().then(() => {
       }
     }
   }).observe(document, {subtree: true, childList: true});
+}).catch(error => {
+  console.error('Failed to initialize modules:', error);
 });
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
