@@ -226,7 +226,6 @@ function showSystemMessage(message) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // First try to extract content from current page
   chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     const currentTab = tabs[0];
     
@@ -253,23 +252,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
       });
 
-      // Store the extracted content in session storage for API calls
-      chrome.storage.session.set({ currentPageContent: pageContent });
+      // Then try to show KinKong with the extracted content
+      try {
+        await chrome.tabs.sendMessage(currentTab.id, {
+          type: 'showKinKongIfInactive',
+          pageContent: pageContent
+        });
+      } catch (e) {
+        // If message fails (content script not present), inject it first
+        chrome.runtime.sendMessage({
+          type: 'INJECT_CONTENT',
+          pageContent: pageContent
+        });
+      }
 
     } catch (error) {
       console.error('Error extracting page content:', error);
-    }
-
-    // Then try to show KinKong
-    try {
-      await chrome.tabs.sendMessage(currentTab.id, {
-        type: 'showKinKongIfInactive'
-      });
-    } catch (e) {
-      // If message fails (content script not present), inject it
-      chrome.runtime.sendMessage({
-        type: 'INJECT_CONTENT'
-      });
     }
   });
 
