@@ -41,35 +41,6 @@ console.error = function(...args) {
   consoleError.apply(console, args);
 };
 
-
-// Helper function to find content using multiple selectors and text matching
-function findContent(selectors) {
-  for (const selector of selectors) {
-    // Handle special case for text content matching
-    if (selector.includes(':contains(')) {
-      const basicSelector = selector.split(':contains(')[0];
-      const searchText = selector.match(/contains\("(.+)"\)/)[1];
-      
-      // Find elements matching basic selector
-      const elements = document.querySelectorAll(basicSelector);
-      for (const element of elements) {
-        if (element.textContent.includes(searchText)) {
-          return element.textContent.trim();
-        }
-      }
-      continue;
-    }
-
-    // Regular selector
-    const element = document.querySelector(selector);
-    if (element) {
-      const text = element.textContent.trim();
-      if (text) return text;
-    }
-  }
-  return '';
-}
-
 function extractVisibleContent() {
   // Get main content elements in order of likely relevance
   const mainSelectors = [
