@@ -1,3 +1,5 @@
+import { getOrCreateWalletId } from './src/chat/chat-interface.js';
+
 async function fetchSignals() {
   try {
     const response = await fetch('https://swarmtrade.ai/api/signals');
@@ -246,8 +248,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Configure premium subscription link with code
   const premiumLink = document.getElementById('premium-link');
   try {
-    const codeId = await getOrCreateCodeId();
-    premiumLink.href = `https://swarmtrade.ai/copilot#${codeId}`;
+    const walletId = await getOrCreateWalletId();
+    premiumLink.href = `https://swarmtrade.ai/copilot#${walletId}`;
     premiumLink.target = '_blank'; // Ensure it opens in new tab
     premiumLink.rel = 'noopener noreferrer'; // Security best practices
   } catch (error) {
