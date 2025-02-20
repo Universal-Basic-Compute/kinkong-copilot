@@ -6,6 +6,8 @@ import { waitForDexScreenerElements, waitForXContent } from '../utils/dom-utils.
 import { extractVisibleContent, extractXContent } from '../content/content-extractor.js';
 import { makeApiCall } from '../api/api-client.js';
 
+let lastApiCallUrl = null;
+
 export async function handleUrlChange() {
   try {
     const pageType = isSupportedPage();
@@ -33,6 +35,16 @@ export async function handleUrlChange() {
     
     // Wait 5 seconds silently before proceeding
     await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Only make API call if URL hasn't changed during wait
+    const currentUrl = window.location.href;
+    if (currentUrl === lastApiCallUrl) {
+      console.log('Skipping duplicate API call for:', currentUrl);
+      return;
+    }
+    
+    // Mark this URL as having an API call in progress
+    lastApiCallUrl = currentUrl;
     
     let elementsLoaded = false;
     if (pageType === 'dexscreener') {
@@ -68,7 +80,7 @@ export async function handleUrlChange() {
     try {
       const response = await makeApiCall('copilot', {
         message: initialMessage,
-        url: window.location.href,
+        url: currentUrl,  // Use URL from when API call was initiated
         pageContent: pageContent,
         pageType: pageType,
         fullyLoaded: elementsLoaded
