@@ -1,5 +1,7 @@
 import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
+import { makeApiCall } from '../api/api-client.js';
+import { showMessageParagraphs } from '../handlers/url-handler.js';
 
 // Cache for interface elements
 let interfaceElements = null;
@@ -341,11 +343,65 @@ async function initializeChatInterface(shadow) {
   const input = chatContainer.querySelector('.kinkong-chat-input');
   const sendButton = chatContainer.querySelector('.kinkong-chat-send');
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const message = input.value.trim();
     if (message) {
+      // Add user message to chat
       addMessageToChatContainer(message, true);
       input.value = '';
+
+      // Add loading indicator
+      const loadingId = 'loading-' + Date.now();
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.id = loadingId;
+      loadingIndicator.className = 'typing-indicator';
+      loadingIndicator.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      `;
+      messagesContainer.appendChild(loadingIndicator);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      try {
+        // Make API call
+        const response = await makeApiCall('copilot', {
+          message: message,
+          url: window.location.href,
+          pageContent: null,
+          pageType: null,
+          fullyLoaded: true
+        });
+
+        // Remove loading indicator
+        const loadingElement = messagesContainer.querySelector(`#${loadingId}`);
+        if (loadingElement) {
+          loadingElement.remove();
+        }
+
+        const responseText = await response.text();
+        
+        // Get shadow root for bubble display
+        const shadowContainer = document.getElementById('kinkong-shadow-container');
+        if (!shadowContainer || !shadowContainer.shadowRoot) {
+          throw new Error('Shadow container not found');
+        }
+        const shadow = shadowContainer.shadowRoot;
+
+        // Add full message to chat history
+        addMessageToChatContainer(responseText, false);
+
+        // Show paragraphs one by one in bubbles
+        await showMessageParagraphs(responseText, shadow);
+
+      } catch (error) {
+        console.error('API Error:', error);
+        document.getElementById(loadingId)?.remove();
+        addMessageToChatContainer(
+          "Sorry, I'm having trouble connecting right now. Please try again later.",
+          false
+        );
+      }
     }
   };
 
