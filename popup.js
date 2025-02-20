@@ -282,44 +282,57 @@ async function connectPhantomWallet() {
   const walletStatus = document.getElementById('wallet-status');
 
   try {
-    // Check if Phantom is installed by looking at window.solana
-    if (!window?.solana?.isPhantom) {
-      walletStatus.textContent = 'Please install Phantom wallet';
+    // Send message to content script to initiate Phantom connection
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    // First check if we're on a webpage (not chrome:// or edge://)
+    if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+      walletStatus.textContent = 'Please open wallet on a webpage';
       walletStatus.style.color = '#e74c3c';
-      // Open Phantom install page
-      window.open('https://phantom.app/', '_blank');
       return;
     }
 
-    try {
-      // Request connection using Phantom's connect method
-      const resp = await window.solana.connect();
-      const publicKey = resp.publicKey.toString();
-      
-      // Update button state
-      connectWalletBtn.classList.add('wallet-connected');
-      connectWalletBtn.innerHTML = `
-        <span class="wallet-icon">✓</span>
-        ${publicKey.slice(0, 6)}...${publicKey.slice(-4)}
-      `;
-      
-      walletStatus.textContent = 'Phantom wallet connected';
-      walletStatus.style.color = '#2ecc71';
-
-      // Save wallet connection state
-      chrome.storage.local.set({
-        walletConnected: true,
-        walletAddress: publicKey
-      });
-
-    } catch (err) {
-      if (err.code === 4001) {
-        // User rejected the connection
-        walletStatus.textContent = 'Connection rejected by user';
-      } else {
-        throw err;
+    // Send message to content script
+    chrome.tabs.sendMessage(tab.id, { 
+      type: 'PHANTOM_CONNECT_REQUEST' 
+    }, response => {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError);
+        walletStatus.textContent = 'Error connecting to page';
+        walletStatus.style.color = '#e74c3c';
+        return;
       }
-    }
+
+      if (response.error) {
+        if (response.error === 'Phantom not installed') {
+          walletStatus.textContent = 'Please install Phantom wallet';
+          walletStatus.style.color = '#e74c3c';
+          window.open('https://phantom.app/', '_blank');
+        } else {
+          walletStatus.textContent = response.error;
+          walletStatus.style.color = '#e74c3c';
+        }
+        return;
+      }
+
+      if (response.publicKey) {
+        // Update button state
+        connectWalletBtn.classList.add('wallet-connected');
+        connectWalletBtn.innerHTML = `
+          <span class="wallet-icon">✓</span>
+          ${response.publicKey.slice(0, 6)}...${response.publicKey.slice(-4)}
+        `;
+        
+        walletStatus.textContent = 'Phantom wallet connected';
+        walletStatus.style.color = '#2ecc71';
+
+        // Save wallet connection state
+        chrome.storage.local.set({
+          walletConnected: true,
+          walletAddress: response.publicKey
+        });
+      }
+    });
 
   } catch (error) {
     console.error('Phantom connection error:', error);

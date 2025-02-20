@@ -89,6 +89,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chatContainer.classList.remove('visible');
     }
   }
+  
+  if (message.type === 'PHANTOM_CONNECT_REQUEST') {
+    // Forward the request to the page through our existing bridge
+    window.postMessage({ type: 'PHANTOM_CONNECT_REQUEST' }, '*');
+    
+    // Set up one-time listener for the response
+    const messageHandler = (event) => {
+      if (event.data.type === 'PHANTOM_CONNECT_RESPONSE') {
+        window.removeEventListener('message', messageHandler);
+        sendResponse(event.data);
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    return true; // Will respond asynchronously
+  }
 });
 
 // Suppress ResizeObserver errors
