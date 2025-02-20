@@ -53,12 +53,20 @@ export async function handleUrlChange() {
       elementsLoaded = true;
     }
     
-    const pageContent = pageType === 'x' ? extractXContent() : extractVisibleContent();
+    // Handle PDF content differently
+    const isPDF = window.location.href.toLowerCase().endsWith('.pdf');
+    const pageContent = isPDF ? 
+      await extractPDFContent() : 
+      (pageType === 'x' ? extractXContent() : extractVisibleContent());
+
     if (!pageContent) {
       throw new Error('Failed to extract page content');
     }
 
-    const initialMessage = getInitialMessage(pageType);
+    // Modify initial message for PDFs
+    const initialMessage = isPDF ? 
+      "I'm looking at this PDF document. What would you like to know about it?" :
+      getInitialMessage(pageType);
     addMessageToChatContainer(initialMessage, true);
 
     const loadingId = 'loading-' + Date.now();

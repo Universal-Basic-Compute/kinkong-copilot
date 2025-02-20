@@ -1,4 +1,55 @@
+export async function extractPDFContent() {
+  try {
+    // Check if it's a PDF URL
+    if (!window.location.href.toLowerCase().endsWith('.pdf')) {
+      return null;
+    }
+
+    // For PDFs loaded in browser
+    const pdfContent = {
+      url: window.location.href,
+      pageContent: {
+        title: document.title,
+        mainContent: ''
+      }
+    };
+
+    // Try to get text content from PDF viewer
+    const textElements = document.querySelectorAll('.textLayer div');
+    if (textElements.length > 0) {
+      pdfContent.pageContent.mainContent = Array.from(textElements)
+        .map(el => el.textContent)
+        .join(' ')
+        .trim();
+      return pdfContent;
+    }
+
+    // Fallback: try to get content from embedded PDF viewer
+    const embedElement = document.querySelector('embed[type="application/pdf"]');
+    if (embedElement) {
+      pdfContent.pageContent.mainContent = "PDF document detected. Please provide the specific sections you'd like me to analyze.";
+      return pdfContent;
+    }
+
+    return pdfContent;
+  } catch (error) {
+    console.error('Error extracting PDF content:', error);
+    return {
+      url: window.location.href,
+      pageContent: {
+        title: document.title,
+        mainContent: "PDF document detected. Please provide the specific sections you'd like me to analyze."
+      }
+    };
+  }
+}
+
 export function extractVisibleContent() {
+  // Check if it's a PDF first
+  if (window.location.href.toLowerCase().endsWith('.pdf')) {
+    return extractPDFContent();
+  }
+
   const mainSelectors = [
     'main',
     'article',
