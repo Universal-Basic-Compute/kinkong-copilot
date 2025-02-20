@@ -318,104 +318,38 @@ function isElementFullyVisibleAtTop(element, container) {
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
-  const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
+  // First get interface elements and ensure they exist
+  const elements = await ensureChatInterface();
   
-  if (messagesContainer) {
-    if (!chatContainer.classList.contains('visible')) {
-      chatContainer.style.display = 'flex';
-      requestAnimationFrame(() => {
-        chatContainer.classList.add('visible');
-      });
-    }
-    
-    if (copilotImage) {
-      copilotImage.style.animation = 'none';
-    }
-
-    // Function to smoothly scroll to an element
-    const smoothScrollToElement = (element) => {
-      const targetPosition = element.offsetTop;
-      const startPosition = messagesContainer.scrollTop;
-      const distance = targetPosition - startPosition;
-      const duration = 300; // ms
-      let start = null;
-      
-      const animation = (currentTime) => {
-        if (!start) start = currentTime;
-        const progress = currentTime - start;
-        const percentage = Math.min(progress / duration, 1);
-        
-        // Easing function for smooth animation
-        const easeOutCubic = percentage => 1 - Math.pow(1 - percentage, 3);
-        
-        messagesContainer.scrollTop = startPosition + distance * easeOutCubic(percentage);
-        
-        if (percentage < 1) {
-          requestAnimationFrame(animation);
-        }
-      };
-      
-      requestAnimationFrame(animation);
-    };
-
-    // Split messages only for bot responses (non-user messages)
-    if (!isUser) {
-      const paragraphs = message.split(/\n\s*\n/);
-      const WORDS_PER_MINUTE = 250;
-      const MILLISECONDS_PER_WORD = (60 * 1000) / WORDS_PER_MINUTE;
-      
-      for (const paragraph of paragraphs) {
-        if (paragraph.trim()) {
-          const tempDiv = document.createElement('div');
-          tempDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
-          tempDiv.style.opacity = '0';
-          tempDiv.style.transform = 'translateY(10px)';
-          tempDiv.style.transition = 'all 0.3s ease';
-          tempDiv.innerHTML = formatMessage(paragraph.trim());
-          
-          messagesContainer.appendChild(tempDiv);
-          
-          // Check if the new bubble is fully visible at the top
-          if (!isElementFullyVisibleAtTop(tempDiv, messagesContainer)) {
-            tempDiv.remove();
-            continue;
-          }
-          
-          // Trigger fade-in animation and scroll
-          await new Promise(resolve => setTimeout(() => {
-            tempDiv.style.opacity = '1';
-            tempDiv.style.transform = 'translateY(0)';
-            
-            // Smooth scroll to the new message
-            tempDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            resolve();
-          }, 100));
-
-          const wordCount = paragraph.trim().split(/\s+/).length;
-          const readingDelay = Math.max(500, wordCount * MILLISECONDS_PER_WORD);
-          await new Promise(resolve => setTimeout(resolve, readingDelay));
-        }
-      }
-    } else {
-      // User messages
-      const tempDiv = document.createElement('div');
-      tempDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
-      tempDiv.innerHTML = formatMessage(message);
-      
-      messagesContainer.appendChild(tempDiv);
-      
-      // Check if the new bubble is fully visible at the top
-      if (!isElementFullyVisibleAtTop(tempDiv, messagesContainer)) {
-        tempDiv.remove();
-        return;
-      }
-      
-      // Smooth scroll to the new message
-      tempDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    
-    if (shouldSave) {
-      saveMessage(message, isUser);
-    }
+  if (!elements || !elements.messagesContainer) {
+    console.error('Chat interface not ready');
+    return;
   }
+
+  const { messagesContainer, chatContainer } = elements;
+  
+  console.log('Adding message:', {
+    message,
+    isUser,
+    containerExists: !!messagesContainer,
+    messageLength: message.length
+  });
+
+  // Create the message element
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+  messageDiv.innerHTML = formatMessage(message);
+  
+  // Add to container
+  messagesContainer.appendChild(messageDiv);
+  
+  // Scroll into view
+  messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Save if needed
+  if (shouldSave) {
+    saveMessage(message, isUser);
+  }
+
+  return messageDiv; // Return for testing
 }
