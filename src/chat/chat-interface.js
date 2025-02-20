@@ -312,6 +312,16 @@ export async function injectFloatingCopilot() {
   });
 }
 
+// Helper function to check if element is fully visible at top
+function isElementFullyVisibleAtTop(element, container) {
+  const elementRect = element.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const elementTop = elementRect.top - containerRect.top;
+  
+  // Check if the element's top edge is cut off
+  return elementTop >= 0;
+}
+
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
   const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
   
@@ -361,19 +371,28 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
       
       for (const paragraph of paragraphs) {
         if (paragraph.trim()) {
-          messagesContainer.innerHTML += `
-            <div class="kinkong-message ${isUser ? 'user' : 'bot'}" style="opacity: 0; transform: translateY(10px); transition: all 0.3s ease">
-              ${formatMessage(paragraph.trim())}
-            </div>
-          `;
+          const tempDiv = document.createElement('div');
+          tempDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+          tempDiv.style.opacity = '0';
+          tempDiv.style.transform = 'translateY(10px)';
+          tempDiv.style.transition = 'all 0.3s ease';
+          tempDiv.innerHTML = formatMessage(paragraph.trim());
           
-          const newBubble = messagesContainer.lastElementChild;
+          messagesContainer.appendChild(tempDiv);
+          
+          // Check if the new bubble is fully visible at the top
+          if (!isElementFullyVisibleAtTop(tempDiv, messagesContainer)) {
+            tempDiv.remove();
+            continue;
+          }
           
           // Trigger fade-in animation and scroll
           await new Promise(resolve => setTimeout(() => {
-            newBubble.style.opacity = '1';
-            newBubble.style.transform = 'translateY(0)';
-            smoothScrollToElement(newBubble);
+            tempDiv.style.opacity = '1';
+            tempDiv.style.transform = 'translateY(0)';
+            
+            // Smooth scroll to the new message
+            tempDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             resolve();
           }, 100));
 
@@ -384,15 +403,20 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
       }
     } else {
       // User messages
-      messagesContainer.innerHTML += `
-        <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
-          ${formatMessage(message)}
-        </div>
-      `;
+      const tempDiv = document.createElement('div');
+      tempDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+      tempDiv.innerHTML = formatMessage(message);
       
-      // Scroll to the new user message
-      const newMessage = messagesContainer.lastElementChild;
-      smoothScrollToElement(newMessage);
+      messagesContainer.appendChild(tempDiv);
+      
+      // Check if the new bubble is fully visible at the top
+      if (!isElementFullyVisibleAtTop(tempDiv, messagesContainer)) {
+        tempDiv.remove();
+        return;
+      }
+      
+      // Smooth scroll to the new message
+      tempDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     
     if (shouldSave) {
