@@ -257,11 +257,28 @@ export function addMessageToChatContainer(message, isUser = true, shouldSave = t
       copilotImage.style.animation = 'none';
     }
 
-    messagesContainer.innerHTML += `
-      <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
-        ${formatMessage(message)}
-      </div>
-    `;
+    // Split messages only for bot responses (non-user messages)
+    if (!isUser) {
+      // Split on double line breaks to preserve intended paragraphs
+      const paragraphs = message.split(/\n\s*\n/);
+      paragraphs.forEach(paragraph => {
+        if (paragraph.trim()) { // Only add non-empty paragraphs
+          messagesContainer.innerHTML += `
+            <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
+              ${formatMessage(paragraph.trim())}
+            </div>
+          `;
+        }
+      });
+    } else {
+      // User messages remain unchanged - single bubble
+      messagesContainer.innerHTML += `
+        <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
+          ${formatMessage(message)}
+        </div>
+      `;
+    }
+
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     if (shouldSave) {
