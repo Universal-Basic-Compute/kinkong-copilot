@@ -55,16 +55,27 @@ export async function ensureChatInterface() {
 export async function injectFloatingCopilot() {
   return new Promise((resolve, reject) => {
     try {
-      // Create a shadow root container if it doesn't exist
+      // Create or get shadow root container
       let shadowContainer = document.getElementById('kinkong-shadow-container');
+      let shadow;
+
       if (!shadowContainer) {
+        // Create new container and shadow root if they don't exist
         shadowContainer = document.createElement('div');
         shadowContainer.id = 'kinkong-shadow-container';
-        document.body.appendChild(shadowContainer); // Add to document first
+        document.body.appendChild(shadowContainer);
+        shadow = shadowContainer.attachShadow({ mode: 'closed' });
+      } else {
+        // Get existing shadow root
+        shadow = shadowContainer.shadowRoot;
+        if (!shadow) {
+          // If container exists but no shadow root, attach new one
+          shadow = shadowContainer.attachShadow({ mode: 'closed' });
+        } else {
+          // If both container and shadow root exist, clear shadow root content
+          shadow.innerHTML = '';
+        }
       }
-      
-      // Create shadow root
-      const shadow = shadowContainer.attachShadow({ mode: 'closed' });
 
       // Get saved preference
       chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
