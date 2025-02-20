@@ -3,6 +3,60 @@ import { saveMessage } from './chat-storage.js';
 import { makeApiCall } from '../api/api-client.js';
 import { showMessageParagraphs } from '../handlers/url-handler.js';
 
+// Message queue system
+let messageQueue = [];
+let isProcessingQueue = false;
+
+async function processMessageQueue() {
+  if (isProcessingQueue || messageQueue.length === 0) return;
+  
+  isProcessingQueue = true;
+  
+  while (messageQueue.length > 0) {
+    const { message, isUser, shouldSave, shadow } = messageQueue[0];
+    
+    try {
+      const elements = await ensureChatInterface();
+      if (!elements || !elements.messagesContainer) {
+        throw new Error('Chat interface not ready');
+      }
+
+      const { messagesContainer } = elements;
+      
+      // For user messages or initial messages, add them instantly
+      if (isUser || shouldSave === false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+        messageDiv.innerHTML = formatMessage(message);
+        messagesContainer.appendChild(messageDiv);
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        // Use paragraph-by-paragraph display for received messages
+        await addMessageParagraphsToChat(message, isUser, messagesContainer);
+      }
+
+      // Save if needed
+      if (shouldSave) {
+        saveMessage(message, isUser);
+      }
+
+      // If there's a shadow, show speech bubbles
+      if (shadow) {
+        await showMessageParagraphs(message, shadow);
+      }
+      
+      // Remove processed message from queue
+      messageQueue.shift();
+      
+    } catch (error) {
+      console.error('Error processing message:', error);
+      messageQueue.shift(); // Remove failed message and continue
+    }
+  }
+  
+  isProcessingQueue = false;
+}
+
 // Activity tracking variables
 let userActivityTimeout;
 let messageInterval;
@@ -610,36 +664,11 @@ function setupActivityTracking(shadow) {
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
-  const elements = await ensureChatInterface();
+  // Add to queue
+  messageQueue.push({ message, isUser, shouldSave });
   
-  if (!elements || !elements.messagesContainer) {
-    console.error('Chat interface not ready');
-    return;
-  }
-
-  const { messagesContainer } = elements;
-  
-  console.log('Adding message:', {
-    message,
-    isUser,
-    containerExists: !!messagesContainer,
-    messageLength: message.length
-  });
-
-  // For user messages or initial messages, add them instantly
-  if (isUser || shouldSave === false) { // shouldSave=false indicates it's a stored/initial message
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
-    messageDiv.innerHTML = formatMessage(message);
-    messagesContainer.appendChild(messageDiv);
-    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  } else {
-    // Only use paragraph-by-paragraph display for received messages
-    await addMessageParagraphsToChat(message, isUser, messagesContainer);
-  }
-
-  // Save if needed
-  if (shouldSave) {
-    saveMessage(message, isUser);
+  // Start processing if not already running
+  if (!isProcessingQueue) {
+    processMessageQueue();
   }
 }
