@@ -1,4 +1,13 @@
 export async function makeApiCall(endpoint, data) {
+  // Add test wallet address
+  const testWallet = "BUYk3CnbsRrqZcKqhyqJrxQUBVRnqsK7GxgXdXcX3Gf9"; // Test Solana address
+
+  // Add wallet to request data
+  const requestData = {
+    ...data,
+    wallet: testWallet
+  };
+
   console.group('API Request Details');
   console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
   console.log('Request Headers:', {
@@ -6,7 +15,7 @@ export async function makeApiCall(endpoint, data) {
     'Accept': 'application/json',
     'Origin': window.location.origin
   });
-  console.log('Request Body:', JSON.stringify(data, null, 2));
+  console.log('Request Body:', JSON.stringify(requestData, null, 2));
   console.groupEnd();
 
   try {
@@ -18,7 +27,7 @@ export async function makeApiCall(endpoint, data) {
         'Content-Type': 'application/json',
         'Accept': 'text/plain, application/json'
       },
-      body: data
+      body: requestData
     });
 
     if (proxyResponse.error) {
