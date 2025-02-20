@@ -72,7 +72,7 @@ async function initializeChatInterface(shadow) {
       right: 30px;
       width: 380px;
       height: 500px;
-      background: rgba(26, 26, 26, 0.95);
+      background: rgba(26, 26, 26, 0.85);
       border: 1px solid rgba(255, 215, 0, 0.2);
       border-radius: 15px;
       overflow: hidden;
@@ -103,7 +103,7 @@ async function initializeChatInterface(shadow) {
       border-top: 1px solid rgba(255, 215, 0, 0.2);
       display: flex;
       gap: 12px;
-      background: rgba(26, 26, 26, 0.95);
+      background: rgba(26, 26, 26, 0.85);
       border-radius: 0 0 12px 12px;
     }
 
