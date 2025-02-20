@@ -242,7 +242,7 @@ export async function injectFloatingCopilot() {
   });
 }
 
-export function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
+export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
   const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
   
   if (messagesContainer) {
@@ -261,15 +261,38 @@ export function addMessageToChatContainer(message, isUser = true, shouldSave = t
     if (!isUser) {
       // Split on double line breaks to preserve intended paragraphs
       const paragraphs = message.split(/\n\s*\n/);
-      paragraphs.forEach(paragraph => {
-        if (paragraph.trim()) { // Only add non-empty paragraphs
+      
+      // Calculate reading time based on average reading speed (250 words per minute)
+      const WORDS_PER_MINUTE = 250;
+      const MILLISECONDS_PER_WORD = (60 * 1000) / WORDS_PER_MINUTE;
+      
+      for (const paragraph of paragraphs) {
+        if (paragraph.trim()) {
+          // Add the message bubble
           messagesContainer.innerHTML += `
-            <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
+            <div class="kinkong-message ${isUser ? 'user' : 'bot'}" style="opacity: 0; transform: translateY(10px); transition: all 0.3s ease">
               ${formatMessage(paragraph.trim())}
             </div>
           `;
+          
+          // Get the newly added message bubble
+          const newBubble = messagesContainer.lastElementChild;
+          
+          // Trigger animation
+          await new Promise(resolve => setTimeout(() => {
+            newBubble.style.opacity = '1';
+            newBubble.style.transform = 'translateY(0)';
+            resolve();
+          }, 100));
+
+          // Calculate delay based on word count
+          const wordCount = paragraph.trim().split(/\s+/).length;
+          const readingDelay = Math.max(500, wordCount * MILLISECONDS_PER_WORD);
+          
+          // Wait for reading time before showing next bubble
+          await new Promise(resolve => setTimeout(resolve, readingDelay));
         }
-      });
+      }
     } else {
       // User messages remain unchanged - single bubble
       messagesContainer.innerHTML += `
