@@ -680,7 +680,7 @@ async function initializeChatInterface(shadow) {
           
           rateLimitMessage.innerHTML = `
             <div style="margin-bottom: 10px;">
-              ⚠️ ${errorData.details || 'You've reached your free message limit.'}
+              ⚠️ ${errorData.details || 'You\'ve reached your free message limit.'}
             </div>
             <div style="margin-bottom: 10px;">
               Your limit will reset in ${remainingTime}.
