@@ -1,3 +1,4 @@
+import { formatMessage } from '../chat/message-formatter.js';
 import { isSupportedPage } from '../content/page-detector.js';
 import { ensureChatInterface, addMessageToChatContainer } from '../chat/chat-interface.js';
 import { displayStoredMessages } from '../chat/chat-storage.js';
