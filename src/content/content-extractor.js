@@ -9,7 +9,7 @@ export async function extractPDFContent() {
     const pdfContent = {
       url: window.location.href,
       pageContent: {
-        title: document.title,
+        title: document.title || 'PDF Document',
         mainContent: ''
       }
     };
@@ -21,24 +21,34 @@ export async function extractPDFContent() {
         .map(el => el.textContent)
         .join(' ')
         .trim();
-      return pdfContent;
+    } else {
+      // If no text layer, try to get content from embedded viewer
+      const embedElement = document.querySelector('embed[type="application/pdf"]');
+      if (embedElement) {
+        pdfContent.pageContent.mainContent = "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze.";
+      }
     }
 
-    // Fallback: try to get content from embedded PDF viewer
-    const embedElement = document.querySelector('embed[type="application/pdf"]');
-    if (embedElement) {
-      pdfContent.pageContent.mainContent = "PDF document detected. Please provide the specific sections you'd like me to analyze.";
-      return pdfContent;
+    // If still no content, provide a default message
+    if (!pdfContent.pageContent.mainContent) {
+      pdfContent.pageContent.mainContent = "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze.";
+    }
+
+    // Add metadata if available
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      pdfContent.pageContent.description = metaDescription.content;
     }
 
     return pdfContent;
+
   } catch (error) {
     console.error('Error extracting PDF content:', error);
     return {
       url: window.location.href,
       pageContent: {
-        title: document.title,
-        mainContent: "PDF document detected. Please provide the specific sections you'd like me to analyze."
+        title: document.title || 'PDF Document',
+        mainContent: "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze."
       }
     };
   }
