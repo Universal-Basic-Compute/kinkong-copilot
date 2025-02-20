@@ -9,19 +9,35 @@ const bridgeScript = document.createElement('script');
 bridgeScript.src = chrome.runtime.getURL('lib/marked-bridge.js');
 document.head.appendChild(bridgeScript);
 
-markedScript.onload = () => {
+// Wait for both scripts to load
+Promise.all([
+  new Promise(resolve => markedScript.onload = resolve),
+  new Promise(resolve => bridgeScript.onload = resolve)
+]).then(() => {
   markedReady = true;
   window.dispatchEvent(new Event('marked-ready'));
-};
+});
 
 export function formatMessage(text) {
-  if (markedReady && window.formatMarkdown) {
-    try {
-      return window.formatMarkdown(text);
-    } catch (e) {
-      console.error('Error formatting markdown:', e);
-      return text;
-    }
+  // Wait for marked to be ready
+  if (!markedReady || !window.formatMarkdown) {
+    // If marked isn't ready, add basic formatting
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/\n/g, '<br>');
   }
-  return text;
+
+  try {
+    const formattedText = window.formatMarkdown(text);
+    return formattedText
+      .replace(/<p>/g, '<div>')  // Replace paragraph tags with divs
+      .replace(/<\/p>/g, '</div>')  // Close div tags
+      .replace(/<pre>/g, '<pre style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; overflow-x: auto;">')  // Style code blocks
+      .replace(/<code>/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">'); // Style inline code
+  } catch (e) {
+    console.error('Error formatting markdown:', e);
+    return text;
+  }
 }
