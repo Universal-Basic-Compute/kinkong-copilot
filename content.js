@@ -9,6 +9,15 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'SERVER_PUSH') {
     handleContentPush(message.data);
   }
+  if (message.type === 'showKinKongIfInactive') {
+    const chatContainer = document.querySelector('#kinkong-shadow-container');
+    if (chatContainer && chatContainer.shadowRoot) {
+      const copilotImage = chatContainer.shadowRoot.querySelector('.kinkong-floating-copilot');
+      if (copilotImage) {
+        copilotImage.style.display = 'block';
+      }
+    }
+  }
 });
 
 async function handleContentPush(data) {

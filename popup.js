@@ -226,6 +226,13 @@ function showSystemMessage(message) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+  // Show KinKong if it was hidden
+  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, {
+      type: 'showKinKongIfInactive'
+    });
+  });
+
   // await checkSubscriptionStatus();
 
   // Add toggle control
