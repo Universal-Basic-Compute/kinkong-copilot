@@ -82,67 +82,7 @@ function formatMessage(text) {
 
 
 
-function ensureChatInterface() {
-  // Check if interface already exists
-  const existing = {
-    messagesContainer: document.querySelector('.kinkong-chat-messages'),
-    chatContainer: document.querySelector('.kinkong-chat-container'),
-    copilotImage: document.querySelector('.kinkong-floating-copilot')
-  };
 
-  if (existing.messagesContainer && existing.chatContainer && existing.copilotImage) {
-    return existing;
-  }
-
-  // If not exists, create it
-  try {
-    injectFloatingCopilot();
-    
-    // Get references to newly created elements
-    const elements = {
-      messagesContainer: document.querySelector('.kinkong-chat-messages'),
-      chatContainer: document.querySelector('.kinkong-chat-container'),
-      copilotImage: document.querySelector('.kinkong-floating-copilot')
-    };
-
-    // Verify all elements were created
-    if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
-      throw new Error('Failed to create one or more chat interface elements');
-    }
-
-    return elements;
-  } catch (error) {
-    console.error('Error creating chat interface:', error);
-    throw new Error('Failed to create chat interface: ' + error.message);
-  }
-}
-
-// Function to save messages
-async function saveMessage(message, isUser) {
-  const currentUrl = window.location.href;
-  try {
-    // Get existing messages for this URL
-    const result = await chrome.storage.local.get('chatMessages');
-    const urlMessages = result.chatMessages || {};
-    
-    // Initialize array for this URL if it doesn't exist
-    if (!urlMessages[currentUrl]) {
-      urlMessages[currentUrl] = [];
-    }
-    
-    // Add new message
-    urlMessages[currentUrl].push({
-      content: message,
-      isUser: isUser,
-      timestamp: Date.now()
-    });
-    
-    // Save back to storage
-    await chrome.storage.local.set({ chatMessages: urlMessages });
-  } catch (error) {
-    console.error('Error saving message:', error);
-  }
-}
 
 // Function to load messages for current URL
 async function loadMessages() {
