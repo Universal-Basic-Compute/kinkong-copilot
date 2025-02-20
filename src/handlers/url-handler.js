@@ -26,25 +26,23 @@ export async function handleUrlChange() {
       return;
     }
 
-    // Destructure messagesContainer from interfaceElements
     const { messagesContainer } = interfaceElements;
 
     await displayStoredMessages().catch(err => {
       console.warn('Failed to load stored messages:', err);
     });
     
+    // Store the URL we're starting the wait for
+    const initialUrl = window.location.href;
+    
     // Wait 5 seconds silently before proceeding
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    // Only make API call if URL hasn't changed during wait
-    const currentUrl = window.location.href;
-    if (currentUrl === lastApiCallUrl) {
-      console.log('Skipping duplicate API call for:', currentUrl);
+    // If URL changed during wait, don't make the API call
+    if (window.location.href !== initialUrl) {
+      console.log('Page changed during wait, skipping API call');
       return;
     }
-    
-    // Mark this URL as having an API call in progress
-    lastApiCallUrl = currentUrl;
     
     let elementsLoaded = false;
     if (pageType === 'dexscreener') {
