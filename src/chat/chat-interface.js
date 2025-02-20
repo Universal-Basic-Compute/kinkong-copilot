@@ -686,22 +686,20 @@ async function initializeChatInterface(shadow) {
         
         let errorData;
         try {
-          // Try to parse the error.message if it's JSON
-          errorData = JSON.parse(error.message);
+          // First try to parse the response text from the error
+          if (error.message) {
+            errorData = JSON.parse(error.message);
+          }
         } catch (e) {
-          // If that fails, check if error itself is already parsed JSON
-          if (typeof error === 'string') {
-            try {
-              errorData = JSON.parse(error);
-            } catch (e2) {
-              errorData = { error: error };
-            }
-          } else {
-            errorData = error;
+          // If that fails, try parsing the error itself
+          try {
+            errorData = JSON.parse(error);
+          } catch (e2) {
+            errorData = { error: error.message || error };
           }
         }
 
-        if (errorData.error === 'Rate limit exceeded') {
+        if (errorData?.error === 'Rate limit exceeded') {
           // Set rate limit state
           await manageRateLimitState(true);
             
