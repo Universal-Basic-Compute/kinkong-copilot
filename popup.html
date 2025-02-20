@@ -434,8 +434,12 @@
     }
 
     .domain {
-      color: #666;
+      color: #bbb;
       font-weight: normal;
+    }
+
+    .app-item:hover .domain {
+      color: var(--primary-gold);
     }
 
     .app-desc {
@@ -511,6 +515,23 @@
       <div class="setting-item">
         <h4 class="settings-heading">Activated Websites</h4>
         <div class="app-list">
+          <div class="app-category">
+            <div class="category-header">
+              <span class="category-icon">⭐</span>
+              <span class="category-title">Official</span>
+            </div>
+            <div class="app-grid">
+              <a href="https://swarmtrade.ai" target="_blank" class="app-item">
+                <div class="app-name">swarmtrade<span class="domain">.ai</span></div>
+                <div class="app-desc">AI trading signals</div>
+              </a>
+              <a href="https://universalbasiccompute.ai" target="_blank" class="app-item">
+                <div class="app-name">ubc<span class="domain">.ai</span></div>
+                <div class="app-desc">Web3 compute network</div>
+              </a>
+            </div>
+          </div>
+
           <div class="app-category">
             <div class="category-header">
               <span class="category-icon">💱</span>
@@ -614,22 +635,6 @@
         </div>
           </div>
 
-          <div class="app-category">
-            <div class="category-header">
-              <span class="category-icon">⭐</span>
-              <span class="category-title">Official</span>
-            </div>
-            <div class="app-grid">
-          <a href="https://swarmtrade.ai" target="_blank" class="app-item">
-            <div class="app-name">swarmtrade<span class="domain">.ai</span></div>
-            <div class="app-desc">AI trading signals</div>
-          </a>
-          <a href="https://universalbasiccompute.ai" target="_blank" class="app-item">
-            <div class="app-name">ubc<span class="domain">.ai</span></div>
-            <div class="app-desc">Web3 compute network</div>
-          </a>
-        </div>
-          </div>
         </div>
       </div>
     </div>
