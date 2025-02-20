@@ -61,9 +61,14 @@ async function manageRateLimitState(isLimited = true) {
   }
 }
 
-// Function to check and reset rate limit
 async function checkAndResetRateLimit() {
   try {
+    // Check if extension context is still valid
+    if (!chrome.runtime?.id) {
+      console.log('Extension context invalidated, stopping rate limit check');
+      return;
+    }
+
     const result = await chrome.storage.local.get('rateLimitState');
     if (result.rateLimitState) {
       const { endTime } = result.rateLimitState;
@@ -71,15 +76,42 @@ async function checkAndResetRateLimit() {
       
       if (now >= endTime) {
         await manageRateLimitState(false);
+      } else {
+        // Only try to update UI if we can find the interface
+        try {
+          const elements = await ensureChatInterface();
+          if (elements?.chatContainer) {
+            const input = elements.chatContainer.querySelector('.kinkong-chat-input');
+            if (input && input.disabled) {
+              const remainingTime = getRemainingHoursText(endTime);
+              input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
+            }
+          }
+        } catch (e) {
+          // Silently fail if we can't update UI
+          console.log('Could not update rate limit UI:', e);
+        }
       }
     }
   } catch (error) {
-    console.error('Error checking rate limit:', error);
+    // Log error but don't throw
+    console.log('Rate limit check error:', error);
   }
 }
 
-// Set up periodic check
-setInterval(checkAndResetRateLimit, 60000); // Check every minute
+// Setup periodic check with context validation
+const rateLimitInterval = setInterval(() => {
+  if (!chrome.runtime?.id) {
+    clearInterval(rateLimitInterval);
+    return;
+  }
+  checkAndResetRateLimit();
+}, 60000);
+
+// Clean up interval when extension is unloaded
+window.addEventListener('unload', () => {
+  clearInterval(rateLimitInterval);
+});
 
 async function processMessageQueue() {
   if (isProcessingQueue || messageQueue.length === 0) return;
