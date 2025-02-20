@@ -106,7 +106,7 @@ export async function injectFloatingCopilot() {
           }
 
           .kinkong-message {
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             padding: 8px 12px;
             border-radius: 18px;
             max-width: 85%;
