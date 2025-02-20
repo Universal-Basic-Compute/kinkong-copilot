@@ -237,33 +237,6 @@ async function isSiteActivated(siteName) {
   return await getSiteActivationState(siteName);
 }
 
-async function getOrCreateCodeId() {
-  try {
-    // Try to get existing code ID from storage
-    const result = await chrome.storage.local.get('codeId');
-    if (result.codeId) {
-      return result.codeId;
-    }
-
-    // Generate new code ID using crypto API
-    const buffer = new Uint8Array(32);
-    crypto.getRandomValues(buffer);
-    
-    // Convert to hex string and take first 32 chars
-    const codeId = Array.from(buffer)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('')
-      .substring(0, 32);
-
-    // Store the code ID
-    await chrome.storage.local.set({ codeId: codeId });
-
-    return codeId;
-  } catch (error) {
-    console.error('Error managing code ID:', error);
-    return 'DEFAULT';
-  }
-}
 
 document.addEventListener('DOMContentLoaded', async function() {
   // Set version number
