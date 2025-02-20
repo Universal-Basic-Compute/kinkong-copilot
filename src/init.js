@@ -4,12 +4,14 @@ import { injectFloatingCopilot } from './chat/chat-interface.js';
 import { handleUrlChange } from './handlers/url-handler.js';
 
 const INIT_FLAG = 'kinkong-initialized';
+let urlObserver = null;
 
 // Initialize chat interface
 export async function initialize() {
   // Check if already initialized
   if (window[INIT_FLAG]) {
-    console.warn('KinKong already initialized');
+    console.log('KinKong already initialized, setting up URL observer only');
+    setupUrlObserver();
     return;
   }
   
@@ -33,19 +35,30 @@ export async function initialize() {
     window[INIT_FLAG] = true;
     
     // Set up URL change listener
-    let lastUrl = location.href;
-    new MutationObserver(() => {
-      const url = location.href;
-      if (url !== lastUrl) {
-        console.log('URL changed to:', url);
-        lastUrl = url;
-        handleUrlChangeIfEnabled();
-      }
-    }).observe(document, {subtree: true, childList: true});
+    setupUrlObserver();
 
   } catch (error) {
     console.error('Error during initialization:', error);
   }
+}
+
+function setupUrlObserver() {
+  // Remove existing observer if any
+  if (urlObserver) {
+    urlObserver.disconnect();
+  }
+
+  let lastUrl = location.href;
+  urlObserver = new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+      console.log('URL changed to:', url);
+      lastUrl = url;
+      handleUrlChangeIfEnabled();
+    }
+  });
+  
+  urlObserver.observe(document, {subtree: true, childList: true});
 }
 
 async function handleUrlChangeIfEnabled() {
