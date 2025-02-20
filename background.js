@@ -94,11 +94,61 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       
       try {
-        // Inject all necessary files
+        // First inject all required files
         await chrome.scripting.executeScript({
           target: {tabId: tab.id},
-          files: ['content.js']
+          files: [
+            'lib/marked.min.js',
+            'lib/marked-bridge.js',
+            'content.js'
+          ]
         });
+
+        // Inject CSS resources
+        await chrome.scripting.insertCSS({
+          target: {tabId: tab.id},
+          css: `
+            .kinkong-chat-container {
+              position: fixed;
+              bottom: 140px;
+              right: 30px;
+              width: 380px;
+              height: 500px;
+              background: rgba(26, 26, 26, 0.85);
+              border: 1px solid rgba(255, 215, 0, 0.2);
+              border-radius: 15px;
+              overflow: hidden;
+              box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+              display: none;
+              flex-direction: column;
+              z-index: 999999;
+              opacity: 0;
+              transform: translateY(20px);
+              transition: all 0.3s ease;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .kinkong-floating-copilot {
+              position: fixed;
+              bottom: 30px;
+              right: 30px;
+              width: 90px;
+              height: 90px;
+              cursor: pointer;
+              z-index: 999999;
+              animation: kinkong-float 3s ease-in-out infinite;
+              filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+              transition: all 0.3s ease;
+            }
+
+            @keyframes kinkong-float {
+              0% { transform: translateY(0px); }
+              50% { transform: translateY(-10px); }
+              100% { transform: translateY(0px); }
+            }
+          `
+        });
+
         // Send follow-up message to show KinKong
         chrome.tabs.sendMessage(tab.id, {
           type: 'showKinKongIfInactive'

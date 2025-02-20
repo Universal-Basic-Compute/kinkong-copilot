@@ -10,13 +10,16 @@ chrome.runtime.onMessage.addListener((message) => {
     handleContentPush(message.data);
   }
   if (message.type === 'showKinKongIfInactive') {
-    const chatContainer = document.querySelector('#kinkong-shadow-container');
-    if (chatContainer && chatContainer.shadowRoot) {
-      const copilotImage = chatContainer.shadowRoot.querySelector('.kinkong-floating-copilot');
-      if (copilotImage) {
-        copilotImage.style.display = 'block';
-      }
-    }
+    initializeModules().then(loadedModules => {
+      modules = loadedModules;
+      ensureChatInterface().then(elements => {
+        if (elements.copilotImage) {
+          elements.copilotImage.style.display = 'block';
+        }
+      });
+    }).catch(error => {
+      console.error('Failed to initialize modules:', error);
+    });
   }
 });
 
