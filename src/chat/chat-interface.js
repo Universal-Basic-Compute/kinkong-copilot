@@ -73,7 +73,7 @@ const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
 // Cache for interface elements
 // Wallet ID management
-export async function getOrCreateCodeId() {
+export async function getOrCreateWalletId() {
   try {
     // Try to get existing code ID from storage
     const result = await chrome.storage.local.get('codeId');
@@ -96,7 +96,7 @@ export async function getOrCreateCodeId() {
 
     return codeId;
   } catch (error) {
-    console.error('Error managing code ID:', error);
+    console.error('Error managing wallet ID:', error);
     return 'DEFAULT';
   }
 }
