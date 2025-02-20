@@ -1,10 +1,11 @@
 import { ensureChatInterface, addMessageToChatContainer } from './src/chat/chat-interface.js';
+import { findContent } from './src/utils/dom-utils.js';
 
 // Track when marked is loaded
 let markedReady = false;
 let copilotEnabled = true;
 
-// Add message listener
+// Add message listener 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'updateCopilotState') {
     copilotEnabled = message.enabled;
