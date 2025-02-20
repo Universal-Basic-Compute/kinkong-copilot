@@ -509,45 +509,39 @@ function handleUserActivity() {
   // Start interval if not already running
   if (!messageInterval) {
     messageInterval = setInterval(async () => {
-      const elements = await ensureChatInterface();
-      if (!elements || !elements.chatContainer) return;
+      const message = "what else?";
+      addMessageToChatContainer(message, true);
 
-      // Only send if chat is open
-      if (elements.chatContainer.classList.contains('visible')) {
-        const message = "what else?";
-        addMessageToChatContainer(message, true);
+      try {
+        const response = await makeApiCall('copilot', {
+          message: message,
+          url: window.location.href,
+          pageContent: null,
+          pageType: null,
+          fullyLoaded: true
+        });
 
-        try {
-          const response = await makeApiCall('copilot', {
-            message: message,
-            url: window.location.href,
-            pageContent: null,
-            pageType: null,
-            fullyLoaded: true
-          });
-
-          const responseText = await response.text();
-          
-          // Get shadow root for bubble display
-          const shadowContainer = document.getElementById('kinkong-shadow-container');
-          if (!shadowContainer || !shadowContainer.shadowRoot) {
-            throw new Error('Shadow container not found');
-          }
-          const shadow = shadowContainer.shadowRoot;
-
-          // Add response to chat
-          addMessageToChatContainer(responseText, false);
-
-          // Show paragraphs one by one in bubbles
-          await showMessageParagraphs(responseText, shadow);
-
-        } catch (error) {
-          console.error('Auto-message API Error:', error);
-          addMessageToChatContainer(
-            "Sorry, I'm having trouble connecting right now.",
-            false
-          );
+        const responseText = await response.text();
+        
+        // Get shadow root for bubble display
+        const shadowContainer = document.getElementById('kinkong-shadow-container');
+        if (!shadowContainer || !shadowContainer.shadowRoot) {
+          throw new Error('Shadow container not found');
         }
+        const shadow = shadowContainer.shadowRoot;
+
+        // Add response to chat
+        addMessageToChatContainer(responseText, false);
+
+        // Show paragraphs one by one in bubbles
+        await showMessageParagraphs(responseText, shadow);
+
+      } catch (error) {
+        console.error('Auto-message API Error:', error);
+        addMessageToChatContainer(
+          "Sorry, I'm having trouble connecting right now.",
+          false
+        );
       }
     }, MESSAGE_INTERVAL);
   }
