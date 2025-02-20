@@ -51,7 +51,8 @@
         "*://*.okx.com/*",
         "*://*.bybit.com/*",
         "*://*.gate.io/*",
-        "*://*.mexc.com/*"
+        "*://*.mexc.com/*",
+        "*://*.web.telegram.org/*"
       ],
       "js": ["content.js"],
       "type": "module",
