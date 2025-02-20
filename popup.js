@@ -282,10 +282,8 @@ async function connectPhantomWallet() {
   const walletStatus = document.getElementById('wallet-status');
 
   try {
-    // Check if Phantom is installed
-    const provider = window?.solana;
-    
-    if (!provider?.isPhantom) {
+    // Check if Phantom is installed by looking at window.solana
+    if (!window?.solana?.isPhantom) {
       walletStatus.textContent = 'Please install Phantom wallet';
       walletStatus.style.color = '#e74c3c';
       // Open Phantom install page
@@ -294,8 +292,8 @@ async function connectPhantomWallet() {
     }
 
     try {
-      // Connect to Phantom
-      const resp = await provider.connect();
+      // Request connection using Phantom's connect method
+      const resp = await window.solana.connect();
       const publicKey = resp.publicKey.toString();
       
       // Update button state
