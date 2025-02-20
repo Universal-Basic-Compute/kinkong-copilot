@@ -1,7 +1,15 @@
 import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
 
+// Cache for interface elements
+let interfaceElements = null;
+
 export async function ensureChatInterface() {
+  // Return cached elements if they exist
+  if (interfaceElements) {
+    return interfaceElements;
+  }
+
   console.group('Chat Interface Initialization');
   console.log('Checking for existing interface...');
   
@@ -28,21 +36,21 @@ export async function ensureChatInterface() {
       }
     }
 
-    // Return interface elements
-    const elements = {
+    // Cache and return interface elements
+    interfaceElements = {
       messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
       chatContainer: shadow.querySelector('.kinkong-chat-container'),
       copilotImage: shadow.querySelector('.kinkong-floating-copilot')
     };
 
     // Verify all elements exist
-    if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
+    if (!interfaceElements.messagesContainer || !interfaceElements.chatContainer || !interfaceElements.copilotImage) {
       throw new Error('Missing interface elements');
     }
 
     console.log('Interface ready');
     console.groupEnd();
-    return elements;
+    return interfaceElements;
 
   } catch (error) {
     console.error('Error ensuring chat interface:', error);

@@ -35,12 +35,20 @@ export async function loadMessages() {
 }
 
 export async function displayStoredMessages() {
-  const messages = await loadMessages();
-  const { messagesContainer } = ensureChatInterface();
-  
-  messagesContainer.innerHTML = '';
-  
-  messages.forEach(message => {
-    addMessageToChatContainer(message.content, message.isUser, false);
-  });
+  try {
+    const messages = await loadMessages();
+    const elements = await ensureChatInterface();
+    
+    if (!elements || !elements.messagesContainer) {
+      throw new Error('Chat interface not ready');
+    }
+    
+    elements.messagesContainer.innerHTML = '';
+    
+    for (const message of messages) {
+      await addMessageToChatContainer(message.content, message.isUser, false);
+    }
+  } catch (error) {
+    console.warn('Failed to display stored messages:', error);
+  }
 }
