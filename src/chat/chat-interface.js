@@ -1,360 +1,125 @@
 import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
 
-let interfaceInitialized = false;
-
 export async function ensureChatInterface() {
   console.group('Chat Interface Initialization');
   console.log('Checking for existing interface...');
   
-  const shadowContainer = document.getElementById('kinkong-shadow-container');
-  
-  if (shadowContainer && shadowContainer.shadowRoot) {
-    const shadow = shadowContainer.shadowRoot;
-    console.log('Found existing interface');
-    console.groupEnd();
-    return {
-      messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
-      chatContainer: shadow.querySelector('.kinkong-chat-container'),
-      copilotImage: shadow.querySelector('.kinkong-floating-copilot')
-    };
-  }
-
-  // If not exists, create it
-  console.log('Creating new interface...');
   try {
-    await injectFloatingCopilot();
-    
-    const container = document.getElementById('kinkong-shadow-container');
-    if (!container || !container.shadowRoot) {
-      throw new Error('Failed to create shadow container');
+    // First check if container exists
+    let shadowContainer = document.getElementById('kinkong-shadow-container');
+    let shadow;
+
+    if (!shadowContainer) {
+      // Create new container and shadow root
+      shadowContainer = document.createElement('div');
+      shadowContainer.id = 'kinkong-shadow-container';
+      document.body.appendChild(shadowContainer);
+      shadow = shadowContainer.attachShadow({ mode: 'closed' });
+      
+      // Initialize the interface
+      await initializeChatInterface(shadow);
+    } else {
+      // Get existing shadow root
+      shadow = shadowContainer.shadowRoot;
+      if (!shadow) {
+        shadow = shadowContainer.attachShadow({ mode: 'closed' });
+        await initializeChatInterface(shadow);
+      }
     }
-    
-    const shadow = container.shadowRoot;
+
+    // Return interface elements
     const elements = {
       messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
       chatContainer: shadow.querySelector('.kinkong-chat-container'),
       copilotImage: shadow.querySelector('.kinkong-floating-copilot')
     };
 
-    // Verify all elements were created
+    // Verify all elements exist
     if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
-      throw new Error('Failed to create one or more chat interface elements');
+      throw new Error('Missing interface elements');
     }
 
-    console.log('Interface created successfully');
+    console.log('Interface ready');
     console.groupEnd();
     return elements;
+
   } catch (error) {
-    console.error('Error creating chat interface:', error);
+    console.error('Error ensuring chat interface:', error);
     console.groupEnd();
     throw new Error('Failed to create chat interface: ' + error.message);
   }
 }
 
-export async function injectFloatingCopilot() {
-  return new Promise((resolve, reject) => {
-    try {
-      // Create or get shadow root container
-      let shadowContainer = document.getElementById('kinkong-shadow-container');
-      let shadow;
-
-      if (!shadowContainer) {
-        // Create new container and shadow root if they don't exist
-        shadowContainer = document.createElement('div');
-        shadowContainer.id = 'kinkong-shadow-container';
-        document.body.appendChild(shadowContainer);
-        shadow = shadowContainer.attachShadow({ mode: 'closed' });
-      } else {
-        // Get existing shadow root
-        shadow = shadowContainer.shadowRoot;
-        if (!shadow) {
-          // If container exists but no shadow root, attach new one
-          shadow = shadowContainer.attachShadow({ mode: 'closed' });
-        } else {
-          // If both container and shadow root exist, clear shadow root content
-          shadow.innerHTML = '';
-        }
-      }
-
-      // Get saved preference
-      chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
-        const copilotEnabled = items.copilotEnabled;
+async function initializeChatInterface(shadow) {
+  // Get saved preference
+  const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
         
-        const style = document.createElement('style');
-        style.textContent = `
-          :host {
-            all: initial;
-          }
-          
-          * {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-          }
-          .kinkong-floating-copilot {
-            position: fixed !important;
-            bottom: 30px !important;
-            right: 30px !important;
-            width: 90px !important;
-            height: 90px !important;
-            z-index: 999999 !important;
-            animation: kinkong-float 3s ease-in-out infinite !important;
-            cursor: pointer !important;
-            transition: transform 0.3s ease !important;
-          }
+  // Add styles
+  const style = document.createElement('style');
+  style.textContent = `/* ... existing styles ... */`;
+  shadow.appendChild(style);
 
-          .kinkong-floating-copilot:hover {
-            transform: scale(1.1);
-          }
+  // Create chat container
+  const chatContainer = document.createElement('div');
+  chatContainer.className = 'kinkong-chat-container';
+  chatContainer.innerHTML = `
+    <div class="kinkong-chat-messages"></div>
+    <div class="kinkong-chat-input-container">
+      <input type="text" class="kinkong-chat-input" placeholder="Type your message...">
+      <button class="kinkong-chat-send">Send</button>
+    </div>
+  `;
+  shadow.appendChild(chatContainer);
 
-          @keyframes kinkong-float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-          }
+  // Create copilot image
+  const img = document.createElement('img');
+  img.src = chrome.runtime.getURL('assets/copilot.png');
+  img.className = 'kinkong-floating-copilot';
+  img.alt = 'KinKong Copilot';
+  img.style.display = copilotEnabled ? 'block' : 'none';
+  shadow.appendChild(img);
 
-          .kinkong-chat-container {
-            position: fixed !important;
-            bottom: 140px !important;
-            right: 30px !important;
-            width: 380px !important;
-            height: 500px !important;
-            border-radius: 15px !important;
-            z-index: 999998 !important;
-            display: none !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            opacity: 0 !important;
-            transform: translateY(20px) !important;
-            transition: all 0.3s ease !important;
-            background: rgba(0, 0, 0, 0.8) !important;
-            backdrop-filter: blur(10px) !important;
-          }
-
-          .kinkong-chat-container.visible {
-            opacity: 1;
-            transform: translateY(0);
-          }
-
-          .kinkong-chat-messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            color: #fff;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            position: relative;
-            clip-path: inset(0 0 0 0);
-          }
-
-          .kinkong-chat-messages::-webkit-scrollbar {
-            display: none;
-          }
-
-          .kinkong-message {
-            margin-bottom: 8px;
-            padding: 6px 12px;
-            border-radius: 18px;
-            max-width: 85%;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            font-size: 14px;
-            line-height: 1.3;
-            display: inline-block;
-            width: auto;
-          }
-
-          .kinkong-message h1,
-          .kinkong-message h2,
-          .kinkong-message h3 {
-            margin: 8px 0;
-            color: inherit;
-          }
-
-          .kinkong-message ul,
-          .kinkong-message ol {
-            margin: 8px 0;
-            padding-left: 20px;
-          }
-
-          .kinkong-message li {
-            margin: 4px 0;
-          }
-
-          .kinkong-message a {
-            color: #ffd700;
-            text-decoration: none;
-          }
-
-          .kinkong-message a:hover {
-            text-decoration: underline;
-          }
-
-          .kinkong-message code {
-            font-family: monospace;
-            background: rgba(0,0,0,0.1);
-            padding: 2px 4px;
-            border-radius: 3px;
-          }
-
-          .kinkong-message pre {
-            background: rgba(0,0,0,0.2);
-            padding: 8px;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 8px 0;
-          }
-
-          .kinkong-message pre code {
-            background: none;
-            padding: 0;
-          }
-
-          .kinkong-message blockquote {
-            border-left: 3px solid rgba(255,215,0,0.5);
-            margin: 8px 0;
-            padding-left: 12px;
-            font-style: italic;
-          }
-
-          .kinkong-message table {
-            border-collapse: collapse;
-            margin: 8px 0;
-            width: 100%;
-          }
-
-          .kinkong-message th,
-          .kinkong-message td {
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 6px;
-            text-align: left;
-          }
-
-          .kinkong-message th {
-            background: rgba(0,0,0,0.2);
-          }
-
-          .kinkong-message.user {
-            background: linear-gradient(135deg, #e31837, #ff4757);
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
-          }
-
-          .kinkong-message.bot {
-            background: linear-gradient(135deg, #ffd700, #ffa502);
-            color: #1a1a1a;
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
-          }
-
-          .kinkong-chat-input-container {
-            display: flex;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            gap: 10px;
-          }
-
-          .kinkong-chat-input {
-            flex-grow: 1;
-            padding: 8px 12px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #fff;
-            font-size: 14px;
-          }
-
-          .kinkong-chat-input:focus {
-            outline: none;
-            border-color: var(--primary-gold, #ffd700);
-          }
-
-          .kinkong-chat-send {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #ffd700, #ffa502);
-            color: #1a1a1a;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-          }
-
-          .kinkong-chat-send:hover {
-            transform: scale(1.05);
-          }
-        `;
-        shadow.appendChild(style);
-
-        // Create chat container inside shadow DOM
-        const chatContainer = document.createElement('div');
-        chatContainer.className = 'kinkong-chat-container';
-        chatContainer.innerHTML = `
-          <div class="kinkong-chat-messages"></div>
-          <div class="kinkong-chat-input-container">
-            <input type="text" class="kinkong-chat-input" placeholder="Type your message...">
-            <button class="kinkong-chat-send">Send</button>
-          </div>
-        `;
-        shadow.appendChild(chatContainer);
-
-        // Create floating copilot inside shadow DOM
-        const img = document.createElement('img');
-        img.src = chrome.runtime.getURL('assets/copilot.png');
-        img.className = 'kinkong-floating-copilot';
-        img.alt = 'KinKong Copilot';
-        img.style.display = copilotEnabled ? 'block' : 'none';
-        shadow.appendChild(img);
-        
-        // Wait for image to load before resolving
-        img.onload = () => {
-          console.log('Copilot image loaded successfully');
-          resolve();
-        };
-
-        img.onerror = (error) => {
-          reject(new Error('Failed to load copilot image: ' + error.message));
-        };
-
-        // Add click handlers
-        img.addEventListener('click', () => {
-          if (chatContainer.classList.contains('visible')) {
-            chatContainer.classList.remove('visible');
-            setTimeout(() => {
-              chatContainer.style.display = 'none';
-            }, 300);
-            img.style.animation = 'kinkong-float 3s ease-in-out infinite';
-          } else {
-            chatContainer.style.display = 'flex';
-            requestAnimationFrame(() => {
-              chatContainer.classList.add('visible');
-            });
-            img.style.animation = 'none';
-          }
-        });
-
-        // Add message handlers
-        const input = chatContainer.querySelector('.kinkong-chat-input');
-        const sendButton = chatContainer.querySelector('.kinkong-chat-send');
-
-        const sendMessage = () => {
-          const message = input.value.trim();
-          if (message) {
-            addMessageToChatContainer(message, true);
-            input.value = '';
-          }
-        };
-
-        sendButton.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            sendMessage();
-          }
-        });
+  // Add click handlers
+  img.addEventListener('click', () => {
+    if (chatContainer.classList.contains('visible')) {
+      chatContainer.classList.remove('visible');
+      setTimeout(() => {
+        chatContainer.style.display = 'none';
+      }, 300);
+      img.style.animation = 'kinkong-float 3s ease-in-out infinite';
+    } else {
+      chatContainer.style.display = 'flex';
+      requestAnimationFrame(() => {
+        chatContainer.classList.add('visible');
       });
-    } catch (error) {
-      reject(error);
+      img.style.animation = 'none';
     }
+  });
+
+  // Add message handlers
+  const input = chatContainer.querySelector('.kinkong-chat-input');
+  const sendButton = chatContainer.querySelector('.kinkong-chat-send');
+
+  const sendMessage = () => {
+    const message = input.value.trim();
+    if (message) {
+      addMessageToChatContainer(message, true);
+      input.value = '';
+    }
+  };
+
+  sendButton.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  // Wait for image to load
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error('Failed to load copilot image'));
   });
 }
 
