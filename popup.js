@@ -226,10 +226,43 @@ function showSystemMessage(message) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // First try to send message directly
+  // First try to extract content from current page
   chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+    const currentTab = tabs[0];
+    
     try {
-      await chrome.tabs.sendMessage(tabs[0].id, {
+      // Skip chrome:// and edge:// URLs
+      if (!currentTab.url || currentTab.url.startsWith('chrome://') || currentTab.url.startsWith('edge://')) {
+        return;
+      }
+
+      // Execute content script to extract page content
+      const [{result: pageContent}] = await chrome.scripting.executeScript({
+        target: {tabId: currentTab.id},
+        func: () => {
+          // Simple content extraction function
+          const mainContent = document.body.innerText;
+          const title = document.title;
+          return {
+            url: window.location.href,
+            pageContent: {
+              title: title,
+              mainContent: mainContent
+            }
+          };
+        }
+      });
+
+      // Store the extracted content in session storage for API calls
+      chrome.storage.session.set({ currentPageContent: pageContent });
+
+    } catch (error) {
+      console.error('Error extracting page content:', error);
+    }
+
+    // Then try to show KinKong
+    try {
+      await chrome.tabs.sendMessage(currentTab.id, {
         type: 'showKinKongIfInactive'
       });
     } catch (e) {
