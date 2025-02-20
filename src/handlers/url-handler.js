@@ -188,9 +188,13 @@ export async function showMessageParagraphs(responseText, shadow) {
     await new Promise(resolve => setTimeout(resolve, readingTime));
   }
 
-  // Remove last bubble after timeout
+  // Remove last bubble after reading time
   const lastBubble = shadow.querySelector('.kinkong-speech-bubble');
   if (lastBubble) {
+    // Calculate reading time for the last paragraph
+    const lastParagraph = paragraphs[paragraphs.length - 1];
+    const lastReadingTime = getReadingTime(lastParagraph);
+    
     setTimeout(() => {
       if (shadow.contains(lastBubble)) {
         lastBubble.classList.add('fade-out');
@@ -200,7 +204,7 @@ export async function showMessageParagraphs(responseText, shadow) {
           }
         }, 300);
       }
-    }, 8000);
+    }, lastReadingTime); // Use calculated reading time instead of hardcoded 8000
   }
 }
 
