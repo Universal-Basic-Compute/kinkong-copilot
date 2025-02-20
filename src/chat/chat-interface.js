@@ -85,6 +85,8 @@ export async function injectFloatingCopilot() {
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
           }
 
           .kinkong-chat-container.visible {
@@ -99,6 +101,8 @@ export async function injectFloatingCopilot() {
             color: #fff;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            position: relative;
+            clip-path: inset(0 0 0 0);
           }
 
           .kinkong-chat-messages::-webkit-scrollbar {
@@ -316,9 +320,11 @@ export async function injectFloatingCopilot() {
 function isElementFullyVisibleAtTop(element, container) {
   const elementRect = element.getBoundingClientRect();
   const containerRect = container.getBoundingClientRect();
+  
+  // Get the actual top position relative to the container
   const elementTop = elementRect.top - containerRect.top;
   
-  // Check if the element's top edge is cut off
+  // Check if element starts at or below the container's top edge
   return elementTop >= 0;
 }
 
