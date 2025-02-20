@@ -23,7 +23,7 @@ export async function ensureChatInterface() {
       shadowContainer = document.createElement('div');
       shadowContainer.id = 'kinkong-shadow-container';
       document.body.appendChild(shadowContainer);
-      shadow = shadowContainer.attachShadow({ mode: 'closed' });
+      shadow = shadowContainer.attachShadow({ mode: 'open' });
       
       // Initialize the interface
       await initializeChatInterface(shadow);
@@ -70,17 +70,19 @@ async function initializeChatInterface(shadow) {
       position: fixed;
       bottom: 80px;
       right: 20px;
-      width: 300px;
-      height: 400px;
+      width: 350px;
+      height: 500px;
       background: #1a1a1a;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      border: 1px solid #333;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
       display: none;
       flex-direction: column;
       z-index: 999999;
       opacity: 0;
       transform: translateY(20px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition: all 0.3s ease;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .kinkong-chat-container.visible {
@@ -91,43 +93,68 @@ async function initializeChatInterface(shadow) {
     .kinkong-chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 15px;
+      padding: 20px;
+      scroll-behavior: smooth;
     }
 
     .kinkong-chat-input-container {
-      padding: 10px;
+      padding: 15px;
       border-top: 1px solid #333;
       display: flex;
-      gap: 10px;
+      gap: 12px;
+      background: #1a1a1a;
+      border-radius: 0 0 12px 12px;
     }
 
     .kinkong-chat-input {
       flex: 1;
-      padding: 8px;
-      border: 1px solid #333;
-      border-radius: 5px;
+      padding: 12px;
+      border: 1px solid #444;
+      border-radius: 8px;
       background: #2d2d2d;
       color: white;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .kinkong-chat-input:focus {
+      outline: none;
+      border-color: #ffd700;
+      box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
     }
 
     .kinkong-chat-send {
-      padding: 8px 15px;
-      background: #ffd700;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #ffd700, #ffb700);
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       color: black;
+      font-weight: bold;
       cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .kinkong-chat-send:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
     }
 
     .kinkong-floating-copilot {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       cursor: pointer;
       z-index: 999999;
       animation: kinkong-float 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      transition: all 0.3s ease;
+    }
+
+    .kinkong-floating-copilot:hover {
+      transform: scale(1.1);
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
     }
 
     @keyframes kinkong-float {
@@ -137,32 +164,48 @@ async function initializeChatInterface(shadow) {
     }
 
     .kinkong-message {
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      max-width: 80%;
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      max-width: 85%;
       word-wrap: break-word;
+      line-height: 1.4;
+      font-size: 14px;
+      animation: message-fade-in 0.3s ease;
+    }
+
+    @keyframes message-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .kinkong-message.user {
-      background: #2d2d2d;
+      background: linear-gradient(135deg, #2d2d2d, #333);
       margin-left: auto;
       color: white;
+      border-bottom-right-radius: 4px;
     }
 
     .kinkong-message.bot {
-      background: #333;
+      background: linear-gradient(135deg, #333, #383838);
       margin-right: auto;
       color: #ffd700;
+      border-bottom-left-radius: 4px;
     }
 
     .typing-indicator {
       display: flex;
       gap: 5px;
-      padding: 10px;
+      padding: 12px;
       background: #333;
-      border-radius: 5px;
-      margin-bottom: 10px;
+      border-radius: 12px;
+      margin-bottom: 15px;
       width: fit-content;
     }
 
@@ -185,16 +228,22 @@ async function initializeChatInterface(shadow) {
 
     /* Scrollbar styles */
     .kinkong-chat-messages::-webkit-scrollbar {
-      width: 5px;
+      width: 6px;
     }
 
     .kinkong-chat-messages::-webkit-scrollbar-track {
       background: #1a1a1a;
+      border-radius: 3px;
     }
 
     .kinkong-chat-messages::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 5px;
+      background: #444;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .kinkong-chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #555;
     }
   `;
   shadow.appendChild(style);
