@@ -369,23 +369,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
 
-  const connectWalletBtn = document.getElementById('connect-wallet');
-  const walletStatus = document.getElementById('wallet-status');
-
-  // Check if wallet was previously connected
-  chrome.storage.local.get(['walletConnected', 'walletAddress'], (result) => {
-    if (result.walletConnected && result.walletAddress) {
-      connectWalletBtn.classList.add('wallet-connected');
-      connectWalletBtn.innerHTML = `
-        <span class="wallet-icon">✓</span>
-        ${result.walletAddress.slice(0, 6)}...${result.walletAddress.slice(-4)}
-      `;
-      walletStatus.textContent = 'Phantom wallet connected';
-      walletStatus.style.color = '#2ecc71';
-    }
-  });
-
-  connectWalletBtn.addEventListener('click', connectPhantomWallet);
 
   const tradingSignals = document.getElementById('trading-signals');
   tradingSignals.innerHTML = '<div style="text-align: center;">Loading signals...</div>';
@@ -411,85 +394,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     settingsPage.classList.remove('visible');
   });
 });
-async function connectPhantomWallet() {
-  const connectWalletBtn = document.getElementById('connect-wallet');
-  const walletStatus = document.getElementById('wallet-status');
-
-  try {
-    // Get current tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    // Check if we're on a webpage (not chrome:// or edge://)
-    if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
-      walletStatus.textContent = 'Please open wallet on a webpage';
-      walletStatus.style.color = '#e74c3c';
-      return;
-    }
-
-    // Show connecting status
-    connectWalletBtn.disabled = true;
-    walletStatus.textContent = 'Connecting...';
-    walletStatus.style.color = '#f39c12';
-
-    // Send message to content script
-    const response = await new Promise((resolve) => {
-      chrome.tabs.sendMessage(tab.id, { 
-        type: 'PHANTOM_CONNECT_REQUEST' 
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          resolve({ error: 'Content script not ready' });
-        } else {
-          resolve(response);
-        }
-      });
-    });
-
-    // Re-enable button
-    connectWalletBtn.disabled = false;
-
-    if (!response) {
-      throw new Error('No response from content script');
-    }
-
-    if (response.error) {
-      if (response.error === 'Phantom not installed') {
-        walletStatus.textContent = 'Please install Phantom wallet';
-        walletStatus.style.color = '#e74c3c';
-        // Only open Phantom website if user clicks the button again
-        connectWalletBtn.textContent = 'Install Phantom';
-        connectWalletBtn.onclick = () => window.open('https://phantom.app/', '_blank');
-      } else if (response.error === 'Content script not ready') {
-        walletStatus.textContent = 'Please refresh the page';
-        walletStatus.style.color = '#e74c3c';
-      } else {
-        walletStatus.textContent = response.error;
-        walletStatus.style.color = '#e74c3c';
-      }
-      return;
-    }
-
-    if (response.publicKey) {
-      // Update button state
-      connectWalletBtn.classList.add('wallet-connected');
-      connectWalletBtn.innerHTML = `
-        <span class="wallet-icon">✓</span>
-        ${response.publicKey.slice(0, 6)}...${response.publicKey.slice(-4)}
-      `;
-      
-      walletStatus.textContent = 'Phantom wallet connected';
-      walletStatus.style.color = '#2ecc71';
-
-      // Save wallet connection state
-      chrome.storage.local.set({
-        walletConnected: true,
-        walletAddress: response.publicKey
-      });
-    }
-
-  } catch (error) {
-    console.error('Phantom connection error:', error);
-    connectWalletBtn.disabled = false;
-    walletStatus.textContent = 'Error connecting to Phantom wallet';
-    walletStatus.style.color = '#e74c3c';
-  }
-}
