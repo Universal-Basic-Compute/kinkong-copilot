@@ -1,6 +1,4 @@
 const base = chrome.runtime.getURL('');
-
-const base = chrome.runtime.getURL('');
 let modules;
 
 async function initializeModules() {
