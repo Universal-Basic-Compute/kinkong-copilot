@@ -489,7 +489,8 @@ async function initializeChatInterface(shadow) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
       try {
-        // Get page type
+        // Get wallet ID and page type
+        const walletId = await getOrCreateWalletId();
         const pageType = isSupportedPage();
 
         // Use the currentPageContent from content.js
@@ -498,7 +499,8 @@ async function initializeChatInterface(shadow) {
           url: window.location.href,
           pageContent: window.currentPageContent || null,
           pageType: pageType || null,
-          fullyLoaded: true
+          fullyLoaded: true,
+          wallet: walletId // Use generated wallet ID
         });
 
         // Remove loading indicator
