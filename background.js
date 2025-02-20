@@ -1,3 +1,41 @@
+let eventSource;
+const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
+
+function connectSSE() {
+  if (eventSource) {
+    eventSource.close();
+  }
+
+  eventSource = new EventSource(SSE_ENDPOINT);
+  
+  eventSource.onopen = () => {
+    console.log('SSE connection established');
+  };
+
+  eventSource.onmessage = (event) => {
+    try {
+      const message = JSON.parse(event.data);
+      // Broadcast to all extension instances
+      chrome.runtime.sendMessage({
+        type: 'SERVER_PUSH', 
+        data: message
+      });
+    } catch (error) {
+      console.error('Error parsing SSE message:', error);
+    }
+  };
+
+  eventSource.onerror = (error) => {
+    console.error('SSE connection error:', error);
+    eventSource.close();
+    // Attempt to reconnect after 5 seconds
+    setTimeout(connectSSE, 5000);
+  };
+}
+
+// Initialize SSE connection when extension starts
+connectSSE();
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('KinKong Copilot Extension Installed');
   
@@ -31,5 +69,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     
     return true; // Will respond asynchronously
+  }
+});
+
+// Clean up when extension is shutting down
+chrome.runtime.onSuspend.addListener(() => {
+  if (eventSource) {
+    eventSource.close();
   }
 });

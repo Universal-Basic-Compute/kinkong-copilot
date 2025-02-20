@@ -176,6 +176,55 @@ async function checkSubscriptionStatus() {
 }
 */
 
+// Add SSE message handler
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'SERVER_PUSH') {
+    handleServerPush(message.data);
+  }
+});
+
+function handleServerPush(data) {
+  switch(data.type) {
+    case 'SIGNAL':
+      // Add new signal to the trading signals list
+      const tradingSignals = document.getElementById('trading-signals');
+      tradingSignals.insertBefore(renderSignal(data.signal), tradingSignals.firstChild);
+      break;
+      
+    case 'PRICE_ALERT':
+      // Update price information
+      updatePriceAlert(data);
+      break;
+      
+    case 'SYSTEM_MESSAGE':
+      // Show system message
+      showSystemMessage(data.message);
+      break;
+  }
+}
+
+function showSystemMessage(message) {
+  const statusDiv = document.createElement('div');
+  statusDiv.className = 'system-message';
+  statusDiv.textContent = message;
+  statusDiv.style.cssText = `
+    background: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid var(--primary-gold);
+    padding: 10px;
+    margin: 10px 0;
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  const container = document.querySelector('.container');
+  container.insertBefore(statusDiv, container.firstChild);
+  
+  // Remove after 5 seconds
+  setTimeout(() => {
+    statusDiv.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => statusDiv.remove(), 300);
+  }, 5000);
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   // await checkSubscriptionStatus();
 

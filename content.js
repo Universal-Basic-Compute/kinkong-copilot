@@ -4,6 +4,52 @@ let urlObserver = null;
 let phantomInjectionAttempts = 0;
 const MAX_PHANTOM_ATTEMPTS = 10;
 
+// Add SSE message handler
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'SERVER_PUSH') {
+    handleContentPush(message.data);
+  }
+});
+
+async function handleContentPush(data) {
+  try {
+    const elements = await ensureChatInterface();
+    
+    switch(data.type) {
+      case 'SIGNAL':
+        // Show signal notification in chat
+        const signalMessage = formatSignalMessage(data.signal);
+        addMessageToChatContainer(signalMessage, false);
+        break;
+        
+      case 'PRICE_ALERT':
+        // Show price alert in chat
+        const alertMessage = formatPriceAlert(data.alert);
+        addMessageToChatContainer(alertMessage, false);
+        break;
+    }
+  } catch (error) {
+    console.error('Error handling pushed message:', error);
+  }
+}
+
+function formatSignalMessage(signal) {
+  return `🚨 New Trading Signal
+Token: ${signal.token}
+Type: ${signal.type}
+Entry: $${signal.entryPrice}
+Target: $${signal.targetPrice}
+Stop Loss: $${signal.stopLoss}
+Timeframe: ${signal.timeframe}
+Confidence: ${signal.confidence}`;
+}
+
+function formatPriceAlert(alert) {
+  return `💰 Price Alert
+${alert.token} has ${alert.direction === 'up' ? 'reached' : 'dropped to'} $${alert.price}
+Change: ${alert.changePercent}%`;
+}
+
 async function waitForPhantom() {
   while (phantomInjectionAttempts < MAX_PHANTOM_ATTEMPTS) {
     if (window?.solana?.isPhantom) {
