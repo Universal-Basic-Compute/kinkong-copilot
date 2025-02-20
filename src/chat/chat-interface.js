@@ -699,9 +699,28 @@ async function initializeChatInterface(shadow) {
         // Convertir l'erreur en string pour pouvoir chercher dedans
         const errorStr = JSON.stringify(error);
 
-        // Si c'est une erreur de rate limit, ne rien afficher
+        // Si c'est une erreur de rate limit
         if (errorStr.includes('Rate limit exceeded')) {
-          return; // On sort simplement de la fonction
+          // Configurer l'état de rate limit
+          await manageRateLimitState(true);
+          
+          // Désactiver l'interface
+          const input = chatContainer.querySelector('.kinkong-chat-input');
+          const sendButton = chatContainer.querySelector('.kinkong-chat-send');
+          
+          if (input) {
+            input.disabled = true;
+            const result = await chrome.storage.local.get('rateLimitState');
+            const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
+            input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
+          }
+          
+          if (sendButton) {
+            sendButton.disabled = true;
+            sendButton.style.opacity = '0.5';
+          }
+          
+          return;
         }
 
         // Pour les autres erreurs, on garde le message par défaut
