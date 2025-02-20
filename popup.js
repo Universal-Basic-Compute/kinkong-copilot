@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const premiumLink = document.getElementById('premium-link');
   try {
     const codeId = await getOrCreateCodeId();
-    premiumLink.href = `https://swarmtrade.ai/copilot?code=${codeId}`;
+    premiumLink.href = `https://swarmtrade.ai/copilot#${codeId}`;
   } catch (error) {
     console.error('Error setting premium link:', error);
     premiumLink.href = 'https://swarmtrade.ai/copilot';

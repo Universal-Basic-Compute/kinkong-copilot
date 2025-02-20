@@ -81,10 +81,15 @@ export async function getOrCreateCodeId() {
       return result.codeId;
     }
 
-    // Generate new code ID if none exists
-    const array = new Uint8Array(12);
-    crypto.getRandomValues(array);
-    const codeId = Array.from(array, b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+    // Generate new code ID using crypto API
+    const buffer = new Uint8Array(32); // Using 32 bytes for SHA-256
+    crypto.getRandomValues(buffer);
+    
+    // Convert to hex string and take first 32 chars
+    const codeId = Array.from(buffer)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .substring(0, 32);
 
     // Store the code ID
     await chrome.storage.local.set({ codeId: codeId });
