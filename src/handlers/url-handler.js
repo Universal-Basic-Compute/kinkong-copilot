@@ -51,13 +51,19 @@ export async function handleUrlChange() {
     addMessageToChatContainer(initialMessage, true);
 
     const loadingId = 'loading-' + Date.now();
-    messagesContainer.innerHTML += `
-      <div id="${loadingId}" class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
+    // Add user message first
+    messagesContainer.appendChild(messageDiv);
+    
+    // Create and add loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = loadingId;
+    loadingIndicator.className = 'typing-indicator';
+    loadingIndicator.innerHTML = `
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
     `;
+    messagesContainer.appendChild(loadingIndicator);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     try {
@@ -78,8 +84,11 @@ export async function handleUrlChange() {
       console.log('Response text:', responseText);
       console.groupEnd();
 
-      // Remove loading indicator
-      document.getElementById(loadingId)?.remove();
+      // Remove loading indicator properly
+      const loadingElement = messagesContainer.querySelector(`#${loadingId}`);
+      if (loadingElement) {
+        loadingElement.remove();
+      }
 
       // Check if response is empty or invalid
       if (!responseText || responseText.trim() === '') {
