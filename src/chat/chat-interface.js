@@ -5,11 +5,13 @@ let interfaceInitialized = false;
 
 export function ensureChatInterface() {
   console.group('Chat Interface Initialization');
+  console.log('Checking for existing interface...');
   
   const shadowContainer = document.getElementById('kinkong-shadow-container');
+  
   if (shadowContainer) {
     const shadow = shadowContainer.shadowRoot;
-    console.log('Returning existing interface');
+    console.log('Found existing interface');
     console.groupEnd();
     return {
       messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
@@ -19,27 +21,44 @@ export function ensureChatInterface() {
   }
 
   // If not exists, create it
-  try {
-    injectFloatingCopilot();
-    const shadow = document.getElementById('kinkong-shadow-container').shadowRoot;
-    
-    // Get references to newly created elements
-    const elements = {
-      messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
-      chatContainer: shadow.querySelector('.kinkong-chat-container'),
-      copilotImage: shadow.querySelector('.kinkong-floating-copilot')
-    };
+  return new Promise((resolve, reject) => {
+    try {
+      console.log('Creating new interface...');
+      injectFloatingCopilot().then(() => {
+        const container = document.getElementById('kinkong-shadow-container');
+        if (!container) {
+          throw new Error('Failed to create shadow container');
+        }
+        
+        const shadow = container.shadowRoot;
+        if (!shadow) {
+          throw new Error('Failed to create shadow root');
+        }
 
-    // Verify all elements were created
-    if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
-      throw new Error('Failed to create one or more chat interface elements');
+        const elements = {
+          messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
+          chatContainer: shadow.querySelector('.kinkong-chat-container'),
+          copilotImage: shadow.querySelector('.kinkong-floating-copilot')
+        };
+
+        // Verify all elements were created
+        if (!elements.messagesContainer || !elements.chatContainer || !elements.copilotImage) {
+          throw new Error('Failed to create one or more chat interface elements');
+        }
+
+        console.log('Interface created successfully');
+        console.groupEnd();
+        resolve(elements);
+      }).catch(error => {
+        console.error('Error in injectFloatingCopilot:', error);
+        reject(error);
+      });
+    } catch (error) {
+      console.error('Error creating chat interface:', error);
+      console.groupEnd();
+      reject(new Error('Failed to create chat interface: ' + error.message));
     }
-
-    return elements;
-  } catch (error) {
-    console.error('Error creating chat interface:', error);
-    throw new Error('Failed to create chat interface: ' + error.message);
-  }
+  });
 }
 
 export async function injectFloatingCopilot() {

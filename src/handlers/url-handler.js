@@ -14,7 +14,7 @@ export async function handleUrlChange() {
     
     let interfaceElements;
     try {
-      interfaceElements = ensureChatInterface();
+      interfaceElements = await ensureChatInterface();
       if (!interfaceElements.messagesContainer) {
         throw new Error('Messages container not found');
       }
