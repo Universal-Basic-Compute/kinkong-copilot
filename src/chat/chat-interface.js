@@ -5,34 +5,29 @@ let interfaceInitialized = false;
 
 export function ensureChatInterface() {
   console.group('Chat Interface Initialization');
-  console.log('Interface already initialized:', interfaceInitialized);
-  console.log('Interface element exists:', !!document.getElementById('kinkong-chat-interface'));
   
-  const INTERFACE_ID = 'kinkong-chat-interface';
-  
-  if (interfaceInitialized || document.getElementById(INTERFACE_ID)) {
+  const shadowContainer = document.getElementById('kinkong-shadow-container');
+  if (shadowContainer) {
+    const shadow = shadowContainer.shadowRoot;
     console.log('Returning existing interface');
     console.groupEnd();
     return {
-      messagesContainer: document.querySelector('.kinkong-chat-messages'),
-      chatContainer: document.querySelector('.kinkong-chat-container'),
-      copilotImage: document.querySelector('.kinkong-floating-copilot')
+      messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
+      chatContainer: shadow.querySelector('.kinkong-chat-container'),
+      copilotImage: shadow.querySelector('.kinkong-floating-copilot')
     };
   }
 
   // If not exists, create it
   try {
-    const interfaceContainer = document.createElement('div');
-    interfaceContainer.id = INTERFACE_ID;
-    document.body.appendChild(interfaceContainer);
-    
     injectFloatingCopilot();
+    const shadow = document.getElementById('kinkong-shadow-container').shadowRoot;
     
     // Get references to newly created elements
     const elements = {
-      messagesContainer: document.querySelector('.kinkong-chat-messages'),
-      chatContainer: document.querySelector('.kinkong-chat-container'),
-      copilotImage: document.querySelector('.kinkong-floating-copilot')
+      messagesContainer: shadow.querySelector('.kinkong-chat-messages'),
+      chatContainer: shadow.querySelector('.kinkong-chat-container'),
+      copilotImage: shadow.querySelector('.kinkong-floating-copilot')
     };
 
     // Verify all elements were created
@@ -50,22 +45,34 @@ export function ensureChatInterface() {
 export async function injectFloatingCopilot() {
   return new Promise((resolve, reject) => {
     try {
+      // Create a shadow root container
+      const shadowContainer = document.createElement('div');
+      shadowContainer.id = 'kinkong-shadow-container';
+      const shadow = shadowContainer.attachShadow({ mode: 'closed' });
+
       // Get saved preference
       chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
         copilotEnabled = items.copilotEnabled;
         
         const style = document.createElement('style');
         style.textContent = `
+          :host {
+            all: initial;
+          }
+          
+          * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+          }
           .kinkong-floating-copilot {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 90px;
-            height: 90px;
-            z-index: 999999;
-            animation: kinkong-float 3s ease-in-out infinite;
-            cursor: pointer;
-            transition: transform 0.3s ease;
+            position: fixed !important;
+            bottom: 30px !important;
+            right: 30px !important;
+            width: 90px !important;
+            height: 90px !important;
+            z-index: 999999 !important;
+            animation: kinkong-float 3s ease-in-out infinite !important;
+            cursor: pointer !important;
+            transition: transform 0.3s ease !important;
           }
 
           .kinkong-floating-copilot:hover {
@@ -79,21 +86,21 @@ export async function injectFloatingCopilot() {
           }
 
           .kinkong-chat-container {
-            position: fixed;
-            bottom: 140px;
-            right: 30px;
-            width: 380px;
-            height: 500px;
-            border-radius: 15px;
-            z-index: 999998;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            position: fixed !important;
+            bottom: 140px !important;
+            right: 30px !important;
+            width: 380px !important;
+            height: 500px !important;
+            border-radius: 15px !important;
+            z-index: 999998 !important;
+            display: none !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            transform: translateY(20px) !important;
+            transition: all 0.3s ease !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(10px) !important;
           }
 
           .kinkong-chat-container.visible {
@@ -250,9 +257,9 @@ export async function injectFloatingCopilot() {
             transform: scale(1.05);
           }
         `;
-        document.head.appendChild(style);
+        shadow.appendChild(style);
 
-        // Create chat container
+        // Create chat container inside shadow DOM
         const chatContainer = document.createElement('div');
         chatContainer.className = 'kinkong-chat-container';
         chatContainer.innerHTML = `
@@ -262,14 +269,15 @@ export async function injectFloatingCopilot() {
             <button class="kinkong-chat-send">Send</button>
           </div>
         `;
-        document.body.appendChild(chatContainer);
+        shadow.appendChild(chatContainer);
 
-        // Create floating copilot
+        // Create floating copilot inside shadow DOM
         const img = document.createElement('img');
         img.src = chrome.runtime.getURL('assets/copilot.png');
         img.className = 'kinkong-floating-copilot';
         img.alt = 'KinKong Copilot';
         img.style.display = copilotEnabled ? 'block' : 'none';
+        shadow.appendChild(img);
         
         // Wait for image to load
         img.onload = () => {
