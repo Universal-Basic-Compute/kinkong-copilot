@@ -1,35 +1,46 @@
 const base = chrome.runtime.getURL('');
 
-let initialized = false;
-// Initialize modules
-let chatInterface, domUtils, contentExtractor, pageDetector, initModule, urlHandler;
+const base = chrome.runtime.getURL('');
+let modules;
 
 async function initializeModules() {
-  if (initialized) {
-    console.warn('Attempting to initialize modules again!');
-    return;
+  if (window.kinkongModules) {
+    return window.kinkongModules;
   }
   
   console.group('Module Initialization');
   console.log('Starting initialization...');
   try {
     // Import all required modules dynamically with explicit paths
-    chatInterface = await import(chrome.runtime.getURL('src/chat/chat-interface.js'));
-    domUtils = await import(chrome.runtime.getURL('src/utils/dom-utils.js'));
-    contentExtractor = await import(chrome.runtime.getURL('src/content/content-extractor.js'));
-    pageDetector = await import(chrome.runtime.getURL('src/content/page-detector.js'));
-    initModule = await import(chrome.runtime.getURL('src/init.js'));
-    urlHandler = await import(chrome.runtime.getURL('src/handlers/url-handler.js'));
+    const modules = {
+      chatInterface: await import(chrome.runtime.getURL('src/chat/chat-interface.js')),
+      domUtils: await import(chrome.runtime.getURL('src/utils/dom-utils.js')),
+      contentExtractor: await import(chrome.runtime.getURL('src/content/content-extractor.js')),
+      pageDetector: await import(chrome.runtime.getURL('src/content/page-detector.js')),
+      initModule: await import(chrome.runtime.getURL('src/init.js')),
+      urlHandler: await import(chrome.runtime.getURL('src/handlers/url-handler.js'))
+    };
     
-    initialized = true;
+    window.kinkongModules = modules;
     console.log('All modules loaded successfully');
+    return modules;
   } catch (error) {
     console.error('Error loading modules:', error);
     throw error;
   }
 }
 
-// Initialize copilot state
+// Initialize once
+initializeModules().then(loadedModules => {
+  modules = loadedModules;
+  modules.initModule.initialize().catch(error => {
+    console.error('Error during initialization:', error);
+  });
+}).catch(error => {
+  console.error('Failed to initialize modules:', error);
+});
+
+// Initialize copilot state 
 let copilotEnabled = true;
 
 // Add message listener 
@@ -56,21 +67,6 @@ console.error = function(...args) {
   consoleError.apply(console, args);
 };
 
-// Check if already initialized
-const INIT_FLAG = 'kinkong-initialized';
-if (!document.body.hasAttribute(INIT_FLAG)) {
-  document.body.setAttribute(INIT_FLAG, 'true');
-  
-  // Initialize everything after modules are loaded
-  initializeModules().then(() => {
-    console.log('Modules initialized, starting app...');
-    initModule.initialize().catch(error => {
-      console.error('Error during initialization:', error);
-    });
-  }).catch(error => {
-    console.error('Failed to initialize modules:', error);
-  });
-}
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
   // Only accept messages from our extension
