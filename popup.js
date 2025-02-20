@@ -237,7 +237,19 @@ async function isSiteActivated(siteName) {
   return await getSiteActivationState(siteName);
 }
 
+import { getOrCreateCodeId } from '../src/chat/chat-interface.js';
+
 document.addEventListener('DOMContentLoaded', async function() {
+  // Configure premium subscription link with code
+  const premiumLink = document.getElementById('premium-link');
+  try {
+    const codeId = await getOrCreateCodeId();
+    premiumLink.href = `https://swarmtrade.ai/copilot?code=${codeId}`;
+  } catch (error) {
+    console.error('Error setting premium link:', error);
+    premiumLink.href = 'https://swarmtrade.ai/copilot';
+  }
+
   // Load saved toggle states
   const toggles = document.querySelectorAll('.site-toggle input');
   
