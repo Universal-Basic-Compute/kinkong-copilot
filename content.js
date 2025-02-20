@@ -1,5 +1,7 @@
 import { ensureChatInterface, addMessageToChatContainer } from './src/chat/chat-interface.js';
 import { findContent } from './src/utils/dom-utils.js';
+import { extractXContent } from './src/content/content-extractor.js';
+import { isXPage } from './src/content/page-detector.js';
 
 // Track when marked is loaded
 let markedReady = false;
@@ -76,58 +78,6 @@ function formatMessage(text) {
 
 
 
-function extractXContent() {
-  const content = {
-    url: window.location.href,
-    pageContent: {}
-  };
-
-  try {
-    // Get profile info if on profile page
-    const profileName = document.querySelector('[data-testid="UserName"]')?.textContent;
-    const profileBio = document.querySelector('[data-testid="UserDescription"]')?.textContent;
-    const profileLocation = document.querySelector('[data-testid="UserLocation"]')?.textContent;
-    
-    if (profileName) {
-      content.pageContent.profile = {
-        name: profileName,
-        bio: profileBio,
-        location: profileLocation
-      };
-    }
-
-    // Get tweets
-    const tweets = Array.from(document.querySelectorAll('[data-testid="tweet"]'));
-    if (tweets.length > 0) {
-      content.pageContent.tweets = tweets.map(tweet => ({
-        text: tweet.querySelector('[data-testid="tweetText"]')?.textContent,
-        time: tweet.querySelector('time')?.getAttribute('datetime'),
-        engagement: {
-          replies: tweet.querySelector('[data-testid="reply"]')?.textContent,
-          retweets: tweet.querySelector('[data-testid="retweet"]')?.textContent,
-          likes: tweet.querySelector('[data-testid="like"]')?.textContent
-        }
-      })).filter(tweet => tweet.text); // Only include tweets with text content
-    }
-
-    // If no specific content found, get general page content
-    if (!content.pageContent.profile && !content.pageContent.tweets) {
-      content.pageContent.mainContent = document.querySelector('[data-testid="primaryColumn"]')?.textContent;
-    }
-
-  } catch (error) {
-    console.error('Error extracting X content:', error);
-    // Fallback to basic content
-    content.pageContent.mainContent = document.body.textContent;
-  }
-
-  return content;
-}
-
-function isXPage() {
-  const hostname = window.location.hostname;
-  return hostname === 'x.com' || hostname === 'twitter.com';
-}
 
 function isSwarmTradePage() {
   const hostname = window.location.hostname;
