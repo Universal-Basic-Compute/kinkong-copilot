@@ -44,6 +44,8 @@
     "resources": [
       "assets/*",
       "lib/*",
+      "lib/marked.min.js",
+      "lib/marked-bridge.js",
       "src/*",
       "src/init.js",
       "src/utils/*",

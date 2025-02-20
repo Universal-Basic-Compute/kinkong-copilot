@@ -119,6 +119,76 @@ export async function injectFloatingCopilot() {
             width: auto;
           }
 
+          .kinkong-message h1,
+          .kinkong-message h2,
+          .kinkong-message h3 {
+            margin: 8px 0;
+            color: inherit;
+          }
+
+          .kinkong-message ul,
+          .kinkong-message ol {
+            margin: 8px 0;
+            padding-left: 20px;
+          }
+
+          .kinkong-message li {
+            margin: 4px 0;
+          }
+
+          .kinkong-message a {
+            color: #ffd700;
+            text-decoration: none;
+          }
+
+          .kinkong-message a:hover {
+            text-decoration: underline;
+          }
+
+          .kinkong-message code {
+            font-family: monospace;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+          }
+
+          .kinkong-message pre {
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 8px 0;
+          }
+
+          .kinkong-message pre code {
+            background: none;
+            padding: 0;
+          }
+
+          .kinkong-message blockquote {
+            border-left: 3px solid rgba(255,215,0,0.5);
+            margin: 8px 0;
+            padding-left: 12px;
+            font-style: italic;
+          }
+
+          .kinkong-message table {
+            border-collapse: collapse;
+            margin: 8px 0;
+            width: 100%;
+          }
+
+          .kinkong-message th,
+          .kinkong-message td {
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px;
+            text-align: left;
+          }
+
+          .kinkong-message th {
+            background: rgba(0,0,0,0.2);
+          }
+
           .kinkong-message.user {
             background: linear-gradient(135deg, #e31837, #ff4757);
             margin-left: auto;
