@@ -1,12 +1,15 @@
-export async function makeApiCall(endpoint, data) {
-  // Add test wallet address
-  const testWallet = "BUYk3CnbsRrqZcKqhyqJrxQUBVRnqsK7GxgXdXcX3Gf9"; // Test Solana address
+import { getOrCreateWalletId } from '../chat/chat-interface.js';
 
-  // Add wallet to request data
-  const requestData = {
-    ...data,
-    wallet: testWallet
-  };
+export async function makeApiCall(endpoint, data) {
+  try {
+    // Get the generated wallet ID
+    const walletId = await getOrCreateWalletId();
+
+    // Add wallet to request data
+    const requestData = {
+      ...data,
+      wallet: walletId
+    };
 
   console.group('API Request Details');
   console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
