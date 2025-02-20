@@ -64,14 +64,20 @@ export function ensureChatInterface() {
 export async function injectFloatingCopilot() {
   return new Promise((resolve, reject) => {
     try {
-      // Create a shadow root container
-      const shadowContainer = document.createElement('div');
-      shadowContainer.id = 'kinkong-shadow-container';
+      // Create a shadow root container if it doesn't exist
+      let shadowContainer = document.getElementById('kinkong-shadow-container');
+      if (!shadowContainer) {
+        shadowContainer = document.createElement('div');
+        shadowContainer.id = 'kinkong-shadow-container';
+        document.body.appendChild(shadowContainer); // Add to document first
+      }
+      
+      // Create shadow root
       const shadow = shadowContainer.attachShadow({ mode: 'closed' });
 
       // Get saved preference
       chrome.storage.sync.get({ copilotEnabled: true }, (items) => {
-        copilotEnabled = items.copilotEnabled;
+        const copilotEnabled = items.copilotEnabled;
         
         const style = document.createElement('style');
         style.textContent = `
@@ -298,9 +304,9 @@ export async function injectFloatingCopilot() {
         img.style.display = copilotEnabled ? 'block' : 'none';
         shadow.appendChild(img);
         
-        // Wait for image to load
+        // Wait for image to load before resolving
         img.onload = () => {
-          document.body.appendChild(img);
+          console.log('Copilot image loaded successfully');
           resolve();
         };
 
