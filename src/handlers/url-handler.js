@@ -101,58 +101,11 @@ export async function handleUrlChange() {
       }
       const shadow = shadowContainer.shadowRoot;
 
-      // Remove any existing speech bubble
-      const existingBubble = shadow.querySelector('.kinkong-speech-bubble');
-      if (existingBubble) {
-        existingBubble.remove();
-      }
-
-      // Create speech bubble inside shadow DOM
-      const speechBubble = document.createElement('div');
-      speechBubble.className = 'kinkong-speech-bubble';
-      speechBubble.innerHTML = formatMessage(responseText);
-      shadow.appendChild(speechBubble);
-
-      // Add click handler to open chat
-      speechBubble.addEventListener('click', () => {
-        // Remove the bubble immediately
-        speechBubble.remove();
-        
-        // Get chat container and show it
-        const chatContainer = shadow.querySelector('.kinkong-chat-container');
-        if (chatContainer) {
-          chatContainer.style.display = 'flex';
-          requestAnimationFrame(() => {
-            chatContainer.classList.add('visible');
-            // Scroll to bottom
-            const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
-            if (messagesContainer) {
-              messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-          });
-        }
-        
-        // Stop KinKong's floating animation
-        const copilotImage = shadow.querySelector('.kinkong-floating-copilot');
-        if (copilotImage) {
-          copilotImage.style.animation = 'none';
-        }
-      });
-
-      // Auto-remove bubble after 8 seconds if not clicked
-      setTimeout(() => {
-        if (shadow.contains(speechBubble)) {  // Only if bubble still exists
-          speechBubble.classList.add('fade-out');
-          setTimeout(() => {
-            if (shadow.contains(speechBubble)) {  // Double check before removal
-              speechBubble.remove();
-            }
-          }, 300);
-        }
-      }, 8000);
-
-      // Still add message to chat history
+      // Add full message to chat history first
       addMessageToChatContainer(responseText, false);
+
+      // Show paragraphs one by one in bubbles
+      await showMessageParagraphs(responseText, shadow);
       
     } catch (error) {
       console.error('API Error:', error);
@@ -178,6 +131,72 @@ export async function handleUrlChange() {
     } catch (e) {
       console.error('Failed to show error message:', e);
     }
+  }
+}
+
+function getReadingTime(text) {
+  // Average reading speed: 200 words per minute, or about 15 chars per second
+  const charsPerSecond = 15;
+  return Math.max(1000, Math.min(4000, (text.length / charsPerSecond) * 1000));
+}
+
+async function showMessageParagraphs(responseText, shadow) {
+  // Split message into paragraphs (split by double newline or markdown headers)
+  const paragraphs = responseText.split(/\n\n|(?=#{1,6}\s)/g)
+    .filter(p => p.trim().length > 0);
+  
+  for (const paragraph of paragraphs) {
+    // Remove any existing speech bubble
+    const existingBubble = shadow.querySelector('.kinkong-speech-bubble');
+    if (existingBubble) {
+      existingBubble.remove();
+    }
+
+    // Create new speech bubble
+    const speechBubble = document.createElement('div');
+    speechBubble.className = 'kinkong-speech-bubble';
+    speechBubble.innerHTML = formatMessage(paragraph);
+    shadow.appendChild(speechBubble);
+
+    // Add click handler
+    speechBubble.addEventListener('click', () => {
+      speechBubble.remove();
+      const chatContainer = shadow.querySelector('.kinkong-chat-container');
+      if (chatContainer) {
+        chatContainer.style.display = 'flex';
+        requestAnimationFrame(() => {
+          chatContainer.classList.add('visible');
+          const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
+          if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        });
+      }
+      
+      const copilotImage = shadow.querySelector('.kinkong-floating-copilot');
+      if (copilotImage) {
+        copilotImage.style.animation = 'none';
+      }
+    });
+
+    // Wait for reading time before showing next paragraph
+    const readingTime = getReadingTime(paragraph);
+    await new Promise(resolve => setTimeout(resolve, readingTime));
+  }
+
+  // Remove last bubble after timeout
+  const lastBubble = shadow.querySelector('.kinkong-speech-bubble');
+  if (lastBubble) {
+    setTimeout(() => {
+      if (shadow.contains(lastBubble)) {
+        lastBubble.classList.add('fade-out');
+        setTimeout(() => {
+          if (shadow.contains(lastBubble)) {
+            lastBubble.remove();
+          }
+        }, 300);
+      }
+    }, 8000);
   }
 }
 
