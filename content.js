@@ -47,15 +47,21 @@ console.error = function(...args) {
   consoleError.apply(console, args);
 };
 
-// Initialize everything after modules are loaded
-initializeModules().then(() => {
-  console.log('Modules initialized, starting app...');
-  initModule.initialize().catch(error => {
-    console.error('Error during initialization:', error);
+// Check if already initialized
+const INIT_FLAG = 'kinkong-initialized';
+if (!document.body.hasAttribute(INIT_FLAG)) {
+  document.body.setAttribute(INIT_FLAG, 'true');
+  
+  // Initialize everything after modules are loaded
+  initializeModules().then(() => {
+    console.log('Modules initialized, starting app...');
+    initModule.initialize().catch(error => {
+      console.error('Error during initialization:', error);
+    });
+  }).catch(error => {
+    console.error('Failed to initialize modules:', error);
   });
-}).catch(error => {
-  console.error('Failed to initialize modules:', error);
-});
+}
 // Add Phantom wallet bridge
 window.addEventListener('message', async (event) => {
   // Only accept messages from our extension
