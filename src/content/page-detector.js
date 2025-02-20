@@ -37,37 +37,41 @@ export function isTelegram() {
   return matches !== null;
 }
 
-export function isSupportedPage() {
-  // Currently implemented
-  if (isDexScreenerTokenPage()) return 'dexscreener';
-  if (isXPage()) return 'x';
-  if (isSolscanPage()) return 'solscan';
-  if (isSwarmTradePage()) return 'swarmtrade';
-  if (isUBCPage()) return 'ubc';
+export async function isSupportedPage() {
+  const hostname = window.location.hostname;
+  let siteName = null;
 
-  // New additions
-  if (isRaydiumPage()) return 'raydium';
-  if (isBirdeye()) return 'birdeye';
-  if (isJupiter()) return 'jupiter';
-  if (isTensorTrade()) return 'tensor';
-  if (isMagicEden()) return 'magiceden';
-  if (isOrcaPage()) return 'orca';
-  if (isCoingecko()) return 'coingecko';
-  if (isCoinMarketCap()) return 'coinmarketcap';
-  if (isMeteora()) return 'meteora';
+  // Map hostname to site name
+  if (hostname === 'dexscreener.com') siteName = 'dexscreener';
+  else if (hostname === 'x.com' || hostname === 'twitter.com') siteName = 'twitter';
+  else if (hostname === 'solscan.io') siteName = 'solscan';
+  else if (hostname === 'swarmtrade.ai') siteName = 'swarmtrade';
+  else if (hostname === 'universalbasiccompute.ai') siteName = 'ubc';
+  else if (hostname === 'raydium.io') siteName = 'raydium';
+  else if (hostname === 'birdeye.so') siteName = 'birdeye';
+  else if (hostname === 'jup.ag') siteName = 'jupiter';
+  else if (hostname === 'tensor.trade') siteName = 'tensor';
+  else if (hostname === 'magiceden.io') siteName = 'magiceden';
+  else if (hostname === 'orca.so') siteName = 'orca';
+  else if (hostname === 'meteora.ag') siteName = 'meteora';
+  else if (hostname === 'binance.com') siteName = 'binance';
+  else if (hostname === 'kucoin.com') siteName = 'kucoin';
+  else if (hostname === 'okx.com') siteName = 'okx';
+  else if (hostname === 'bybit.com') siteName = 'bybit';
+  else if (hostname === 'gate.io') siteName = 'gate';
+  else if (hostname === 'mexc.com') siteName = 'mexc';
+  else if (hostname === 'web.telegram.org') siteName = 'telegram';
+  else if (hostname === 'coingecko.com') siteName = 'coingecko';
+  else if (hostname === 'coinmarketcap.com') siteName = 'coinmarketcap';
 
-  // CEX additions
-  if (isBinance()) return 'binance';
-  if (isKucoin()) return 'kucoin';
-  if (isOKX()) return 'okx';
-  if (isBybit()) return 'bybit';
-  if (isGate()) return 'gate';
-  if (isMexc()) return 'mexc';
+  if (!siteName) return null;
+
+  // Check if site is activated
+  const result = await chrome.storage.sync.get(['site_toggles']);
+  const savedToggles = result.site_toggles || {};
   
-  // Social/Community additions
-  if (isTelegram()) return 'telegram';
-  
-  return null;
+  // Return site name only if activated
+  return savedToggles[siteName] !== false ? siteName : null;
 }
 
 // New detection functions

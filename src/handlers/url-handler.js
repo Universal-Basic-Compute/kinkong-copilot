@@ -10,8 +10,18 @@ let lastApiCallUrl = null;
 
 export async function handleUrlChange() {
   try {
-    const pageType = isSupportedPage();
+    const pageType = await isSupportedPage();
     if (!pageType) return;
+
+    // Get activation state
+    const result = await chrome.storage.sync.get(['site_toggles']);
+    const savedToggles = result.site_toggles || {};
+    const isActivated = savedToggles[pageType] !== false;
+    
+    if (!isActivated) {
+      console.log(`Site ${pageType} is not activated`);
+      return;
+    }
 
     console.log('On supported page:', pageType);
     

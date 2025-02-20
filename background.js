@@ -88,8 +88,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'INJECT_CONTENT') {
     chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
       const tab = tabs[0];
+      
       // Skip chrome:// and edge:// URLs
       if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+        return;
+      }
+
+      // Get the hostname from the URL
+      const url = new URL(tab.url);
+      const hostname = url.hostname;
+
+      // Determine site name from hostname
+      let siteName = '';
+      if (hostname.includes('dexscreener.com')) siteName = 'dexscreener';
+      else if (hostname.includes('twitter.com') || hostname.includes('x.com')) siteName = 'twitter';
+      else if (hostname.includes('solscan.io')) siteName = 'solscan';
+      else if (hostname.includes('swarmtrade.ai')) siteName = 'swarmtrade';
+      else if (hostname.includes('universalbasiccompute.ai')) siteName = 'ubc';
+      else if (hostname.includes('raydium.io')) siteName = 'raydium';
+      else if (hostname.includes('birdeye.so')) siteName = 'birdeye';
+      else if (hostname.includes('jup.ag')) siteName = 'jupiter';
+      else if (hostname.includes('tensor.trade')) siteName = 'tensor';
+      else if (hostname.includes('magiceden.io')) siteName = 'magiceden';
+      else if (hostname.includes('orca.so')) siteName = 'orca';
+      else if (hostname.includes('meteora.ag')) siteName = 'meteora';
+      else if (hostname.includes('binance.com')) siteName = 'binance';
+      else if (hostname.includes('kucoin.com')) siteName = 'kucoin';
+      else if (hostname.includes('okx.com')) siteName = 'okx';
+      else if (hostname.includes('bybit.com')) siteName = 'bybit';
+      else if (hostname.includes('gate.io')) siteName = 'gate';
+      else if (hostname.includes('mexc.com')) siteName = 'mexc';
+      else if (hostname.includes('web.telegram.org')) siteName = 'telegram';
+      else if (hostname.includes('coingecko.com')) siteName = 'coingecko';
+      else if (hostname.includes('coinmarketcap.com')) siteName = 'coinmarketcap';
+
+      // Check if site is activated
+      const result = await chrome.storage.sync.get(['site_toggles']);
+      const savedToggles = result.site_toggles || {};
+      const isActivated = savedToggles[siteName] !== false;
+      
+      if (!isActivated) {
+        console.log(`Site ${siteName} is not activated`);
         return;
       }
       

@@ -225,6 +225,18 @@ function showSystemMessage(message) {
   }, 5000);
 }
 
+// Add helper functions for site activation
+async function getSiteActivationState(siteName) {
+  const result = await chrome.storage.sync.get(['site_toggles']);
+  const savedToggles = result.site_toggles || {};
+  // Default to enabled if no saved state
+  return savedToggles[siteName] !== false;
+}
+
+async function isSiteActivated(siteName) {
+  return await getSiteActivationState(siteName);
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   // Load saved toggle states
   const toggles = document.querySelectorAll('.site-toggle input');
