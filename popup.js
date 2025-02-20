@@ -225,7 +225,7 @@ function showSystemMessage(message) {
   }, 5000);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   // Load saved toggle states
   const toggles = document.querySelectorAll('.site-toggle input');
   
