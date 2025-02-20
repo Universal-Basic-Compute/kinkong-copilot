@@ -10,15 +10,23 @@ const RATE_LIMIT_RESET_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
 let messageQueue = [];
 let isProcessingQueue = false;
 
+// Function to get remaining hours text
+function getRemainingHoursText(endTime) {
+  const now = Date.now();
+  const hoursRemaining = Math.ceil((endTime - now) / (60 * 60 * 1000));
+  return hoursRemaining <= 1 ? '1 hour' : `${hoursRemaining} hours`;
+}
+
 // Function to manage rate limit state
 async function manageRateLimitState(isLimited = true) {
   try {
     if (isLimited) {
-      // Set rate limit state with timestamp
+      const now = Date.now();
       await chrome.storage.local.set({
         rateLimitState: {
           isLimited: true,
-          timestamp: Date.now()
+          startTime: now,
+          endTime: now + RATE_LIMIT_RESET_INTERVAL
         }
       });
     } else {
@@ -58,11 +66,10 @@ async function checkAndResetRateLimit() {
   try {
     const result = await chrome.storage.local.get('rateLimitState');
     if (result.rateLimitState) {
-      const { timestamp } = result.rateLimitState;
+      const { endTime } = result.rateLimitState;
       const now = Date.now();
       
-      // If 4 hours have passed, reset the rate limit
-      if (now - timestamp >= RATE_LIMIT_RESET_INTERVAL) {
+      if (now >= endTime) {
         await manageRateLimitState(false);
       }
     }
@@ -249,7 +256,8 @@ export async function ensureChatInterface() {
         
         if (input) {
           input.disabled = true;
-          input.placeholder = 'Chat will be re-enabled in 4 hours...';
+          const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
+          input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
         }
         
         if (sendButton) {
@@ -641,12 +649,15 @@ async function initializeChatInterface(shadow) {
           // Create rate limit message element
           const rateLimitMessage = document.createElement('div');
           rateLimitMessage.className = 'kinkong-message bot rate-limit-message';
+          const result = await chrome.storage.local.get('rateLimitState');
+          const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
+          
           rateLimitMessage.innerHTML = `
             <div style="margin-bottom: 10px;">
               ⚠️ You've reached your free message limit.
             </div>
             <div style="margin-bottom: 15px;">
-              Your limit will reset in 4 hours, or upgrade to Premium for:
+              Your limit will reset in ${remainingTime}, or upgrade to Premium for:
               <ul style="margin-top: 8px; padding-left: 20px;">
                 <li>Unlimited AI interactions</li>
                 <li>Priority response time</li>
