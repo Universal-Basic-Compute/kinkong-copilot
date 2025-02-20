@@ -46,82 +46,11 @@ console.error = function(...args) {
 
 
 
-function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
-  const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
-  
-  if (messagesContainer) {
-    // If chat is closed, open it
-    if (!chatContainer.classList.contains('visible')) {
-      chatContainer.style.display = 'flex';
-      // Wait a tiny bit for display:flex to take effect
-      requestAnimationFrame(() => {
-        chatContainer.classList.add('visible');
-      });
-    }
-    
-    // Stop the floating animation when chat is open
-    if (copilotImage) {
-      copilotImage.style.animation = 'none';
-    }
-
-    messagesContainer.innerHTML += `
-      <div class="kinkong-message ${isUser ? 'user' : 'bot'}">
-        ${formatMessage(message)}
-      </div>
-    `;
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    // Save message if needed
-    if (shouldSave) {
-      saveMessage(message, isUser);
-    }
-  }
-}
-
-
-
-
-
-function waitForDOM() {
-  return new Promise(resolve => {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', resolve);
-    } else {
-      resolve();
-    }
-  });
-}
-
-// Initialize chat interface
-async function initialize() {
-  try {
-    // Wait for DOM to be ready
-    await waitForDOM();
-    
-    // Load saved preferences
-    const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-    
-    // Create interface if enabled
-    if (copilotEnabled) {
-      await injectFloatingCopilot();
-      console.log('Chat interface created successfully');
-      
-      // Check initial page
-      const initialPageType = isSupportedPage();
-      if (initialPageType) {
-        console.log('Initial page is supported:', initialPageType);
-        await handleUrlChange();
-      }
-    }
-  } catch (error) {
-    console.error('Error during initialization:', error);
-  }
-}
 
 // Start initialization
 initialize();
 
-// Listen for URL changes
+// Listen for URL changes 
 let lastUrl = location.href;
 new MutationObserver(() => {
   const url = location.href;
