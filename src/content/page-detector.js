@@ -22,6 +22,10 @@ export function isSolscanPage() {
   return window.location.hostname === 'solscan.io';
 }
 
+export function isTelegram() {
+  return window.location.hostname === 'web.telegram.org';
+}
+
 export function isSupportedPage() {
   // Currently implemented
   if (isDexScreenerTokenPage()) return 'dexscreener';
@@ -48,6 +52,9 @@ export function isSupportedPage() {
   if (isBybit()) return 'bybit';
   if (isGate()) return 'gate';
   if (isMexc()) return 'mexc';
+  
+  // Social/Community additions
+  if (isTelegram()) return 'telegram';
   
   return null;
 }
