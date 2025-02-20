@@ -72,8 +72,9 @@ async function initializeChatInterface(shadow) {
       right: 20px;
       width: 350px;
       height: 500px;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: rgba(26, 26, 26, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 215, 0, 0.2);
       border-radius: 12px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.5);
       display: none;
@@ -99,19 +100,19 @@ async function initializeChatInterface(shadow) {
 
     .kinkong-chat-input-container {
       padding: 15px;
-      border-top: 1px solid #333;
+      border-top: 1px solid rgba(255, 215, 0, 0.2);
       display: flex;
       gap: 12px;
-      background: #1a1a1a;
+      background: rgba(26, 26, 26, 0.95);
       border-radius: 0 0 12px 12px;
     }
 
     .kinkong-chat-input {
       flex: 1;
       padding: 12px;
-      border: 1px solid #444;
+      border: 1px solid rgba(255, 215, 0, 0.3);
       border-radius: 8px;
-      background: #2d2d2d;
+      background: rgba(45, 45, 45, 0.8);
       color: white;
       font-size: 14px;
       transition: all 0.3s ease;
@@ -125,7 +126,7 @@ async function initializeChatInterface(shadow) {
 
     .kinkong-chat-send {
       padding: 12px 20px;
-      background: linear-gradient(135deg, #ffd700, #ffb700);
+      background: linear-gradient(135deg, #FFD700, #FFA500);
       border: none;
       border-radius: 8px;
       color: black;
@@ -137,6 +138,7 @@ async function initializeChatInterface(shadow) {
     .kinkong-chat-send:hover {
       transform: translateY(-2px);
       box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+      background: linear-gradient(135deg, #FFA500, #FF8C00);
     }
 
     .kinkong-floating-copilot {
@@ -186,24 +188,26 @@ async function initializeChatInterface(shadow) {
     }
 
     .kinkong-message.user {
-      background: linear-gradient(135deg, #2d2d2d, #333);
+      background: linear-gradient(135deg, #FFD700, #FFA500);
       margin-left: auto;
-      color: white;
+      color: black;
       border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .kinkong-message.bot {
-      background: linear-gradient(135deg, #333, #383838);
+      background: linear-gradient(135deg, #FF4500, #8B0000);
       margin-right: auto;
-      color: #ffd700;
+      color: white;
       border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .typing-indicator {
       display: flex;
       gap: 5px;
       padding: 12px;
-      background: #333;
+      background: rgba(51, 51, 51, 0.8);
       border-radius: 12px;
       margin-bottom: 15px;
       width: fit-content;
@@ -212,7 +216,7 @@ async function initializeChatInterface(shadow) {
     .typing-dot {
       width: 8px;
       height: 8px;
-      background: #ffd700;
+      background: #FFD700;
       border-radius: 50%;
       animation: typing 1s infinite ease-in-out;
     }
