@@ -1,7 +1,7 @@
 const base = chrome.runtime.getURL('');
 
 // Initialize modules
-let chatInterface, domUtils, contentExtractor, pageDetector;
+let chatInterface, domUtils, contentExtractor, pageDetector, initModule, urlHandler;
 
 async function initializeModules() {
   // Import all required modules dynamically
@@ -9,6 +9,8 @@ async function initializeModules() {
   domUtils = await import(base + 'src/utils/dom-utils.js');
   contentExtractor = await import(base + 'src/content/content-extractor.js');
   pageDetector = await import(base + 'src/content/page-detector.js');
+  initModule = await import(base + 'src/init.js');
+  urlHandler = await import(base + 'src/handlers/url-handler.js');
 }
 
 // Initialize copilot state
@@ -72,7 +74,7 @@ initializeModules().then(() => {
   });
 
   // Start initialization
-  initialize();
+  initModule.initialize();
 
   // Listen for URL changes 
   let lastUrl = location.href;
@@ -82,7 +84,7 @@ initializeModules().then(() => {
       console.log('URL changed to:', url);
       lastUrl = url;
       if (copilotEnabled) {
-        handleUrlChange().catch(error => {
+        urlHandler.handleUrlChange().catch(error => {
           console.error('Error handling URL change:', error);
         });
       }
