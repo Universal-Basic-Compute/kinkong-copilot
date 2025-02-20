@@ -60,4 +60,8 @@ export async function makeApiCall(endpoint, data) {
 
     throw new Error('Unable to connect to SwarmTrade API. The service may be down or blocked by CORS policy.');
   }
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 }
