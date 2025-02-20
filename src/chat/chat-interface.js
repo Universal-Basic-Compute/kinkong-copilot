@@ -136,6 +136,15 @@ async function processMessageQueue() {
         throw new Error('Chat interface not ready');
       }
 
+      // Check rate limit state before adding messages
+      const result = await chrome.storage.local.get('rateLimitState');
+      if (result.rateLimitState?.isLimited) {
+        // Clear queue if rate limited
+        messageQueue = [];
+        isProcessingQueue = false;
+        return;
+      }
+
       const { messagesContainer } = elements;
       
       // For user messages or initial messages, add them instantly
@@ -146,21 +155,17 @@ async function processMessageQueue() {
         messagesContainer.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } else {
-        // Use paragraph-by-paragraph display for received messages
         await addMessageParagraphsToChat(message, isUser, messagesContainer);
       }
 
-      // Save if needed
       if (shouldSave) {
         saveMessage(message, isUser);
       }
 
-      // If there's a shadow, show speech bubbles
       if (shadow) {
         await showMessageParagraphs(message, shadow);
       }
       
-      // Remove processed message from queue
       messageQueue.shift();
       
     } catch (error) {
