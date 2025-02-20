@@ -143,6 +143,17 @@ function getReadingTime(text) {
 }
 
 export async function showMessageParagraphs(responseText, shadow) {
+  // Check if chat is open first
+  const chatContainer = shadow.querySelector('.kinkong-chat-container');
+  const isChatOpen = chatContainer && 
+    chatContainer.style.display === 'flex' && 
+    chatContainer.classList.contains('visible');
+
+  // If chat is open, don't show speech bubbles
+  if (isChatOpen) {
+    return;
+  }
+
   // Split message into paragraphs (split by double newline or markdown headers)
   const paragraphs = responseText.split(/\n\n|(?=#{1,6}\s)/g)
     .filter(p => p.trim().length > 0);
