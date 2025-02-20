@@ -327,6 +327,11 @@ async function initializeChatInterface(shadow) {
       chatContainer.style.display = 'flex';
       requestAnimationFrame(() => {
         chatContainer.classList.add('visible');
+        // Scroll to bottom when opening
+        const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
       });
       img.style.animation = 'none';
     }
