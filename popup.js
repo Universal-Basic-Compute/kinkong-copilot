@@ -351,7 +351,6 @@ async function connectPhantomWallet() {
       chrome.tabs.sendMessage(tab.id, { 
         type: 'PHANTOM_CONNECT_REQUEST' 
       }, (response) => {
-        // Handle potential undefined response
         if (chrome.runtime.lastError) {
           resolve({ error: 'Content script not ready' });
         } else {
@@ -371,8 +370,9 @@ async function connectPhantomWallet() {
       if (response.error === 'Phantom not installed') {
         walletStatus.textContent = 'Please install Phantom wallet';
         walletStatus.style.color = '#e74c3c';
-        // Open Phantom website in new tab
-        window.open('https://phantom.app/', '_blank');
+        // Only open Phantom website if user clicks the button again
+        connectWalletBtn.textContent = 'Install Phantom';
+        connectWalletBtn.onclick = () => window.open('https://phantom.app/', '_blank');
       } else if (response.error === 'Content script not ready') {
         walletStatus.textContent = 'Please refresh the page';
         walletStatus.style.color = '#e74c3c';
