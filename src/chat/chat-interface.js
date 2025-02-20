@@ -65,7 +65,138 @@ async function initializeChatInterface(shadow) {
         
   // Add styles
   const style = document.createElement('style');
-  style.textContent = `/* ... existing styles ... */`;
+  style.textContent = `
+    .kinkong-chat-container {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background: #1a1a1a;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      z-index: 999999;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .kinkong-chat-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .kinkong-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .kinkong-chat-input-container {
+      padding: 10px;
+      border-top: 1px solid #333;
+      display: flex;
+      gap: 10px;
+    }
+
+    .kinkong-chat-input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      background: #2d2d2d;
+      color: white;
+    }
+
+    .kinkong-chat-send {
+      padding: 8px 15px;
+      background: #ffd700;
+      border: none;
+      border-radius: 5px;
+      color: black;
+      cursor: pointer;
+    }
+
+    .kinkong-floating-copilot {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      z-index: 999999;
+      animation: kinkong-float 3s ease-in-out infinite;
+    }
+
+    @keyframes kinkong-float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .kinkong-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .kinkong-message.user {
+      background: #2d2d2d;
+      margin-left: auto;
+      color: white;
+    }
+
+    .kinkong-message.bot {
+      background: #333;
+      margin-right: auto;
+      color: #ffd700;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #ffd700;
+      border-radius: 50%;
+      animation: typing 1s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* Scrollbar styles */
+    .kinkong-chat-messages::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .kinkong-chat-messages::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .kinkong-chat-messages::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 5px;
+    }
+  `;
   shadow.appendChild(style);
 
   // Create chat container
