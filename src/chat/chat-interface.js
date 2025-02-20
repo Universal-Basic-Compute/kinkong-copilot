@@ -2,6 +2,7 @@ import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
 import { makeApiCall } from '../api/api-client.js';
 import { showMessageParagraphs } from '../handlers/url-handler.js';
+import { isSupportedPage } from '../content/page-detector.js';
 
 // Message queue system
 let messageQueue = [];
