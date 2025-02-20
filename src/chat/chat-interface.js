@@ -6,6 +6,8 @@ import { showMessageParagraphs } from '../handlers/url-handler.js';
 // Activity tracking variables
 let userActivityTimeout;
 let messageInterval;
+let isTabVisible = !document.hidden;
+let isTabFocused = document.hasFocus();
 const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes of inactivity before stopping
 const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
@@ -481,6 +483,15 @@ async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
 }
 
 function handleUserActivity() {
+  // Only proceed if tab is visible and focused
+  if (!isTabVisible || !isTabFocused) {
+    if (messageInterval) {
+      clearInterval(messageInterval);
+      messageInterval = null;
+    }
+    return;
+  }
+
   // Clear existing timeouts
   if (userActivityTimeout) {
     clearTimeout(userActivityTimeout);
@@ -543,6 +554,33 @@ function handleUserActivity() {
 }
 
 function setupActivityTracking(shadow) {
+  // Track tab visibility
+  document.addEventListener('visibilitychange', () => {
+    isTabVisible = !document.hidden;
+    if (!isTabVisible && messageInterval) {
+      clearInterval(messageInterval);
+      messageInterval = null;
+    } else if (isTabVisible && isTabFocused) {
+      handleUserActivity();
+    }
+  });
+
+  // Track window focus
+  window.addEventListener('focus', () => {
+    isTabFocused = true;
+    if (isTabVisible) {
+      handleUserActivity();
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    isTabFocused = false;
+    if (messageInterval) {
+      clearInterval(messageInterval);
+      messageInterval = null;
+    }
+  });
+
   // Track user activity
   const activityEvents = ['mousedown', 'keydown', 'mousemove', 'wheel', 'touchstart'];
   
@@ -551,8 +589,10 @@ function setupActivityTracking(shadow) {
     document.addEventListener(eventType, handleUserActivity, { passive: true });
   });
 
-  // Start tracking immediately
-  handleUserActivity();
+  // Start tracking if tab is visible and focused
+  if (isTabVisible && isTabFocused) {
+    handleUserActivity();
+  }
 
   // Clean up on page unload
   window.addEventListener('unload', () => {
