@@ -75,29 +75,31 @@ const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 // Wallet ID management
 export async function getOrCreateWalletId() {
   try {
-    // Try to get existing code ID from storage
-    const result = await chrome.storage.local.get('codeId');
-    if (result.codeId) {
-      return result.codeId;
+    // Check if ID exists in storage
+    const result = await chrome.storage.local.get('walletId');
+    
+    // Return existing ID if valid
+    if (result.walletId && result.walletId !== '803c7488f8632c0b9506c6f2fec75405') {
+      return result.walletId;
     }
 
-    // Generate new code ID using crypto API
-    const buffer = new Uint8Array(32); // Using 32 bytes for SHA-256
+    // Generate new random code
+    const buffer = new Uint8Array(32);
     crypto.getRandomValues(buffer);
     
-    // Convert to hex string and take first 32 chars
-    const codeId = Array.from(buffer)
+    // Convert to 32-char hex string
+    const walletId = Array.from(buffer)
       .map(b => b.toString(16).padStart(2, '0'))
       .join('')
       .substring(0, 32);
 
-    // Store the code ID
-    await chrome.storage.local.set({ codeId: codeId });
+    // Save to local storage
+    await chrome.storage.local.set({ walletId: walletId });
 
-    return codeId;
+    return walletId;
   } catch (error) {
     console.error('Error managing wallet ID:', error);
-    return 'DEFAULT';
+    return '803c7488f8632c0b9506c6f2fec75405'; // Default code if error
   }
 }
 
