@@ -133,11 +133,7 @@ function extractVisibleContent() {
 
 
 // Helper function to find price-like numbers in text
-function findPrices(text) {
-  const priceRegex = /\$\s*\d+(?:[.,]\d+)?/g;
-  const matches = text.match(priceRegex);
-  return matches || [];
-}
+import { findPrices } from './src/utils/dom-utils.js';
 
 // First inject the marked library
 const markedScript = document.createElement('script');
