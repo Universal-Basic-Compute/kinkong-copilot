@@ -106,15 +106,15 @@ export async function injectFloatingCopilot() {
           }
 
           .kinkong-message {
-            margin-bottom: 4px;
-            padding: 8px 12px;
+            margin-bottom: 8px;
+            padding: 6px 12px;
             border-radius: 18px;
             max-width: 85%;
             white-space: pre-wrap;
             word-wrap: break-word;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.3;
             display: inline-block;
             width: auto;
           }
