@@ -695,113 +695,20 @@ async function initializeChatInterface(shadow) {
       } catch (error) {
         console.error('API Error:', error);
         document.getElementById(loadingId)?.remove();
-        
-        let errorData;
-        try {
-          // Try multiple ways to parse the error response
-          if (typeof error.message === 'string') {
-            try {
-              errorData = JSON.parse(error.message);
-            } catch (e) {
-              // Not JSON in error.message
-            }
-          }
-          
-          if (!errorData && typeof error === 'string') {
-            try {
-              errorData = JSON.parse(error);
-            } catch (e) {
-              // Not JSON string
-            }
-          }
 
-          // Try to parse response text if available
-          if (!errorData && error.responseText) {
-            try {
-              errorData = JSON.parse(error.responseText);
-            } catch (e) {
-              // Not JSON in responseText
-            }
-          }
+        // Convertir l'erreur en string pour pouvoir chercher dedans
+        const errorStr = JSON.stringify(error);
 
-          // If still no parsed data, check if error is already an object
-          if (!errorData && typeof error === 'object') {
-            errorData = error;
-          }
-
-        } catch (e) {
-          console.log('Error parsing error response:', e);
-          errorData = { error: error.message || error.toString() };
+        // Si c'est une erreur de rate limit, ne rien afficher
+        if (errorStr.includes('Rate limit exceeded')) {
+          return; // On sort simplement de la fonction
         }
 
-        if (errorData?.error === 'Rate limit exceeded') {
-          // Set rate limit state
-          await manageRateLimitState(true);
-            
-          const rateLimitMessage = document.createElement('div');
-          rateLimitMessage.className = 'kinkong-message bot rate-limit-message';
-          const result = await chrome.storage.local.get('rateLimitState');
-          const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
-          
-          rateLimitMessage.innerHTML = `
-            <div style="margin-bottom: 10px;">
-              ⚠️ ${errorData.details || 'You\'ve reached your free message limit.'}
-            </div>
-            <div style="margin-bottom: 10px;">
-              Your limit will reset in ${remainingTime}.
-            </div>
-            <div style="margin: 10px 0; font-size: 13px; color: #bbb;">
-              Message Limits:
-              <div>• ${errorData.subscription?.free || 'Free: 10 messages per 4 hours'}</div>
-              <div>• ${errorData.subscription?.premium || 'Premium: 100 messages per 4 hours'}</div>
-            </div>
-            <div style="margin-bottom: 15px;">
-              Upgrade to Premium for:
-              <ul style="margin-top: 8px; padding-left: 20px;">
-                <li>Increased message limits</li>
-                <li>Priority response time</li>
-                <li>Advanced trading signals</li>
-                <li>Portfolio tracking</li>
-              </ul>
-            </div>
-            <a href="https://swarmtrade.ai/copilot" 
-               target="_blank" 
-               style="
-                 display: inline-block;
-                 background: linear-gradient(135deg, #ffd700, #ffa502);
-                 color: #1a1a1a;
-                 padding: 8px 16px;
-                 border-radius: 6px;
-                 text-decoration: none;
-                 font-weight: 600;
-                 transition: all 0.3s ease;
-               "
-               onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform='translateY(0)'">
-              Upgrade to Premium
-            </a>
-          `;
-            
-          messagesContainer.appendChild(rateLimitMessage);
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-          // Disable input and update placeholder
-          const input = chatContainer.querySelector('.kinkong-chat-input');
-          input.disabled = true;
-          input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
-            
-          // Disable send button
-          const sendButton = chatContainer.querySelector('.kinkong-chat-send');
-          sendButton.disabled = true;
-          sendButton.style.opacity = '0.5';
-          
-        } else {
-          // Handle other errors
-          addMessageToChatContainer(
-            "Sorry, I'm having trouble connecting right now. Please try again later.",
-            false
-          );
-        }
+        // Pour les autres erreurs, on garde le message par défaut
+        addMessageToChatContainer(
+          "Sorry, I'm having trouble connecting right now. Please try again later.",
+          false
+        );
       }
     }
   };
