@@ -51,8 +51,6 @@ export async function handleUrlChange() {
     addMessageToChatContainer(initialMessage, true);
 
     const loadingId = 'loading-' + Date.now();
-    // Add user message first
-    messagesContainer.appendChild(messageDiv);
     
     // Create and add loading indicator
     const loadingIndicator = document.createElement('div');
