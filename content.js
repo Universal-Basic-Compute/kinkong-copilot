@@ -40,19 +40,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Initialize copilot state
-document.addEventListener('DOMContentLoaded', async () => {
-  chrome.storage.sync.get({
-    copilotEnabled: true
-  }, (items) => {
-    copilotEnabled = items.copilotEnabled;
-    const copilotImage = document.querySelector('.kinkong-floating-copilot');
-    if (copilotImage) {
-      copilotImage.style.display = copilotEnabled ? 'block' : 'none';
-    }
-  });
-});
-
 // Suppress ResizeObserver errors
 const consoleError = console.error;
 console.error = function(...args) {
@@ -60,47 +47,14 @@ console.error = function(...args) {
   consoleError.apply(console, args);
 };
 
-
-
-
-
-
 // Initialize everything after modules are loaded
 initializeModules().then(() => {
   console.log('Modules initialized, starting app...');
   
-  // Initialize copilot state
-  document.addEventListener('DOMContentLoaded', async () => {
-    chrome.storage.sync.get({
-      copilotEnabled: true
-    }, (items) => {
-      copilotEnabled = items.copilotEnabled;
-      const copilotImage = document.querySelector('.kinkong-floating-copilot');
-      if (copilotImage) {
-        copilotImage.style.display = copilotEnabled ? 'block' : 'none';
-      }
-    });
-  });
-
-  // Start initialization
+  console.log('Modules initialized, starting app...');
   initModule.initialize().catch(error => {
     console.error('Error during initialization:', error);
   });
-
-  // Listen for URL changes 
-  let lastUrl = location.href;
-  new MutationObserver(() => {
-    const url = location.href;
-    if (url !== lastUrl) {
-      console.log('URL changed to:', url);
-      lastUrl = url;
-      if (copilotEnabled) {
-        urlHandler.handleUrlChange().catch(error => {
-          console.error('Error handling URL change:', error);
-        });
-      }
-    }
-  }).observe(document, {subtree: true, childList: true});
 }).catch(error => {
   console.error('Failed to initialize modules:', error);
 });
