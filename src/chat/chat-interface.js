@@ -652,46 +652,44 @@ async function initializeChatInterface(shadow) {
         console.error('API Error:', error);
         document.getElementById(loadingId)?.remove();
         
-        // Check if error response is JSON
         let errorData;
         try {
+          // Try to parse the error.message if it's JSON
           errorData = JSON.parse(error.message);
         } catch (e) {
-          // If not JSON, use message directly
-          errorData = {
-            error: error.message
-          };
+          // If that fails, check if error itself is already parsed JSON
+          if (typeof error === 'string') {
+            try {
+              errorData = JSON.parse(error);
+            } catch (e2) {
+              errorData = { error: error };
+            }
+          } else {
+            errorData = error;
+          }
         }
 
-        if (errorData.error === 'Rate limit exceeded' || error.message === 'RATE_LIMIT_EXCEEDED') {
+        if (errorData.error === 'Rate limit exceeded') {
           // Set rate limit state
           await manageRateLimitState(true);
             
-          // Create rate limit message element
           const rateLimitMessage = document.createElement('div');
           rateLimitMessage.className = 'kinkong-message bot rate-limit-message';
           const result = await chrome.storage.local.get('rateLimitState');
           const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
           
-          // Format subscription tiers info if available
-          let tiersInfo = '';
-          if (errorData.subscription) {
-            tiersInfo = `
-              <div style="margin: 10px 0; font-size: 13px; color: #bbb;">
-                <div>• Free: ${errorData.subscription.free}</div>
-                <div>• Premium: ${errorData.subscription.premium}</div>
-              </div>
-            `;
-          }
-          
           rateLimitMessage.innerHTML = `
             <div style="margin-bottom: 10px;">
-              ⚠️ You've reached your free message limit.
+              ⚠️ ${errorData.details || 'You've reached your free message limit.'}
             </div>
             <div style="margin-bottom: 10px;">
               Your limit will reset in ${remainingTime}.
             </div>
-            ${tiersInfo}
+            <div style="margin: 10px 0; font-size: 13px; color: #bbb;">
+              Message Limits:
+              <div>• ${errorData.subscription?.free || 'Free: 10 messages per 4 hours'}</div>
+              <div>• ${errorData.subscription?.premium || 'Premium: 100 messages per 4 hours'}</div>
+            </div>
             <div style="margin-bottom: 15px;">
               Upgrade to Premium for:
               <ul style="margin-top: 8px; padding-left: 20px;">
@@ -733,7 +731,7 @@ async function initializeChatInterface(shadow) {
           sendButton.style.opacity = '0.5';
           
         } else {
-          // Handle other errors as before
+          // Handle other errors
           addMessageToChatContainer(
             "Sorry, I'm having trouble connecting right now. Please try again later.",
             false
