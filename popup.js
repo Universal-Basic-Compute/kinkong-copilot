@@ -226,11 +226,18 @@ function showSystemMessage(message) {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // Show KinKong if it was hidden
-  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, {
-      type: 'showKinKongIfInactive'
-    });
+  // First try to send message directly
+  chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+    try {
+      await chrome.tabs.sendMessage(tabs[0].id, {
+        type: 'showKinKongIfInactive'
+      });
+    } catch (e) {
+      // If message fails (content script not present), inject it
+      chrome.runtime.sendMessage({
+        type: 'INJECT_CONTENT'
+      });
+    }
   });
 
   // await checkSubscriptionStatus();

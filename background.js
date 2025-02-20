@@ -43,6 +43,33 @@ function connectSSE() {
 // Initialize SSE connection when extension starts
 connectSSE();
 
+// Handle content script injection
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'INJECT_CONTENT') {
+    chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+      const tab = tabs[0];
+      // Skip chrome:// and edge:// URLs
+      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+        return;
+      }
+      
+      try {
+        // Inject all necessary files
+        await chrome.scripting.executeScript({
+          target: {tabId: tab.id},
+          files: ['content.js']
+        });
+        // Send follow-up message to show KinKong
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'showKinKongIfInactive'
+        });
+      } catch (error) {
+        console.error('Injection failed:', error);
+      }
+    });
+  }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('KinKong Copilot Extension Installed');
   
