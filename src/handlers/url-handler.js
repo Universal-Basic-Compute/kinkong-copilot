@@ -237,7 +237,5 @@ export async function showMessageParagraphs(responseText, shadow) {
 }
 
 function getInitialMessage(pageType) {
-  const path = window.location.pathname;
-  const cleanPath = path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, '');
-  return `I'm on ${cleanPath}, what do you think?`;
+  return `I'm on ${window.location.href}, what do you think?`;
 }
