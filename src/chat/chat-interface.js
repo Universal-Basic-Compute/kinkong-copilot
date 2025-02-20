@@ -69,6 +69,59 @@ const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes of inactivity before stoppi
 const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
 // Cache for interface elements
+// Wallet ID management
+async function getOrCreateWalletId() {
+  try {
+    // Try to get existing wallet ID from storage
+    const result = await chrome.storage.local.get('walletId');
+    if (result.walletId) {
+      return result.walletId;
+    }
+
+    // Generate new wallet ID if none exists
+    const array = new Uint8Array(12); // Use 12 bytes for more entropy
+    crypto.getRandomValues(array);
+    const walletId = Array.from(array, b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+
+    // Store with current timestamp and other metadata
+    const metadata = {
+      walletId: walletId,
+      createdAt: Date.now(),
+      browserInfo: navigator.userAgent,
+      installId: crypto.randomUUID() // Additional unique identifier
+    };
+
+    // Encrypt metadata before storing
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(metadata));
+    const key = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 }, 
+      true, 
+      ['encrypt', 'decrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      key,
+      data
+    );
+
+    // Store encrypted data
+    await chrome.storage.local.set({
+      walletId: walletId,
+      walletData: {
+        encrypted: Array.from(new Uint8Array(encrypted)),
+        iv: Array.from(iv)
+      }
+    });
+
+    return walletId;
+  } catch (error) {
+    console.error('Error managing wallet ID:', error);
+    return 'DEFAULT'; // Fallback
+  }
+}
+
 let interfaceElements = null;
 
 export async function ensureChatInterface() {
