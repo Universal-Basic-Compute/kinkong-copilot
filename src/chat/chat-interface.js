@@ -626,8 +626,17 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
     messageLength: message.length
   });
 
-  // Add paragraphs with delay
-  await addMessageParagraphsToChat(message, isUser, messagesContainer);
+  // For user messages or initial messages, add them instantly
+  if (isUser || shouldSave === false) { // shouldSave=false indicates it's a stored/initial message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+    messageDiv.innerHTML = formatMessage(message);
+    messagesContainer.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    // Only use paragraph-by-paragraph display for received messages
+    await addMessageParagraphsToChat(message, isUser, messagesContainer);
+  }
 
   // Save if needed
   if (shouldSave) {
