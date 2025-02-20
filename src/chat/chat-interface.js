@@ -4,132 +4,16 @@ import { makeApiCall } from '../api/api-client.js';
 import { showMessageParagraphs } from '../handlers/url-handler.js';
 import { isSupportedPage } from '../content/page-detector.js';
 
-const RATE_LIMIT_RESET_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-
 // Message queue system
 let messageQueue = [];
 let isProcessingQueue = false;
-
-// Function to get remaining hours text
-function getRemainingHoursText(endTime) {
-  const now = Date.now();
-  const hoursRemaining = Math.ceil((endTime - now) / (60 * 60 * 1000));
-  return hoursRemaining <= 1 ? '1 hour' : `${hoursRemaining} hours`;
-}
 
 // Fonction utilitaire pour vérifier si le contexte est valide
 function isExtensionContextValid() {
   return typeof chrome !== 'undefined' && chrome?.runtime?.id;
 }
 
-// Function to manage rate limit state
-async function manageRateLimitState(isLimited = true) {
-  if (!isExtensionContextValid()) {
-    console.log('Extension context invalid, skipping rate limit management');
-    return;
-  }
 
-  try {
-    if (isLimited) {
-      const now = Date.now();
-      await chrome.storage.local.set({
-        rateLimitState: {
-          isLimited: true,
-          startTime: now,
-          endTime: now + RATE_LIMIT_RESET_INTERVAL
-        }
-      });
-    } else {
-      await chrome.storage.local.remove('rateLimitState');
-      
-      // Re-enable chat interface
-      const elements = await ensureChatInterface();
-      if (elements && elements.chatContainer) {
-        const input = elements.chatContainer.querySelector('.kinkong-chat-input');
-        const sendButton = elements.chatContainer.querySelector('.kinkong-chat-send');
-        
-        if (input) {
-          input.disabled = false;
-          input.placeholder = 'Type your message...';
-        }
-        
-        if (sendButton) {
-          sendButton.disabled = false;
-          sendButton.style.opacity = '1';
-        }
-        
-        // Remove rate limit message if it exists
-        const rateLimitMessage = elements.messagesContainer.querySelector('.rate-limit-message');
-        if (rateLimitMessage) {
-          rateLimitMessage.remove();
-        }
-      }
-    }
-  } catch (error) {
-    console.log('Rate limit state management error:', error);
-  }
-}
-
-
-// Rate limit checking setup
-function setupRateLimitCheck() {
-  let checkInterval;
-
-  function clearCheck() {
-    if (checkInterval) {
-      clearInterval(checkInterval);
-      checkInterval = null;
-    }
-  }
-
-  async function check() {
-    try {
-      // Verify extension context is valid
-      if (!chrome?.runtime?.id) {
-        console.log('Extension context invalid, clearing rate limit check');
-        clearCheck();
-        return;
-      }
-
-      const result = await chrome.storage.local.get('rateLimitState');
-      if (!result?.rateLimitState) return;
-
-      const now = Date.now();
-      if (now >= result.rateLimitState.endTime) {
-        await manageRateLimitState(false);
-      } else {
-        const elements = await ensureChatInterface().catch(() => null);
-        if (elements?.chatContainer) {
-          const input = elements.chatContainer.querySelector('.kinkong-chat-input');
-          if (input?.disabled) {
-            const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
-            input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
-          }
-        }
-      }
-    } catch (error) {
-      console.log('Rate limit check error:', error);
-      if (error.message.includes('Extension context invalidated')) {
-        clearCheck();
-      }
-    }
-  }
-
-  // Initial check
-  check();
-
-  // Setup interval with context validation
-  checkInterval = setInterval(() => {
-    if (!chrome?.runtime?.id) {
-      clearCheck();
-      return;
-    }
-    check();
-  }, 60000);
-
-  // Clean up on unload
-  window.addEventListener('unload', clearCheck);
-}
 
 async function processMessageQueue() {
   if (isProcessingQueue || messageQueue.length === 0) return;
@@ -143,15 +27,6 @@ async function processMessageQueue() {
       const elements = await ensureChatInterface();
       if (!elements || !elements.messagesContainer) {
         throw new Error('Chat interface not ready');
-      }
-
-      // Check rate limit state before adding messages
-      const result = await chrome.storage.local.get('rateLimitState');
-      if (result.rateLimitState?.isLimited) {
-        // Clear queue if rate limited
-        messageQueue = [];
-        isProcessingQueue = false;
-        return;
       }
 
       const { messagesContainer } = elements;
@@ -337,9 +212,6 @@ export async function ensureChatInterface() {
 async function initializeChatInterface(shadow) {
   // Get saved preference
   const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-  
-  // Setup rate limit checking
-  setupRateLimitCheck();
         
   // Add styles
   const style = document.createElement('style');
@@ -710,23 +582,7 @@ async function initializeChatInterface(shadow) {
         console.error('API Error:', error);
         document.getElementById(loadingId)?.remove();
 
-        // Convertir l'erreur en string pour pouvoir chercher dedans
-        const errorStr = JSON.stringify(error);
-
-        // Si le contexte de l'extension est invalide, sortir proprement
-        if (!isExtensionContextValid()) {
-          console.log('Extension context invalid, stopping error handling');
-          return;
-        }
-
-        // Si c'est une erreur de rate limit
-        if (errorStr.includes('Rate limit exceeded')) {
-          // Configurer l'état de rate limit de manière sécurisée
-          await manageRateLimitState(true);
-          return;
-        }
-
-        // Pour les autres erreurs, on garde le message par défaut
+        // Pour toutes les erreurs, on affiche juste le message par défaut
         addMessageToChatContainer(
           "Sorry, I'm having trouble connecting right now. Please try again later.",
           false
