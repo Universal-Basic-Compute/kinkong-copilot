@@ -69,18 +69,36 @@ export async function handleUrlChange() {
         fullyLoaded: elementsLoaded
       });
 
+      // Add debug logging
+      console.group('API Response Details');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      console.groupEnd();
+
+      // Remove loading indicator
       document.getElementById(loadingId)?.remove();
 
-      const responseText = await response.text();
+      // Check if response is empty or invalid
+      if (!responseText || responseText.trim() === '') {
+        throw new Error('Empty response from API');
+      }
+
+      // Add the message to chat
       addMessageToChatContainer(responseText, false);
       
     } catch (error) {
       console.error('API Error:', error);
       document.getElementById(loadingId)?.remove();
-      addMessageToChatContainer(
-        'Sorry, I\'m having trouble connecting right now. Please try again later.',
-        false
-      );
+      
+      // More descriptive error message
+      const errorMessage = error.message === 'Empty response from API' 
+        ? "I didn't receive a response from the server. Please try again."
+        : "Sorry, I'm having trouble connecting right now. Please try again later.";
+        
+      addMessageToChatContainer(errorMessage, false);
     }
   } catch (error) {
     console.error('Error in handleUrlChange:', error);
