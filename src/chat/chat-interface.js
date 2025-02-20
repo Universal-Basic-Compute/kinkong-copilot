@@ -61,6 +61,15 @@ async function processMessageQueue() {
   isProcessingQueue = false;
 }
 
+// Auto message options
+const AUTO_MESSAGES = [
+  "what else?",
+  "anything interesting here?", 
+  "should I analyze something specific?",
+  "want me to look deeper?",
+  "notice anything important?"
+];
+
 // Activity tracking variables
 let userActivityTimeout;
 let messageInterval;
@@ -670,12 +679,12 @@ function handleUserActivity() {
       }
 
       autoMessageCount++;
-      const message = "what else?";
-      addMessageToChatContainer(message, true);
+      const randomMessage = AUTO_MESSAGES[Math.floor(Math.random() * AUTO_MESSAGES.length)];
+      addMessageToChatContainer(randomMessage, true);
 
       try {
         const response = await makeApiCall('copilot', {
-          message: message,
+          message: randomMessage,
           url: window.location.href,
           pageContent: null,
           pageType: null,
