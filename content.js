@@ -44,8 +44,6 @@ console.error = function(...args) {
 
 
 
-// Helper function to find price-like numbers in text
-import { findPrices } from './src/utils/dom-utils.js';
 
 // First inject the marked library
 const markedScript = document.createElement('script');
@@ -77,25 +75,6 @@ function formatMessage(text) {
 }
 
 
-async function waitForXContent() {
-  const maxWaitTime = 5000; // 5 seconds maximum wait
-  const startTime = Date.now();
-  
-  while (Date.now() - startTime < maxWaitTime) {
-    // Check for main timeline or profile content
-    const timeline = document.querySelector('[data-testid="primaryColumn"]');
-    const tweets = document.querySelectorAll('[data-testid="tweet"]');
-    const profileInfo = document.querySelector('[data-testid="UserName"]');
-    
-    if ((timeline && tweets.length > 0) || profileInfo) {
-      return true;
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  
-  return false;
-}
 
 function extractXContent() {
   const content = {
