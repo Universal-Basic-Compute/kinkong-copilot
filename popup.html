@@ -449,6 +449,74 @@
       margin-top: 2px;
     }
 
+    .site-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .site-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .site-item:hover {
+      background: rgba(255, 215, 0, 0.1);
+    }
+
+    .site-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .site-toggle {
+      position: relative;
+      width: 40px;
+      height: 20px;
+    }
+
+    .site-toggle input {
+      display: none;
+    }
+
+    .site-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--secondary-black);
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+
+    .site-toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      left: 2px;
+      top: 2px;
+      background: white;
+      transition: 0.3s;
+    }
+
+    .site-toggle input:checked + .site-toggle-slider {
+      background: var(--primary-gold);
+    }
+
+    .site-toggle input:checked + .site-toggle-slider:before {
+      transform: translateX(20px);
+    }
+
     .settings-content {
       padding: 15px;
       height: 400px;
@@ -520,15 +588,28 @@
               <span class="category-icon">⭐</span>
               <span class="category-title">Official</span>
             </div>
-            <div class="app-grid">
-              <a href="https://swarmtrade.ai" target="_blank" class="app-item">
-                <div class="app-name">swarmtrade<span class="domain">.ai</span></div>
-                <div class="app-desc">AI trading signals</div>
-              </a>
-              <a href="https://universalbasiccompute.ai" target="_blank" class="app-item">
-                <div class="app-name">ubc<span class="domain">.ai</span></div>
-                <div class="app-desc">Web3 compute network</div>
-              </a>
+            <div class="site-list">
+              <div class="site-item" data-site="swarmtrade">
+                <div class="site-info">
+                  <div class="app-name">swarmtrade<span class="domain">.ai</span></div>
+                  <div class="app-desc">AI trading signals</div>
+                </div>
+                <label class="site-toggle">
+                  <input type="checkbox" checked>
+                  <span class="site-toggle-slider"></span>
+                </label>
+              </div>
+              
+              <div class="site-item" data-site="ubc">
+                <div class="site-info">
+                  <div class="app-name">ubc<span class="domain">.ai</span></div>
+                  <div class="app-desc">Web3 compute network</div>
+                </div>
+                <label class="site-toggle">
+                  <input type="checkbox" checked>
+                  <span class="site-toggle-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
