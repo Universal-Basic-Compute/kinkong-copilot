@@ -94,17 +94,24 @@ export async function handleUrlChange() {
         throw new Error('Empty response from API');
       }
 
+      // Get the shadow root
+      const shadowContainer = document.getElementById('kinkong-shadow-container');
+      if (!shadowContainer || !shadowContainer.shadowRoot) {
+        throw new Error('Shadow container not found');
+      }
+      const shadow = shadowContainer.shadowRoot;
+
       // Remove any existing speech bubble
-      const existingBubble = document.querySelector('.kinkong-speech-bubble');
+      const existingBubble = shadow.querySelector('.kinkong-speech-bubble');
       if (existingBubble) {
         existingBubble.remove();
       }
 
-      // Create speech bubble
+      // Create speech bubble inside shadow DOM
       const speechBubble = document.createElement('div');
       speechBubble.className = 'kinkong-speech-bubble';
       speechBubble.innerHTML = formatMessage(responseText);
-      document.body.appendChild(speechBubble);
+      shadow.appendChild(speechBubble);
 
       // Auto-remove bubble after 8 seconds
       setTimeout(() => {
