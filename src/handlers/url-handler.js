@@ -113,12 +113,42 @@ export async function handleUrlChange() {
       speechBubble.innerHTML = formatMessage(responseText);
       shadow.appendChild(speechBubble);
 
-      // Auto-remove bubble after 8 seconds
+      // Add click handler to open chat
+      speechBubble.addEventListener('click', () => {
+        // Remove the bubble immediately
+        speechBubble.remove();
+        
+        // Get chat container and show it
+        const chatContainer = shadow.querySelector('.kinkong-chat-container');
+        if (chatContainer) {
+          chatContainer.style.display = 'flex';
+          requestAnimationFrame(() => {
+            chatContainer.classList.add('visible');
+            // Scroll to bottom
+            const messagesContainer = chatContainer.querySelector('.kinkong-chat-messages');
+            if (messagesContainer) {
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+          });
+        }
+        
+        // Stop KinKong's floating animation
+        const copilotImage = shadow.querySelector('.kinkong-floating-copilot');
+        if (copilotImage) {
+          copilotImage.style.animation = 'none';
+        }
+      });
+
+      // Auto-remove bubble after 8 seconds if not clicked
       setTimeout(() => {
-        speechBubble.classList.add('fade-out');
-        setTimeout(() => {
-          speechBubble.remove();
-        }, 300);
+        if (shadow.contains(speechBubble)) {  // Only if bubble still exists
+          speechBubble.classList.add('fade-out');
+          setTimeout(() => {
+            if (shadow.contains(speechBubble)) {  // Double check before removal
+              speechBubble.remove();
+            }
+          }, 300);
+        }
       }, 8000);
 
       // Still add message to chat history
