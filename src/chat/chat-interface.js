@@ -323,6 +323,20 @@ async function initializeChatInterface(shadow) {
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
+    .rate-limit-message {
+      background: linear-gradient(135deg, #2d3436, #2d3436) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    .rate-limit-message ul {
+      color: #bbb;
+    }
+
+    .rate-limit-message a:hover {
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    }
+
     .typing-indicator {
       display: flex;
       gap: 5px;
@@ -527,10 +541,62 @@ async function initializeChatInterface(shadow) {
       } catch (error) {
         console.error('API Error:', error);
         document.getElementById(loadingId)?.remove();
-        addMessageToChatContainer(
-          "Sorry, I'm having trouble connecting right now. Please try again later.",
-          false
-        );
+        
+        if (error.message === 'RATE_LIMIT_EXCEEDED') {
+          // Create rate limit message element
+          const rateLimitMessage = document.createElement('div');
+          rateLimitMessage.className = 'kinkong-message bot rate-limit-message';
+          rateLimitMessage.innerHTML = `
+            <div style="margin-bottom: 10px;">
+              ⚠️ You've reached your free message limit for today.
+            </div>
+            <div style="margin-bottom: 15px;">
+              Upgrade to Premium for unlimited messages and exclusive features:
+              <ul style="margin-top: 8px; padding-left: 20px;">
+                <li>Unlimited AI interactions</li>
+                <li>Priority response time</li>
+                <li>Advanced trading signals</li>
+                <li>Portfolio tracking</li>
+              </ul>
+            </div>
+            <a href="https://swarmtrade.ai/copilot" 
+               target="_blank" 
+               style="
+                 display: inline-block;
+                 background: linear-gradient(135deg, #ffd700, #ffa502);
+                 color: #1a1a1a;
+                 padding: 8px 16px;
+                 border-radius: 6px;
+                 text-decoration: none;
+                 font-weight: 600;
+                 transition: all 0.3s ease;
+               "
+               onmouseover="this.style.transform='translateY(-2px)'"
+               onmouseout="this.style.transform='translateY(0)'">
+              Upgrade to Premium
+            </a>
+          `;
+          
+          messagesContainer.appendChild(rateLimitMessage);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+          // Disable input and update placeholder
+          const input = chatContainer.querySelector('.kinkong-chat-input');
+          input.disabled = true;
+          input.placeholder = 'Upgrade to Premium to continue chatting...';
+          
+          // Disable send button
+          const sendButton = chatContainer.querySelector('.kinkong-chat-send');
+          sendButton.disabled = true;
+          sendButton.style.opacity = '0.5';
+          
+        } else {
+          // Handle other errors as before
+          addMessageToChatContainer(
+            "Sorry, I'm having trouble connecting right now. Please try again later.",
+            false
+          );
+        }
       }
     }
   };

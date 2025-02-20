@@ -33,6 +33,11 @@ export async function makeApiCall(endpoint, data) {
       body: requestData
     });
 
+    // Add rate limit detection
+    if (proxyResponse.status === 429) { // HTTP 429 is Too Many Requests
+      throw new Error('RATE_LIMIT_EXCEEDED');
+    }
+
     if (proxyResponse.error) {
       throw new Error(proxyResponse.error);
     }
@@ -61,6 +66,9 @@ export async function makeApiCall(endpoint, data) {
     throw new Error('Unable to connect to SwarmTrade API. The service may be down or blocked by CORS policy.');
   }
   } catch (error) {
+    if (error.message === 'RATE_LIMIT_EXCEEDED') {
+      throw error; // Propagate rate limit error specifically
+    }
     console.error('API Error:', error);
     throw error;
   }
