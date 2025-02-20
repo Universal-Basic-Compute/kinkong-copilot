@@ -230,6 +230,59 @@ async function initializeChatInterface(shadow) {
       50% { transform: translateY(-5px); }
     }
 
+    .kinkong-speech-bubble {
+      position: fixed;
+      bottom: 140px;
+      right: 30px;
+      background: linear-gradient(135deg, #ffd700, #ffa502);
+      color: #1a1a1a;
+      padding: 15px 20px;
+      border-radius: 12px;
+      max-width: 280px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      font-size: 14px;
+      line-height: 1.4;
+      z-index: 999998;
+      animation: bubble-pop-in 0.3s ease;
+      transform-origin: bottom right;
+    }
+
+    .kinkong-speech-bubble:after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      right: 40px;
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: #ffa502 transparent transparent;
+    }
+
+    @keyframes bubble-pop-in {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes bubble-fade-out {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.8) translateY(10px);
+      }
+    }
+
+    .kinkong-speech-bubble.fade-out {
+      animation: bubble-fade-out 0.3s ease forwards;
+    }
+
     /* Scrollbar styles */
     .kinkong-chat-messages {
       scrollbar-width: none;

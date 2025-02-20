@@ -93,16 +93,27 @@ export async function handleUrlChange() {
         throw new Error('Empty response from API');
       }
 
-      // Get chat container and ensure it's visible
-      const { chatContainer } = interfaceElements;
-      if (chatContainer && !chatContainer.classList.contains('visible')) {
-        chatContainer.style.display = 'flex';
-        requestAnimationFrame(() => {
-          chatContainer.classList.add('visible');
-        });
+      // Remove any existing speech bubble
+      const existingBubble = document.querySelector('.kinkong-speech-bubble');
+      if (existingBubble) {
+        existingBubble.remove();
       }
 
-      // Add the message to chat
+      // Create speech bubble
+      const speechBubble = document.createElement('div');
+      speechBubble.className = 'kinkong-speech-bubble';
+      speechBubble.innerHTML = formatMessage(responseText);
+      document.body.appendChild(speechBubble);
+
+      // Auto-remove bubble after 8 seconds
+      setTimeout(() => {
+        speechBubble.classList.add('fade-out');
+        setTimeout(() => {
+          speechBubble.remove();
+        }, 300);
+      }, 8000);
+
+      // Still add message to chat history
       addMessageToChatContainer(responseText, false);
       
     } catch (error) {
