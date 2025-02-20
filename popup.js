@@ -245,6 +245,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   try {
     const codeId = await getOrCreateCodeId();
     premiumLink.href = `https://swarmtrade.ai/copilot#${codeId}`;
+    premiumLink.target = '_blank'; // Ensure it opens in new tab
+    premiumLink.rel = 'noopener noreferrer'; // Security best practices
   } catch (error) {
     console.error('Error setting premium link:', error);
     premiumLink.href = 'https://swarmtrade.ai/copilot';
