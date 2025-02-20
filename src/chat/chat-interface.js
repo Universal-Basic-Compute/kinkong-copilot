@@ -431,8 +431,40 @@ function isElementFullyVisibleAtTop(element, container) {
   return elementTop >= 0;
 }
 
+function getReadingTime(text) {
+  // Slower reading speed: 120 words per minute, or about 10 chars per second
+  const charsPerSecond = 10;
+  
+  // Minimum 2 seconds, maximum 6 seconds per paragraph
+  return Math.max(2000, Math.min(6000, (text.length / charsPerSecond) * 1000));
+}
+
+async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
+  // Split message into paragraphs (same as speech bubbles)
+  const paragraphs = message.split(/\n\n|(?=#{1,6}\s)/g)
+    .filter(p => p.trim().length > 0);
+  
+  for (const paragraph of paragraphs) {
+    // Create message element for this paragraph
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
+    messageDiv.innerHTML = formatMessage(paragraph);
+    
+    // Add to container
+    messagesContainer.appendChild(messageDiv);
+    
+    // Scroll into view smoothly
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Wait for reading time before next paragraph
+    if (!isUser) {  // Only delay for bot messages
+      const readingTime = getReadingTime(paragraph);
+      await new Promise(resolve => setTimeout(resolve, readingTime));
+    }
+  }
+}
+
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
-  // First get interface elements and ensure they exist
   const elements = await ensureChatInterface();
   
   if (!elements || !elements.messagesContainer) {
@@ -440,7 +472,7 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
     return;
   }
 
-  const { messagesContainer, chatContainer } = elements;
+  const { messagesContainer } = elements;
   
   console.log('Adding message:', {
     message,
@@ -449,21 +481,11 @@ export async function addMessageToChatContainer(message, isUser = true, shouldSa
     messageLength: message.length
   });
 
-  // Create the message element
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
-  messageDiv.innerHTML = formatMessage(message);
-  
-  // Add to container
-  messagesContainer.appendChild(messageDiv);
-  
-  // Scroll into view
-  messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Add paragraphs with delay
+  await addMessageParagraphsToChat(message, isUser, messagesContainer);
 
   // Save if needed
   if (shouldSave) {
     saveMessage(message, isUser);
   }
-
-  return messageDiv; // Return for testing
 }
