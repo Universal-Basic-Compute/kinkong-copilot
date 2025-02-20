@@ -84,32 +84,6 @@ function formatMessage(text) {
 
 
 
-// Function to load messages for current URL
-async function loadMessages() {
-  const currentUrl = window.location.href;
-  try {
-    const result = await chrome.storage.local.get('chatMessages');
-    const urlMessages = result.chatMessages || {};
-    return urlMessages[currentUrl] || [];
-  } catch (error) {
-    console.error('Error loading messages:', error);
-    return [];
-  }
-}
-
-// Function to display all messages
-async function displayStoredMessages() {
-  const messages = await loadMessages();
-  const { messagesContainer } = ensureChatInterface();
-  
-  // Clear existing messages
-  messagesContainer.innerHTML = '';
-  
-  // Display each message
-  messages.forEach(message => {
-    addMessageToChatContainer(message.content, message.isUser, false); // false means don't save again
-  });
-}
 
 function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
   const { messagesContainer, chatContainer, copilotImage } = ensureChatInterface();
