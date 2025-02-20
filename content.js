@@ -3,8 +3,6 @@ import { findContent } from './src/utils/dom-utils.js';
 import { extractXContent } from './src/content/content-extractor.js';
 import { isXPage, isSupportedPage } from './src/content/page-detector.js';
 
-// Track when marked is loaded
-let markedReady = false;
 let copilotEnabled = true;
 
 // Add message listener 
@@ -43,43 +41,6 @@ console.error = function(...args) {
   if (args[0]?.includes?.('ResizeObserver')) return;
   consoleError.apply(console, args);
 };
-
-
-
-
-// First inject the marked library
-const markedScript = document.createElement('script');
-markedScript.src = chrome.runtime.getURL('lib/marked.min.js');
-document.head.appendChild(markedScript);
-
-// Then create a bridge script to set up our formatter
-const bridgeScript = document.createElement('script');
-bridgeScript.src = chrome.runtime.getURL('lib/marked-bridge.js');
-document.head.appendChild(bridgeScript);
-
-markedScript.onload = () => {
-  markedReady = true;
-  // Dispatch event to notify the bridge script
-  window.dispatchEvent(new Event('marked-ready'));
-};
-
-// Helper function for markdown formatting
-function formatMessage(text) {
-  if (markedReady && window.formatMarkdown) {
-    try {
-      return window.formatMarkdown(text);
-    } catch (e) {
-      console.error('Error formatting markdown:', e);
-      return text;
-    }
-  }
-  return text; // Fallback if marked isn't ready yet
-}
-
-
-
-
-
 
 
 
