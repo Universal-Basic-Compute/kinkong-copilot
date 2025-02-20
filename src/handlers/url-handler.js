@@ -78,7 +78,7 @@ export async function handleUrlChange() {
     try {
       const response = await makeApiCall('copilot', {
         message: initialMessage,
-        url: currentUrl,  // Use URL from when API call was initiated
+        url: initialUrl,  // Use stored initial URL
         pageContent: pageContent,
         pageType: pageType,
         fullyLoaded: elementsLoaded
