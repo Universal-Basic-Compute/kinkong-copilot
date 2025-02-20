@@ -149,9 +149,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           `
         });
 
-        // Send follow-up message to show KinKong
+        // Send follow-up message to show KinKong with the page content
         chrome.tabs.sendMessage(tab.id, {
-          type: 'showKinKongIfInactive'
+          type: 'showKinKongIfInactive',
+          pageContent: message.pageContent
         });
       } catch (error) {
         console.error('Injection failed:', error);

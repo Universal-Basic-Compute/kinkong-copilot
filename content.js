@@ -1,5 +1,6 @@
 const base = chrome.runtime.getURL('');
 let modules;
+let currentPageContent = null;
 let urlObserver = null;
 let phantomInjectionAttempts = 0;
 const MAX_PHANTOM_ATTEMPTS = 10;
@@ -10,9 +11,11 @@ chrome.runtime.onMessage.addListener((message) => {
     handleContentPush(message.data);
   }
   if (message.type === 'showKinKongIfInactive') {
+    // Store the page content
+    currentPageContent = message.pageContent;
+    
     initializeModules().then(loadedModules => {
       modules = loadedModules;
-      // Use the imported chatInterface module
       modules.chatInterface.ensureChatInterface().then(elements => {
         if (elements.copilotImage) {
           elements.copilotImage.style.display = 'block';
