@@ -394,6 +394,11 @@ async function initializeChatInterface(shadow) {
       line-height: 1.4;
       font-size: 14px;
       animation: message-fade-in 0.3s ease;
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      cursor: text;
     }
 
     @keyframes message-fade-in {
@@ -479,6 +484,11 @@ async function initializeChatInterface(shadow) {
       z-index: 999998;
       animation: bubble-pop-in 0.3s ease;
       transform-origin: bottom right;
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      cursor: text;
     }
 
     .kinkong-speech-bubble:after {
