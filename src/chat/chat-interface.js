@@ -246,17 +246,17 @@ export async function ensureChatInterface() {
     // Check rate limit state when initializing
     const result = await chrome.storage.local.get('rateLimitState');
     if (result.rateLimitState) {
-      const { timestamp } = result.rateLimitState;
+      const { endTime } = result.rateLimitState;
       const now = Date.now();
       
-      if (now - timestamp < RATE_LIMIT_RESET_INTERVAL) {
+      if (now < endTime) {
         // Still rate limited
+        const remainingTime = getRemainingHoursText(endTime);
         const input = interfaceElements.chatContainer.querySelector('.kinkong-chat-input');
         const sendButton = interfaceElements.chatContainer.querySelector('.kinkong-chat-send');
         
         if (input) {
           input.disabled = true;
-          const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
           input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
         }
         
