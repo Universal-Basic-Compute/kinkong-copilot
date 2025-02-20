@@ -252,6 +252,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
   
+  toggles.forEach(toggle => {
+    const siteItem = toggle.closest('.site-item');
+    const siteName = siteItem.dataset.site;
+    
+    // Load saved state
+    chrome.storage.sync.get(['site_toggles'], function(result) {
+      const savedToggles = result.site_toggles || {};
+      // Default to enabled if no saved state
+      toggle.checked = savedToggles[siteName] !== false;
+    });
+    
+    // Save state on change
+    toggle.addEventListener('change', function() {
+      chrome.storage.sync.get(['site_toggles'], function(result) {
+        const savedToggles = result.site_toggles || {};
+        savedToggles[siteName] = toggle.checked;
+        chrome.storage.sync.set({
+          site_toggles: savedToggles
+        });
+      });
+    });
+  });
+  
   chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
     const currentTab = tabs[0];
     
