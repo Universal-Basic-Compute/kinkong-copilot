@@ -1,9 +1,17 @@
 const base = chrome.runtime.getURL('');
 
+let initialized = false;
 // Initialize modules
 let chatInterface, domUtils, contentExtractor, pageDetector, initModule, urlHandler;
 
 async function initializeModules() {
+  if (initialized) {
+    console.warn('Attempting to initialize modules again!');
+    return;
+  }
+  
+  console.group('Module Initialization');
+  console.log('Starting initialization...');
   try {
     // Import all required modules dynamically with explicit paths
     chatInterface = await import(chrome.runtime.getURL('src/chat/chat-interface.js'));
@@ -13,6 +21,7 @@ async function initializeModules() {
     initModule = await import(chrome.runtime.getURL('src/init.js'));
     urlHandler = await import(chrome.runtime.getURL('src/handlers/url-handler.js'));
     
+    initialized = true;
     console.log('All modules loaded successfully');
   } catch (error) {
     console.error('Error loading modules:', error);

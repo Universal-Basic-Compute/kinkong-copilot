@@ -1,11 +1,18 @@
 import { formatMessage } from './message-formatter.js';
 import { saveMessage } from './chat-storage.js';
 
+let interfaceInitialized = false;
+
 export function ensureChatInterface() {
+  console.group('Chat Interface Initialization');
+  console.log('Interface already initialized:', interfaceInitialized);
+  console.log('Interface element exists:', !!document.getElementById('kinkong-chat-interface'));
+  
   const INTERFACE_ID = 'kinkong-chat-interface';
   
-  // Check if interface already exists
-  if (document.getElementById(INTERFACE_ID)) {
+  if (interfaceInitialized || document.getElementById(INTERFACE_ID)) {
+    console.log('Returning existing interface');
+    console.groupEnd();
     return {
       messagesContainer: document.querySelector('.kinkong-chat-messages'),
       chatContainer: document.querySelector('.kinkong-chat-container'),
