@@ -3,6 +3,12 @@ import { saveMessage } from './chat-storage.js';
 import { makeApiCall } from '../api/api-client.js';
 import { showMessageParagraphs } from '../handlers/url-handler.js';
 
+// Activity tracking variables
+let userActivityTimeout;
+let messageInterval;
+const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes of inactivity before stopping
+const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
+
 // Cache for interface elements
 let interfaceElements = null;
 
