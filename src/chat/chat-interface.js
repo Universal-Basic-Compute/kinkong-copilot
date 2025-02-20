@@ -698,17 +698,40 @@ async function initializeChatInterface(shadow) {
         
         let errorData;
         try {
-          // First try to parse the response text from the error
-          if (error.message) {
-            errorData = JSON.parse(error.message);
+          // Try multiple ways to parse the error response
+          if (typeof error.message === 'string') {
+            try {
+              errorData = JSON.parse(error.message);
+            } catch (e) {
+              // Not JSON in error.message
+            }
           }
+          
+          if (!errorData && typeof error === 'string') {
+            try {
+              errorData = JSON.parse(error);
+            } catch (e) {
+              // Not JSON string
+            }
+          }
+
+          // Try to parse response text if available
+          if (!errorData && error.responseText) {
+            try {
+              errorData = JSON.parse(error.responseText);
+            } catch (e) {
+              // Not JSON in responseText
+            }
+          }
+
+          // If still no parsed data, check if error is already an object
+          if (!errorData && typeof error === 'object') {
+            errorData = error;
+          }
+
         } catch (e) {
-          // If that fails, try parsing the error itself
-          try {
-            errorData = JSON.parse(error);
-          } catch (e2) {
-            errorData = { error: error.message || error };
-          }
+          console.log('Error parsing error response:', e);
+          errorData = { error: error.message || error.toString() };
         }
 
         if (errorData?.error === 'Rate limit exceeded') {
