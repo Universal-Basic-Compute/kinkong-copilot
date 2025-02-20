@@ -23,6 +23,9 @@ export async function handleUrlChange() {
       return;
     }
 
+    // Destructure messagesContainer from interfaceElements
+    const { messagesContainer } = interfaceElements;
+
     await displayStoredMessages().catch(err => {
       console.warn('Failed to load stored messages:', err);
     });
