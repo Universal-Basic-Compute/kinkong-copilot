@@ -6,38 +6,78 @@ function connectSSE() {
     eventSource.close();
   }
 
-  eventSource = new EventSource(SSE_ENDPOINT);
-  
-  eventSource.onopen = () => {
-    console.log('SSE connection established');
-  };
+  // Add headers to the request
+  const headers = new Headers({
+    'Accept': 'text/event-stream',
+    'Cache-Control': 'no-cache'
+  });
 
-  eventSource.onmessage = async (event) => {
-    try {
-      const message = JSON.parse(event.data);
-      
-      // Forward to active tabs as a regular chat message
-      const tabs = await chrome.tabs.query({active: true});
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'CHAT_MESSAGE',
-          data: {
-            content: message.text,
-            isUser: false
+  // Create fetch request with proper headers
+  fetch(SSE_ENDPOINT, {
+    method: 'GET',
+    headers: headers,
+    credentials: 'include'
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const reader = response.body.getReader();
+    let buffer = '';
+
+    function processText(text) {
+      const messages = text.split('\n\n');
+      messages.forEach(message => {
+        if (message.trim()) {
+          try {
+            const data = JSON.parse(message.replace('data: ', ''));
+            // Forward to active tabs
+            chrome.tabs.query({active: true}, tabs => {
+              tabs.forEach(tab => {
+                chrome.tabs.sendMessage(tab.id, {
+                  type: 'SERVER_PUSH',
+                  data: data
+                });
+              });
+            });
+          } catch (e) {
+            console.error('Error parsing SSE message:', e);
+          }
+        }
+      });
+    }
+
+    // Read the stream
+    function readStream() {
+      reader.read().then(({done, value}) => {
+        if (done) {
+          console.log('SSE connection closed');
+          setTimeout(connectSSE, 5000); // Reconnect after 5 seconds
+          return;
+        }
+
+        buffer += new TextDecoder().decode(value);
+        const messages = buffer.split('\n\n');
+        buffer = messages.pop(); // Keep the last incomplete message in buffer
+        
+        messages.forEach(message => {
+          if (message.trim()) {
+            processText(message);
           }
         });
+
+        readStream();
+      }).catch(error => {
+        console.error('SSE read error:', error);
+        setTimeout(connectSSE, 5000);
       });
-
-    } catch (error) {
-      console.error('Error handling SSE message:', error);
     }
-  };
 
-  eventSource.onerror = (error) => {
+    readStream();
+  }).catch(error => {
     console.error('SSE connection error:', error);
-    eventSource.close();
     setTimeout(connectSSE, 5000);
-  };
+  });
 }
 
 // Initialize SSE connection when extension starts
