@@ -12,23 +12,30 @@ function connectSSE() {
     console.log('SSE connection established');
   };
 
-  eventSource.onmessage = (event) => {
+  eventSource.onmessage = async (event) => {
     try {
       const message = JSON.parse(event.data);
-      // Broadcast to all extension instances
-      chrome.runtime.sendMessage({
-        type: 'SERVER_PUSH', 
-        data: message
+      
+      // Forward to active tabs as a regular chat message
+      const tabs = await chrome.tabs.query({active: true});
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'CHAT_MESSAGE',
+          data: {
+            content: message.text,
+            isUser: false
+          }
+        });
       });
+
     } catch (error) {
-      console.error('Error parsing SSE message:', error);
+      console.error('Error handling SSE message:', error);
     }
   };
 
   eventSource.onerror = (error) => {
     console.error('SSE connection error:', error);
     eventSource.close();
-    // Attempt to reconnect after 5 seconds
     setTimeout(connectSSE, 5000);
   };
 }
