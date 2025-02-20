@@ -50,8 +50,6 @@ console.error = function(...args) {
 // Initialize everything after modules are loaded
 initializeModules().then(() => {
   console.log('Modules initialized, starting app...');
-  
-  console.log('Modules initialized, starting app...');
   initModule.initialize().catch(error => {
     console.error('Error during initialization:', error);
   });
