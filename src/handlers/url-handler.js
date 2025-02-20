@@ -95,6 +95,15 @@ export async function handleUrlChange() {
         throw new Error('Empty response from API');
       }
 
+      // Get chat container and ensure it's visible
+      const { chatContainer } = interfaceElements;
+      if (chatContainer && !chatContainer.classList.contains('visible')) {
+        chatContainer.style.display = 'flex';
+        requestAnimationFrame(() => {
+          chatContainer.classList.add('visible');
+        });
+      }
+
       // Add the message to chat
       addMessageToChatContainer(responseText, false);
       
