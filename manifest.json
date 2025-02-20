@@ -44,7 +44,8 @@
     "resources": [
       "assets/copilot.png",
       "lib/marked.min.js",
-      "lib/marked-bridge.js"
+      "lib/marked-bridge.js",
+      "src/**/*.js"
     ],
     "matches": ["<all_urls>"]
   }],
