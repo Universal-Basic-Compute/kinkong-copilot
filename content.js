@@ -1,7 +1,7 @@
 import { ensureChatInterface, addMessageToChatContainer } from './src/chat/chat-interface.js';
 import { findContent } from './src/utils/dom-utils.js';
 import { extractXContent } from './src/content/content-extractor.js';
-import { isXPage } from './src/content/page-detector.js';
+import { isXPage, isSupportedPage } from './src/content/page-detector.js';
 
 // Track when marked is loaded
 let markedReady = false;
@@ -81,28 +81,6 @@ function formatMessage(text) {
 
 
 
-function isSupportedPage() {
-  // Check URL and return appropriate type
-  if (isDexScreenerTokenPage()) {
-    return 'dexscreener';
-  } else if (isXPage()) {
-    return 'x';
-  } else if (isSolscanPage()) {
-    return 'solscan';
-  } else if (isSwarmTradePage()) {
-    return 'swarmtrade';
-  } else if (isUBCPage()) {
-    return 'ubc';
-  }
-  return null;
-}
-
-function getInitialMessage(pageType) {
-  const path = window.location.pathname;
-  const cleanPath = path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, '');
-  
-  return `I'm on ${cleanPath}, what do you think?`;
-}
 
 function ensureChatInterface() {
   // Check if interface already exists
