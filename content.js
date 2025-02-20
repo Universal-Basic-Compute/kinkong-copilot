@@ -12,7 +12,8 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'showKinKongIfInactive') {
     initializeModules().then(loadedModules => {
       modules = loadedModules;
-      ensureChatInterface().then(elements => {
+      // Use the imported chatInterface module
+      modules.chatInterface.ensureChatInterface().then(elements => {
         if (elements.copilotImage) {
           elements.copilotImage.style.display = 'block';
         }
@@ -25,19 +26,19 @@ chrome.runtime.onMessage.addListener((message) => {
 
 async function handleContentPush(data) {
   try {
-    const elements = await ensureChatInterface();
+    const elements = await modules.chatInterface.ensureChatInterface();
     
     switch(data.type) {
       case 'SIGNAL':
         // Show signal notification in chat
         const signalMessage = formatSignalMessage(data.signal);
-        addMessageToChatContainer(signalMessage, false);
+        modules.chatInterface.addMessageToChatContainer(signalMessage, false);
         break;
         
       case 'PRICE_ALERT':
         // Show price alert in chat
         const alertMessage = formatPriceAlert(data.alert);
-        addMessageToChatContainer(alertMessage, false);
+        modules.chatInterface.addMessageToChatContainer(alertMessage, false);
         break;
     }
   } catch (error) {
