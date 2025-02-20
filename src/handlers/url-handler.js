@@ -135,9 +135,11 @@ export async function handleUrlChange() {
 }
 
 function getReadingTime(text) {
-  // Average reading speed: 200 words per minute, or about 15 chars per second
-  const charsPerSecond = 15;
-  return Math.max(1000, Math.min(4000, (text.length / charsPerSecond) * 1000));
+  // Slower reading speed: 120 words per minute, or about 10 chars per second
+  const charsPerSecond = 10;
+  
+  // Minimum 2 seconds, maximum 6 seconds per paragraph
+  return Math.max(2000, Math.min(6000, (text.length / charsPerSecond) * 1000));
 }
 
 async function showMessageParagraphs(responseText, shadow) {
