@@ -30,6 +30,9 @@ export async function handleUrlChange() {
       console.warn('Failed to load stored messages:', err);
     });
     
+    // Wait 5 seconds silently before proceeding
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
     let elementsLoaded = false;
     if (pageType === 'dexscreener') {
       elementsLoaded = await waitForDexScreenerElements();
