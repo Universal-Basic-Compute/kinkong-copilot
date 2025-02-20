@@ -652,7 +652,18 @@ async function initializeChatInterface(shadow) {
         console.error('API Error:', error);
         document.getElementById(loadingId)?.remove();
         
-        if (error.message === 'RATE_LIMIT_EXCEEDED') {
+        // Check if error response is JSON
+        let errorData;
+        try {
+          errorData = JSON.parse(error.message);
+        } catch (e) {
+          // If not JSON, use message directly
+          errorData = {
+            error: error.message
+          };
+        }
+
+        if (errorData.error === 'Rate limit exceeded' || error.message === 'RATE_LIMIT_EXCEEDED') {
           // Set rate limit state
           await manageRateLimitState(true);
             
@@ -662,14 +673,29 @@ async function initializeChatInterface(shadow) {
           const result = await chrome.storage.local.get('rateLimitState');
           const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
           
+          // Format subscription tiers info if available
+          let tiersInfo = '';
+          if (errorData.subscription) {
+            tiersInfo = `
+              <div style="margin: 10px 0; font-size: 13px; color: #bbb;">
+                <div>• Free: ${errorData.subscription.free}</div>
+                <div>• Premium: ${errorData.subscription.premium}</div>
+              </div>
+            `;
+          }
+          
           rateLimitMessage.innerHTML = `
             <div style="margin-bottom: 10px;">
               ⚠️ You've reached your free message limit.
             </div>
+            <div style="margin-bottom: 10px;">
+              Your limit will reset in ${remainingTime}.
+            </div>
+            ${tiersInfo}
             <div style="margin-bottom: 15px;">
-              Your limit will reset in ${remainingTime}, or upgrade to Premium for:
+              Upgrade to Premium for:
               <ul style="margin-top: 8px; padding-left: 20px;">
-                <li>Unlimited AI interactions</li>
+                <li>Increased message limits</li>
                 <li>Priority response time</li>
                 <li>Advanced trading signals</li>
                 <li>Portfolio tracking</li>
@@ -699,7 +725,7 @@ async function initializeChatInterface(shadow) {
           // Disable input and update placeholder
           const input = chatContainer.querySelector('.kinkong-chat-input');
           input.disabled = true;
-          input.placeholder = 'Chat will be re-enabled in 4 hours...';
+          input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
             
           // Disable send button
           const sendButton = chatContainer.querySelector('.kinkong-chat-send');
