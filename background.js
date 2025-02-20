@@ -171,8 +171,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               position: fixed;
               bottom: 30px;
               right: 30px;
-              width: 90px;
-              height: 90px;
+              width: 100px;
+              height: 100px;
               cursor: pointer;
               z-index: 999999;
               animation: kinkong-float 3s ease-in-out infinite;
