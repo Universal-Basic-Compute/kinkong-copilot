@@ -1,45 +1,11 @@
-import { waitForDOM } from './utils/dom-utils.js';
 import { isSupportedPage } from './content/page-detector.js';
-import { injectFloatingCopilot } from './chat/chat-interface.js';
 import { handleUrlChange } from './handlers/url-handler.js';
 
-const INIT_FLAG = 'kinkong-initialized';
 let urlObserver = null;
 
-// Initialize chat interface
+// Initialize only URL observer
 export async function initialize() {
-  // Check if already initialized
-  if (window[INIT_FLAG]) {
-    console.log('KinKong already initialized, setting up URL observer only');
-    setupUrlObserver();
-    return;
-  }
-  
-  try {
-    await waitForDOM();
-    
-    const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-    
-    if (copilotEnabled) {
-      await injectFloatingCopilot();
-      console.log('Chat interface created successfully');
-      
-      const initialPageType = isSupportedPage();
-      if (initialPageType) {
-        console.log('Initial page is supported:', initialPageType);
-        await handleUrlChange();
-      }
-    }
-
-    // Mark as initialized
-    window[INIT_FLAG] = true;
-    
-    // Set up URL change listener
-    setupUrlObserver();
-
-  } catch (error) {
-    console.error('Error during initialization:', error);
-  }
+  setupUrlObserver();
 }
 
 function setupUrlObserver() {
