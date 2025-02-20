@@ -1,6 +1,9 @@
 export function isXPage() {
   const hostname = window.location.hostname;
-  return hostname === 'x.com' || hostname === 'twitter.com';
+  const isXDomain = hostname === 'x.com' || hostname === 'twitter.com';
+  const isMessagesPage = window.location.pathname === '/messages';
+  
+  return isXDomain && !isMessagesPage;
 }
 
 export function isSwarmTradePage() {
