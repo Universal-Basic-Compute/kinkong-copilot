@@ -1,6 +1,6 @@
 const base = chrome.runtime.getURL('');
 let modules;
-let currentPageContent = null;
+window.currentPageContent = null;
 let urlObserver = null;
 let phantomInjectionAttempts = 0;
 const MAX_PHANTOM_ATTEMPTS = 10;
@@ -11,8 +11,8 @@ chrome.runtime.onMessage.addListener((message) => {
     handleContentPush(message.data);
   }
   if (message.type === 'showKinKongIfInactive') {
-    // Store the page content
-    currentPageContent = message.pageContent;
+    // Store the page content globally
+    window.currentPageContent = message.pageContent;
     
     initializeModules().then(loadedModules => {
       modules = loadedModules;

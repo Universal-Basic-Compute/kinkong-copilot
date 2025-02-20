@@ -435,15 +435,14 @@ async function initializeChatInterface(shadow) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
       try {
-        // Get stored page content if available
-        const { currentPageContent } = await chrome.storage.session.get('currentPageContent');
+        // Get page type
         const pageType = isSupportedPage();
 
-        // Make API call with content
+        // Use the currentPageContent from content.js
         const response = await makeApiCall('copilot', {
           message: message,
           url: window.location.href,
-          pageContent: currentPageContent || null,
+          pageContent: window.currentPageContent || null,
           pageType: pageType || null,
           fullyLoaded: true
         });
