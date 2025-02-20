@@ -1,6 +1,19 @@
 const base = chrome.runtime.getURL('');
 let modules;
 let urlObserver = null;
+let phantomInjectionAttempts = 0;
+const MAX_PHANTOM_ATTEMPTS = 10;
+
+async function waitForPhantom() {
+  while (phantomInjectionAttempts < MAX_PHANTOM_ATTEMPTS) {
+    if (window?.solana?.isPhantom) {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    phantomInjectionAttempts++;
+  }
+  return false;
+}
 
 async function initializeModules() {
   if (window.kinkongModules) {
@@ -121,8 +134,8 @@ window.addEventListener('message', async (event) => {
   
   if (event.data.type === 'PHANTOM_CONNECT_REQUEST') {
     try {
-      const provider = window?.solana;
-      if (!provider?.isPhantom) {
+      const hasPhantom = await waitForPhantom();
+      if (!hasPhantom) {
         window.postMessage({ 
           type: 'PHANTOM_CONNECT_RESPONSE',
           error: 'Phantom not installed'
@@ -130,15 +143,22 @@ window.addEventListener('message', async (event) => {
         return;
       }
 
-      const resp = await provider.connect();
-      window.postMessage({ 
-        type: 'PHANTOM_CONNECT_RESPONSE',
-        publicKey: resp.publicKey.toString()
-      }, '*');
+      try {
+        const resp = await window.solana.connect();
+        window.postMessage({ 
+          type: 'PHANTOM_CONNECT_RESPONSE',
+          publicKey: resp.publicKey.toString()
+        }, '*');
+      } catch (error) {
+        window.postMessage({ 
+          type: 'PHANTOM_CONNECT_RESPONSE',
+          error: error.message || 'Failed to connect'
+        }, '*');
+      }
     } catch (error) {
       window.postMessage({ 
         type: 'PHANTOM_CONNECT_RESPONSE',
-        error: error.message
+        error: 'Unexpected error connecting to Phantom'
       }, '*');
     }
   }
