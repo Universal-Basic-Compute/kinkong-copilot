@@ -39,6 +39,7 @@ export function isSupportedPage() {
   if (isOrcaPage()) return 'orca';
   if (isCoingecko()) return 'coingecko';
   if (isCoinMarketCap()) return 'coinmarketcap';
+  if (isMeteora()) return 'meteora';  // Add Meteora check
   
   return null;
 }
@@ -74,4 +75,8 @@ export function isCoingecko() {
 
 export function isCoinMarketCap() {
   return window.location.hostname === 'coinmarketcap.com';
+}
+
+export function isMeteora() {
+  return window.location.hostname === 'app.meteora.ag';
 }

@@ -44,7 +44,8 @@
         "*://*.magiceden.io/*",
         "*://*.orca.so/*",
         "*://*.coingecko.com/*",
-        "*://*.coinmarketcap.com/*"
+        "*://*.coinmarketcap.com/*",
+        "*://*.app.meteora.ag/*"  // Add Meteora
       ],
       "js": ["content.js"],
       "type": "module",
