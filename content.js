@@ -80,27 +80,6 @@ function formatMessage(text) {
 
 
 
-function isDexScreenerTokenPage() {
-  const isDex = window.location.hostname === 'dexscreener.com';
-  const hasPath = window.location.pathname.split('/').length >= 3;
-  const notHome = window.location.pathname !== '/';
-  
-  console.log('DexScreener check:', {
-    hostname: window.location.hostname,
-    pathname: window.location.pathname,
-    isDex,
-    hasPath,
-    notHome,
-    result: isDex && hasPath && notHome
-  });
-  
-  return isDex && hasPath && notHome;
-}
-
-function isSolscanPage() {
-  const hostname = window.location.hostname;
-  return hostname === 'solscan.io';
-}
 
 function isSupportedPage() {
   // Check URL and return appropriate type
