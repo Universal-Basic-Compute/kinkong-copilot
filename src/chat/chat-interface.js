@@ -17,8 +17,18 @@ function getRemainingHoursText(endTime) {
   return hoursRemaining <= 1 ? '1 hour' : `${hoursRemaining} hours`;
 }
 
+// Fonction utilitaire pour vérifier si le contexte est valide
+function isExtensionContextValid() {
+  return typeof chrome !== 'undefined' && chrome?.runtime?.id;
+}
+
 // Function to manage rate limit state
 async function manageRateLimitState(isLimited = true) {
+  if (!isExtensionContextValid()) {
+    console.log('Extension context invalid, skipping rate limit management');
+    return;
+  }
+
   try {
     if (isLimited) {
       const now = Date.now();
@@ -30,7 +40,6 @@ async function manageRateLimitState(isLimited = true) {
         }
       });
     } else {
-      // Clear rate limit state
       await chrome.storage.local.remove('rateLimitState');
       
       // Re-enable chat interface
@@ -57,7 +66,7 @@ async function manageRateLimitState(isLimited = true) {
       }
     }
   } catch (error) {
-    console.error('Error managing rate limit state:', error);
+    console.log('Rate limit state management error:', error);
   }
 }
 
@@ -704,27 +713,16 @@ async function initializeChatInterface(shadow) {
         // Convertir l'erreur en string pour pouvoir chercher dedans
         const errorStr = JSON.stringify(error);
 
+        // Si le contexte de l'extension est invalide, sortir proprement
+        if (!isExtensionContextValid()) {
+          console.log('Extension context invalid, stopping error handling');
+          return;
+        }
+
         // Si c'est une erreur de rate limit
         if (errorStr.includes('Rate limit exceeded')) {
-          // Configurer l'état de rate limit
+          // Configurer l'état de rate limit de manière sécurisée
           await manageRateLimitState(true);
-          
-          // Désactiver l'interface
-          const input = chatContainer.querySelector('.kinkong-chat-input');
-          const sendButton = chatContainer.querySelector('.kinkong-chat-send');
-          
-          if (input) {
-            input.disabled = true;
-            const result = await chrome.storage.local.get('rateLimitState');
-            const remainingTime = getRemainingHoursText(result.rateLimitState.endTime);
-            input.placeholder = `Chat will be re-enabled in ${remainingTime}...`;
-          }
-          
-          if (sendButton) {
-            sendButton.disabled = true;
-            sendButton.style.opacity = '0.5';
-          }
-          
           return;
         }
 
