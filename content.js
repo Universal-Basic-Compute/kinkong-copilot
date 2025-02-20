@@ -1,7 +1,7 @@
-import { ensureChatInterface, addMessageToChatContainer } from './src/chat/chat-interface.js';
-import { findContent } from './src/utils/dom-utils.js';
-import { extractXContent } from './src/content/content-extractor.js';
-import { isXPage, isSupportedPage } from './src/content/page-detector.js';
+import { ensureChatInterface, addMessageToChatContainer } from '/src/chat/chat-interface.js';
+import { findContent } from '/src/utils/dom-utils.js';
+import { extractXContent } from '/src/content/content-extractor.js';
+import { isXPage, isSupportedPage } from '/src/content/page-detector.js';
 
 let copilotEnabled = true;
 

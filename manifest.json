@@ -36,6 +36,7 @@
         "*://*.universalbasiccompute.ai/*"
       ],
       "js": ["content.js"],
+      "type": "module",
       "run_at": "document_end"
     }
   ],
