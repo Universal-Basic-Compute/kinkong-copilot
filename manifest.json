@@ -71,7 +71,8 @@
       "src/content/*", 
       "src/chat/*",
       "src/handlers/*",
-      "src/api/*"
+      "src/api/*",
+      "src/config/*"
     ],
     "matches": ["<all_urls>"]
   }],

@@ -14,6 +14,18 @@
       to { opacity: 0; transform: translateY(-10px); }
     }
 
+    .title-container {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .version-tag {
+      color: #888;
+      font-size: 12px;
+      font-weight: normal;
+    }
+
     @keyframes glow {
       0% {
         text-shadow: 0 0 5px rgba(255,255,255,0.1),
@@ -629,7 +641,10 @@
 </head>
 <body>
   <div class="header">
-    <h2>KinKong Copilot</h2>
+    <div class="title-container">
+      <h2>KinKong Copilot</h2>
+      <span class="version-tag">v<script>document.write(config.VERSION)</script></span>
+    </div>
     <label class="toggle-switch">
       <input type="checkbox" id="copilot-enabled" checked>
       <span class="toggle-slider"></span>
