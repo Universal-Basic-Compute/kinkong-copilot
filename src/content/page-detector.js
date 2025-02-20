@@ -39,7 +39,15 @@ export function isSupportedPage() {
   if (isOrcaPage()) return 'orca';
   if (isCoingecko()) return 'coingecko';
   if (isCoinMarketCap()) return 'coinmarketcap';
-  if (isMeteora()) return 'meteora';  // Add Meteora check
+  if (isMeteora()) return 'meteora';
+
+  // CEX additions
+  if (isBinance()) return 'binance';
+  if (isKucoin()) return 'kucoin';
+  if (isOKX()) return 'okx';
+  if (isBybit()) return 'bybit';
+  if (isGate()) return 'gate';
+  if (isMexc()) return 'mexc';
   
   return null;
 }
@@ -79,4 +87,29 @@ export function isCoinMarketCap() {
 
 export function isMeteora() {
   return window.location.hostname === 'app.meteora.ag';
+}
+
+// Add new CEX detection functions
+export function isBinance() {
+  return window.location.hostname === 'www.binance.com';
+}
+
+export function isKucoin() {
+  return window.location.hostname === 'www.kucoin.com';
+}
+
+export function isOKX() {
+  return window.location.hostname === 'www.okx.com';
+}
+
+export function isBybit() {
+  return window.location.hostname === 'www.bybit.com';
+}
+
+export function isGate() {
+  return window.location.hostname === 'www.gate.io';
+}
+
+export function isMexc() {
+  return window.location.hostname === 'www.mexc.com';
 }

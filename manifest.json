@@ -45,7 +45,13 @@
         "*://*.orca.so/*",
         "*://*.coingecko.com/*",
         "*://*.coinmarketcap.com/*",
-        "*://*.app.meteora.ag/*"  // Add Meteora
+        "*://*.app.meteora.ag/*",
+        "*://*.binance.com/*",
+        "*://*.kucoin.com/*",
+        "*://*.okx.com/*",
+        "*://*.bybit.com/*",
+        "*://*.gate.io/*",
+        "*://*.mexc.com/*"
       ],
       "js": ["content.js"],
       "type": "module",
