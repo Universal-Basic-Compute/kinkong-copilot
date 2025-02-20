@@ -2,13 +2,13 @@ import { getOrCreateWalletId } from '../chat/chat-interface.js';
 
 export async function makeApiCall(endpoint, data) {
   try {
-    // Get the generated wallet ID
-    const walletId = await getOrCreateWalletId();
+    // Get the generated code ID
+    const codeId = await getOrCreateCodeId();
 
-    // Add wallet to request data
+    // Add code to request data
     const requestData = {
       ...data,
-      wallet: walletId
+      code: codeId
     };
 
   console.group('API Request Details');

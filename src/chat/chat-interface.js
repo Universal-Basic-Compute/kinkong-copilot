@@ -73,55 +73,26 @@ const MESSAGE_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
 
 // Cache for interface elements
 // Wallet ID management
-export async function getOrCreateWalletId() {
+export async function getOrCreateCodeId() {
   try {
-    // Try to get existing wallet ID from storage
-    const result = await chrome.storage.local.get('walletId');
-    if (result.walletId) {
-      return result.walletId;
+    // Try to get existing code ID from storage
+    const result = await chrome.storage.local.get('codeId');
+    if (result.codeId) {
+      return result.codeId;
     }
 
-    // Generate new wallet ID if none exists
-    const array = new Uint8Array(12); // Use 12 bytes for more entropy
+    // Generate new code ID if none exists
+    const array = new Uint8Array(12);
     crypto.getRandomValues(array);
-    const walletId = Array.from(array, b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+    const codeId = Array.from(array, b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
 
-    // Store with current timestamp and other metadata
-    const metadata = {
-      walletId: walletId,
-      createdAt: Date.now(),
-      browserInfo: navigator.userAgent,
-      installId: crypto.randomUUID() // Additional unique identifier
-    };
+    // Store the code ID
+    await chrome.storage.local.set({ codeId: codeId });
 
-    // Encrypt metadata before storing
-    const encoder = new TextEncoder();
-    const data = encoder.encode(JSON.stringify(metadata));
-    const key = await crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 }, 
-      true, 
-      ['encrypt', 'decrypt']
-    );
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv },
-      key,
-      data
-    );
-
-    // Store encrypted data
-    await chrome.storage.local.set({
-      walletId: walletId,
-      walletData: {
-        encrypted: Array.from(new Uint8Array(encrypted)),
-        iv: Array.from(iv)
-      }
-    });
-
-    return walletId;
+    return codeId;
   } catch (error) {
-    console.error('Error managing wallet ID:', error);
-    return 'DEFAULT'; // Fallback
+    console.error('Error managing code ID:', error);
+    return 'DEFAULT';
   }
 }
 
