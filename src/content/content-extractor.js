@@ -14,24 +14,75 @@ export async function extractPDFContent() {
       }
     };
 
-    // Try to get text content from PDF viewer
-    const textElements = document.querySelectorAll('.textLayer div');
-    if (textElements.length > 0) {
-      pdfContent.pageContent.mainContent = Array.from(textElements)
-        .map(el => el.textContent)
-        .join(' ')
-        .trim();
-    } else {
-      // If no text layer, try to get content from embedded viewer
-      const embedElement = document.querySelector('embed[type="application/pdf"]');
-      if (embedElement) {
-        pdfContent.pageContent.mainContent = "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze.";
+    // Try multiple methods to get PDF content
+    const methods = [
+      // Method 1: Get all visible text content
+      () => document.body.innerText,
+      
+      // Method 2: Get specific viewer content
+      () => {
+        const viewer = document.querySelector('#viewer');
+        return viewer ? viewer.innerText : '';
+      },
+      
+      // Method 3: Get from common PDF viewer elements
+      () => {
+        const elements = document.querySelectorAll('.textLayer, .pdfViewer, #viewerContainer');
+        return Array.from(elements)
+          .map(el => el.innerText)
+          .join('\n')
+          .trim();
+      },
+      
+      // Method 4: Get all pre-formatted text
+      () => {
+        const pres = document.querySelectorAll('pre');
+        return Array.from(pres)
+          .map(pre => pre.innerText)
+          .join('\n')
+          .trim();
+      }
+    ];
+
+    // Try each method until we get content
+    for (const method of methods) {
+      try {
+        const content = method();
+        if (content && content.trim().length > 0) {
+          pdfContent.pageContent.mainContent = content;
+          break;
+        }
+      } catch (e) {
+        console.warn('PDF extraction method failed:', e);
+        continue;
       }
     }
 
-    // If still no content, provide a default message
+    // If still no content, try to get any text content
     if (!pdfContent.pageContent.mainContent) {
-      pdfContent.pageContent.mainContent = "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze.";
+      const textNodes = document.evaluate(
+        '//text()',
+        document.body,
+        null,
+        XPathResult.ANY_TYPE,
+        null
+      );
+      
+      let node;
+      let text = [];
+      while (node = textNodes.iterateNext()) {
+        const content = node.textContent.trim();
+        if (content) {
+          text.push(content);
+        }
+      }
+      
+      pdfContent.pageContent.mainContent = text.join(' ');
+    }
+
+    // If still no content, provide default message
+    if (!pdfContent.pageContent.mainContent) {
+      pdfContent.pageContent.mainContent = "This appears to be a PDF document. I can see it's a PDF but I'm having trouble reading its contents. Could you paste the specific section you'd like me to analyze?";
     }
 
     // Add metadata if available
@@ -39,6 +90,14 @@ export async function extractPDFContent() {
     if (metaDescription) {
       pdfContent.pageContent.description = metaDescription.content;
     }
+
+    // Log extraction results
+    console.group('PDF Content Extraction');
+    console.log('URL:', pdfContent.url);
+    console.log('Title:', pdfContent.pageContent.title);
+    console.log('Content Length:', pdfContent.pageContent.mainContent.length);
+    console.log('Content Preview:', pdfContent.pageContent.mainContent.substring(0, 200) + '...');
+    console.groupEnd();
 
     return pdfContent;
 
@@ -48,7 +107,7 @@ export async function extractPDFContent() {
       url: window.location.href,
       pageContent: {
         title: document.title || 'PDF Document',
-        mainContent: "This appears to be a PDF document. Please provide specific sections or pages you'd like me to analyze."
+        mainContent: "This appears to be a PDF document. I encountered an error while trying to read it. Could you paste the specific section you'd like me to analyze?"
       }
     };
   }
