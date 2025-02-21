@@ -680,8 +680,7 @@ function handleUserActivity() {
 
       autoMessageCount++;
       const randomMessage = AUTO_MESSAGES[Math.floor(Math.random() * AUTO_MESSAGES.length)];
-      addMessageToChatContainer(randomMessage, true);
-
+      
       try {
         const response = await makeApiCall('copilot', {
           message: randomMessage,

@@ -77,8 +77,7 @@ export async function handleUrlChange() {
     const initialMessage = isPDF ? 
       "I'm looking at this PDF document. What would you like to know about it?" :
       getInitialMessage(pageType);
-    addMessageToChatContainer(initialMessage, true);
-
+    
     const loadingId = 'loading-' + Date.now();
     
     // Create and add loading indicator
