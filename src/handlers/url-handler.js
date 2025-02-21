@@ -45,8 +45,8 @@ export async function handleUrlChange() {
     // Store the URL we're starting the wait for
     const initialUrl = window.location.href;
     
-    // Wait 5 seconds silently before proceeding
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Wait 20 seconds silently before proceeding
+    await new Promise(resolve => setTimeout(resolve, 20000));
     
     // If URL changed during wait, don't make the API call
     if (window.location.href !== initialUrl) {
