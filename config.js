@@ -1,7 +1,7 @@
 const config = {
   AIRTABLE_API_KEY: 'your_api_key',
   AIRTABLE_BASE_ID: 'your_base_id',
-  VERSION: '0.1.1'
+  VERSION: '0.1.2'
 };
 
 window.config = config; // Make config globally available
