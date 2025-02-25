@@ -61,24 +61,6 @@ async function processMessageQueue() {
   isProcessingQueue = false;
 }
 
-// Auto message options
-const AUTO_MESSAGES = [
-  "what else?",
-  "anything interesting here?", 
-  "should I analyze something specific?",
-  "want me to look deeper?",
-  "notice anything important?"
-];
-
-// Activity tracking variables
-let userActivityTimeout;
-let messageInterval;
-let isTabVisible = !document.hidden;
-let isTabFocused = document.hasFocus();
-let autoMessageCount = 0;
-const MAX_AUTO_MESSAGES = 10;  // Reduced from 20 to 10 maximum messages
-const ACTIVITY_TIMEOUT = 3 * 60 * 1000; // 3 minutes of inactivity before stopping
-const MESSAGE_INTERVAL = 5 * 60 * 1000; // Changed from 2 to 5 minutes between messages
 
 // Cache for interface elements
 // Wallet ID management
@@ -640,128 +622,9 @@ async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
   }
 }
 
-function handleUserActivity() {
-  // Only proceed if tab is visible and focused and we haven't hit the message limit
-  if (!isTabVisible || !isTabFocused || autoMessageCount >= MAX_AUTO_MESSAGES) {
-    if (messageInterval) {
-      clearInterval(messageInterval);
-      messageInterval = null;
-    }
-    return;
-  }
-
-  // Clear existing timeouts
-  if (userActivityTimeout) {
-    clearTimeout(userActivityTimeout);
-  }
-
-  // Reset the activity timeout
-  userActivityTimeout = setTimeout(() => {
-    // Stop sending messages after inactivity
-    if (messageInterval) {
-      clearInterval(messageInterval);
-      messageInterval = null;
-    }
-  }, ACTIVITY_TIMEOUT);
-
-  // Start interval if not already running
-  if (!messageInterval) {
-    messageInterval = setInterval(async () => {
-      // Check message limit before sending
-      if (autoMessageCount >= MAX_AUTO_MESSAGES) {
-        clearInterval(messageInterval);
-        messageInterval = null;
-        addMessageToChatContainer(
-          "I've reached my automatic message limit. Feel free to continue chatting with me directly!",
-          false
-        );
-        return;
-      }
-
-      autoMessageCount++;
-      const randomMessage = AUTO_MESSAGES[Math.floor(Math.random() * AUTO_MESSAGES.length)];
-      
-      try {
-        const response = await makeApiCall('copilot', {
-          message: randomMessage,
-          url: window.location.href,
-          pageContent: null,
-          pageType: null,
-          fullyLoaded: true
-        });
-
-        const responseText = await response.text();
-        
-        // Get shadow root for bubble display
-        const shadowContainer = document.getElementById('kinkong-shadow-container');
-        if (!shadowContainer || !shadowContainer.shadowRoot) {
-          throw new Error('Shadow container not found');
-        }
-        const shadow = shadowContainer.shadowRoot;
-
-        // Add response to chat
-        addMessageToChatContainer(responseText, false);
-
-        // Show paragraphs one by one in bubbles
-        await showMessageParagraphs(responseText, shadow);
-
-      } catch (error) {
-        console.error('Auto-message API Error:', error);
-        addMessageToChatContainer(
-          "Sorry, I'm having trouble connecting right now.",
-          false
-        );
-      }
-    }, MESSAGE_INTERVAL);
-  }
-}
 
 function setupActivityTracking(shadow) {
-  // Track tab visibility
-  document.addEventListener('visibilitychange', () => {
-    isTabVisible = !document.hidden;
-    if (!isTabVisible && messageInterval) {
-      clearInterval(messageInterval);
-      messageInterval = null;
-    } else if (isTabVisible && isTabFocused) {
-      handleUserActivity();
-    }
-  });
-
-  // Track window focus
-  window.addEventListener('focus', () => {
-    isTabFocused = true;
-    if (isTabVisible) {
-      handleUserActivity();
-    }
-  });
-
-  window.addEventListener('blur', () => {
-    isTabFocused = false;
-    if (messageInterval) {
-      clearInterval(messageInterval);
-      messageInterval = null;
-    }
-  });
-
-  // Track user activity
-  const activityEvents = ['mousedown', 'keydown', 'mousemove', 'wheel', 'touchstart'];
-  
-  activityEvents.forEach(eventType => {
-    shadow.addEventListener(eventType, handleUserActivity, { passive: true });
-    document.addEventListener(eventType, handleUserActivity, { passive: true });
-  });
-
-  // Start tracking if tab is visible and focused
-  if (isTabVisible && isTabFocused) {
-    handleUserActivity();
-  }
-
-  // Clean up on page unload
-  window.addEventListener('unload', () => {
-    if (messageInterval) clearInterval(messageInterval);
-    if (userActivityTimeout) clearTimeout(userActivityTimeout);
-  });
+  // This function is now empty as we've removed the auto-messaging functionality
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
