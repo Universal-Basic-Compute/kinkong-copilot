@@ -300,6 +300,25 @@ async function initializeChatInterface(shadow) {
       cursor: text;
     }
 
+    .kinkong-message a {
+      color: #ffd700;
+      text-decoration: underline;
+      transition: all 0.2s ease;
+    }
+
+    .kinkong-message a:hover {
+      color: #ffec8b;
+      text-decoration: none;
+    }
+
+    .kinkong-message.bot a {
+      color: #e31837;
+    }
+
+    .kinkong-message.bot a:hover {
+      color: #ff4757;
+    }
+
     @keyframes message-fade-in {
       from {
         opacity: 0;
