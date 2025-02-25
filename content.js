@@ -125,7 +125,7 @@ function setupUrlObserver() {
 async function handleUrlChangeIfEnabled() {
   try {
     const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-    if (copilotEnabled && modules.pageDetector.isSupportedPage()) {
+    if (copilotEnabled && await modules.pageDetector.isSupportedPage()) {
       await modules.urlHandler.handleUrlChange();
     }
   } catch (error) {

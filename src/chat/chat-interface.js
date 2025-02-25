@@ -624,7 +624,8 @@ async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
 
 
 function setupActivityTracking(shadow) {
-  // This function is now empty as we've removed the auto-messaging functionality
+  // This function is intentionally empty as we've removed the auto-messaging functionality
+  // No automatic API calls will be made when the user visits a page
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {

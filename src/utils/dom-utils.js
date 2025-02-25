@@ -79,7 +79,7 @@ export async function waitForDexScreenerElements() {
   const startTime = Date.now();
   
   while (Date.now() - startTime < maxWaitTime) {
-    console.log(`Checking elements... Time elapsed: ${Date.now() - startTime}ms`);
+    console.log(`Checking DexScreener elements... Time elapsed: ${Date.now() - startTime}ms`);
     
     const tokenName = document.querySelector('[data-cy="token-name"]');
     const tokenSymbol = document.querySelector('[data-cy="token-symbol"]');
@@ -93,6 +93,6 @@ export async function waitForDexScreenerElements() {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   
-  console.log('Timeout reached, proceeding with partial content');
+  console.log('Timeout reached for DexScreener elements, proceeding with partial content');
   return false;
 }

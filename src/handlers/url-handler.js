@@ -25,22 +25,21 @@ export async function handleUrlChange() {
 
     console.log('On supported page:', pageType);
     
-    let interfaceElements;
+    // Only ensure chat interface is available, but don't make any automatic API calls
     try {
-      interfaceElements = await ensureChatInterface();
+      const interfaceElements = await ensureChatInterface();
       if (!interfaceElements.messagesContainer) {
         throw new Error('Messages container not found');
       }
+      
+      // Load previous messages if any
+      await displayStoredMessages().catch(err => {
+        console.warn('Failed to load stored messages:', err);
+      });
     } catch (error) {
       console.error('Failed to create chat interface:', error);
       return;
     }
-
-    const { messagesContainer } = interfaceElements;
-
-    await displayStoredMessages().catch(err => {
-      console.warn('Failed to load stored messages:', err);
-    });
   } catch (error) {
     console.error('Error in handleUrlChange:', error);
     try {
