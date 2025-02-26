@@ -131,14 +131,22 @@ function formatSignalMessage(signal) {
   const signalDate = new Date(signal.createdAt);
   const formattedDate = signalDate.toLocaleString();
   
-  return `🚨 New Trading Signal (${formattedDate})
-Token: ${signal.token}
-Type: ${signal.type}
-Entry: $${signal.entryPrice}
-Target: $${signal.targetPrice}
-Stop Loss: $${signal.stopLoss}
-Timeframe: ${signal.timeframe}
-Confidence: ${signal.confidence}`;
+  // Build the message with available fields
+  let message = `🚨 New Trading Signal (${formattedDate})\n`;
+  
+  if (signal.token) message += `Token: ${signal.token}\n`;
+  if (signal.type) message += `Type: ${signal.type}\n`;
+  if (signal.entryPrice) message += `Entry: $${signal.entryPrice}\n`;
+  if (signal.targetPrice) message += `Target: $${signal.targetPrice}\n`;
+  if (signal.stopLoss) message += `Stop Loss: $${signal.stopLoss}\n`;
+  if (signal.timeframe) message += `Timeframe: ${signal.timeframe}\n`;
+  if (signal.confidence) message += `Confidence: ${signal.confidence}\n`;
+  
+  // Add any additional fields that might be in the API response
+  if (signal.exchange) message += `Exchange: ${signal.exchange}\n`;
+  if (signal.notes) message += `Notes: ${signal.notes}\n`;
+  
+  return message.trim();
 }
 
 function formatPriceAlert(alert) {

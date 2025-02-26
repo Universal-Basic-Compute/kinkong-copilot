@@ -3,14 +3,12 @@ let sseConnected = false;
 let reconnectTimeout = null;
 let signalPollingInterval = null;
 const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
-const AIRTABLE_ENDPOINT = 'https://api.airtable.com/v0/appABC123XYZ/Signals'; // Replace with your actual base ID
-const AIRTABLE_API_KEY = 'keyABC123XYZ'; // Replace with your actual API key
+const SWARMTRADE_NOTIFICATIONS_ENDPOINT = 'https://swarmtrade.ai/api/notifications/latest';
 const POLLING_INTERVAL = 20000; // 20 seconds
 
 // Add debug logs for configuration
 console.log('[Config] Initializing background script');
-console.log(`[Config] AIRTABLE_ENDPOINT: ${AIRTABLE_ENDPOINT}`);
-console.log(`[Config] AIRTABLE_API_KEY: ${AIRTABLE_API_KEY ? 'Set (first 4 chars: ' + AIRTABLE_API_KEY.substring(0, 4) + '...)' : 'Not set'}`);
+console.log(`[Config] SWARMTRADE_NOTIFICATIONS_ENDPOINT: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
 console.log(`[Config] POLLING_INTERVAL: ${POLLING_INTERVAL}ms`);
 
 function connectSSE() {
@@ -355,7 +353,7 @@ function resizeImage(dataUrl, targetWidth) {
   });
 }
 
-// Function to start polling for signals from Airtable
+// Function to start polling for signals from SwarmTrade API
 function startSignalPolling() {
   // Clear any existing interval
   if (signalPollingInterval) {
@@ -378,41 +376,40 @@ function startSignalPolling() {
       
       console.log(`[Signal Polling] Active tab: ${tabs[0].url}`);
       
-      // Make request to Airtable
-      console.log(`[Signal Polling] Requesting data from Airtable: ${AIRTABLE_ENDPOINT}`);
-      const response = await fetch(`${AIRTABLE_ENDPOINT}?sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=10`, {
+      // Make request to SwarmTrade API
+      console.log(`[Signal Polling] Requesting data from SwarmTrade: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
+      const response = await fetch(SWARMTRADE_NOTIFICATIONS_ENDPOINT, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
           'Content-Type': 'application/json'
         }
       });
       
       if (!response.ok) {
-        console.error(`[Signal Polling] Airtable API error: ${response.status} ${response.statusText}`);
-        throw new Error(`Airtable API error: ${response.status}`);
+        console.error(`[Signal Polling] SwarmTrade API error: ${response.status} ${response.statusText}`);
+        throw new Error(`SwarmTrade API error: ${response.status}`);
       }
       
-      console.log('[Signal Polling] Airtable response received');
+      console.log('[Signal Polling] SwarmTrade response received');
       const data = await response.json();
       
-      if (!data.records || data.records.length === 0) {
-        console.log('[Signal Polling] No signals found in Airtable response');
+      if (!data || !data.signals || data.signals.length === 0) {
+        console.log('[Signal Polling] No signals found in SwarmTrade response');
         return;
       }
       
-      console.log(`[Signal Polling] Found ${data.records.length} total signals in Airtable`);
+      console.log(`[Signal Polling] Found ${data.signals.length} total signals in SwarmTrade API`);
       
       // Get current time
       const now = new Date();
       console.log(`[Signal Polling] Current time: ${now.toISOString()}`);
       
       // Filter signals less than 1 hour old
-      const recentSignals = data.records.filter(record => {
-        const createdAt = new Date(record.fields.createdAt);
+      const recentSignals = data.signals.filter(signal => {
+        const createdAt = new Date(signal.createdAt);
         const diffMs = now - createdAt;
         const diffHours = diffMs / (1000 * 60 * 60);
-        console.log(`[Signal Polling] Signal ${record.id} created at ${createdAt.toISOString()}, ${diffHours.toFixed(2)} hours old`);
+        console.log(`[Signal Polling] Signal ${signal.id} created at ${createdAt.toISOString()}, ${diffHours.toFixed(2)} hours old`);
         return diffHours < 1;
       });
       
@@ -428,14 +425,14 @@ function startSignalPolling() {
         // Format the signal data
         const formattedSignal = {
           id: signal.id,
-          token: signal.fields.token,
-          type: signal.fields.type,
-          entryPrice: signal.fields.entryPrice,
-          targetPrice: signal.fields.targetPrice,
-          stopLoss: signal.fields.stopLoss,
-          timeframe: signal.fields.timeframe,
-          confidence: signal.fields.confidence,
-          createdAt: signal.fields.createdAt
+          token: signal.token,
+          type: signal.type,
+          entryPrice: signal.entryPrice,
+          targetPrice: signal.targetPrice,
+          stopLoss: signal.stopLoss,
+          timeframe: signal.timeframe,
+          confidence: signal.confidence,
+          createdAt: signal.createdAt
         };
         
         console.log(`[Signal Polling] Sending signal to tab: ${JSON.stringify(formattedSignal)}`);
