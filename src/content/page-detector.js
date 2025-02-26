@@ -63,6 +63,7 @@ export async function isSupportedPage() {
   else if (hostname === 'web.telegram.org') siteName = 'telegram';
   else if (hostname === 'coingecko.com') siteName = 'coingecko';
   else if (hostname === 'coinmarketcap.com') siteName = 'coinmarketcap';
+  else if (hostname === 'dyor.com') siteName = 'dyor';
 
   if (!siteName) return null;
 
@@ -134,4 +135,8 @@ export function isGate() {
 
 export function isMexc() {
   return window.location.hostname === 'www.mexc.com';
+}
+
+export function isDyor() {
+  return window.location.hostname === 'dyor.com';
 }
