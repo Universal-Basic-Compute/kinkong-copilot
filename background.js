@@ -116,17 +116,20 @@ self.addEventListener('online', () => {
 // Handle content script injection
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'INJECT_CONTENT') {
+    console.log('Received INJECT_CONTENT message', message);
     chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
       const tab = tabs[0];
       
       // Skip chrome:// and edge:// URLs
       if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+        console.log('Skipping injection for browser URL:', tab.url);
         return;
       }
 
       // Get the hostname from the URL
       const url = new URL(tab.url);
       const hostname = url.hostname;
+      console.log('Injecting content script for hostname:', hostname);
 
       // Determine site name from hostname
       let siteName = '';

@@ -8,20 +8,16 @@ import { isSupportedPage } from '../content/page-detector.js';
 let messageQueue = [];
 let isProcessingQueue = false;
 
-// Fonction utilitaire pour vérifier si le contexte est valide
+// Helper function to check if extension context is valid
 function isExtensionContextValid() {
   try {
     // This will throw an error if the extension context is invalid
     chrome.runtime.getURL('');
     return true;
   } catch (e) {
+    console.warn('Extension context invalid:', e);
     return false;
   }
-}
-
-// Fonction utilitaire pour vérifier si le contexte est valide
-function isExtensionContextValid() {
-  return typeof chrome !== 'undefined' && chrome?.runtime?.id;
 }
 
 
@@ -120,7 +116,9 @@ export async function ensureChatInterface() {
   }
   
   // Return cached elements if they exist
-  if (interfaceElements) {
+  if (interfaceElements && 
+      document.body.contains(interfaceElements.copilotImage?.parentNode) && 
+      interfaceElements.copilotImage?.isConnected) {
     return interfaceElements;
   }
 
@@ -164,6 +162,10 @@ export async function ensureChatInterface() {
 
     console.log('Interface ready');
     console.groupEnd();
+    
+    // Make sure the copilot image is visible
+    interfaceElements.copilotImage.style.display = 'block';
+    
     // Check rate limit state when initializing
     const result = await chrome.storage.local.get('rateLimitState');
     if (result.rateLimitState) {

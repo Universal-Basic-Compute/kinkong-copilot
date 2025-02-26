@@ -12,6 +12,7 @@ function isExtensionContextValid() {
     chrome.runtime.getURL('');
     return true;
   } catch (e) {
+    console.warn('Extension context invalid:', e);
     return false;
   }
 }
@@ -27,6 +28,7 @@ chrome.runtime.onMessage.addListener((message) => {
     handleContentPush(message.data);
   }
   if (message.type === 'showKinKongIfInactive') {
+    console.log('Received showKinKongIfInactive message', message);
     // Store the page content globally
     window.currentPageContent = message.pageContent;
     
@@ -34,8 +36,13 @@ chrome.runtime.onMessage.addListener((message) => {
       modules = loadedModules;
       modules.chatInterface.ensureChatInterface().then(elements => {
         if (elements && elements.copilotImage) {
+          console.log('Showing KinKong copilot image');
           elements.copilotImage.style.display = 'block';
+        } else {
+          console.error('Could not find copilot image element');
         }
+      }).catch(err => {
+        console.error('Error ensuring chat interface:', err);
       });
     }).catch(error => {
       console.error('Failed to initialize modules:', error);
