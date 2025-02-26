@@ -26,7 +26,7 @@ export function formatMessage(text) {
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #ffd700; text-decoration: underline;">$1</a>')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #3498db; text-decoration: underline;">$1</a>')
       .replace(/\n/g, '<br>');
   }
 
@@ -37,7 +37,7 @@ export function formatMessage(text) {
       .replace(/<\/p>/g, '</div>')  // Close div tags
       .replace(/<pre>/g, '<pre style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; overflow-x: auto;">')  // Style code blocks
       .replace(/<code>/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">')  // Style inline code
-      .replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" style="color: #ffd700; text-decoration: underline;" '); // Style links
+      .replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" style="color: #3498db; text-decoration: underline;" '); // Style links
   } catch (e) {
     console.error('Error formatting markdown:', e);
     return text;

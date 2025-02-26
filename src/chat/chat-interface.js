@@ -301,22 +301,22 @@ async function initializeChatInterface(shadow) {
     }
 
     .kinkong-message a {
-      color: #ffd700;
+      color: #3498db;
       text-decoration: underline;
       transition: all 0.2s ease;
     }
 
     .kinkong-message a:hover {
-      color: #ffec8b;
+      color: #2980b9;
       text-decoration: none;
     }
 
     .kinkong-message.bot a {
-      color: #e31837;
+      color: #3498db;
     }
 
     .kinkong-message.bot a:hover {
-      color: #ff4757;
+      color: #2980b9;
     }
 
     @keyframes message-fade-in {
