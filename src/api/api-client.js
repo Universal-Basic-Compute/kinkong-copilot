@@ -57,7 +57,7 @@ export async function makeApiCall(endpoint, data) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/plain, application/json'
+        'Accept': 'application/json, text/plain'
       },
       body: requestData
     });
@@ -71,8 +71,17 @@ export async function makeApiCall(endpoint, data) {
       throw new Error(proxyResponse.error);
     }
 
+    // Check if response looks like HTML (might be an error page)
+    if (proxyResponse.data && 
+        (proxyResponse.data.trim().startsWith('<!DOCTYPE') || 
+         proxyResponse.data.trim().startsWith('<html'))) {
+      console.error('[API] Received HTML response instead of expected data');
+      console.log('[API] HTML response preview:', proxyResponse.data.substring(0, 200));
+      throw new Error('Received HTML response instead of expected data. The API endpoint may be unavailable.');
+    }
+
     return new Response(proxyResponse.data, {
-      status: 200,
+      status: proxyResponse.status || 200,
       headers: {
         'Content-Type': 'text/plain'
       }

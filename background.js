@@ -288,11 +288,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       body: JSON.stringify(request.body)
     })
     .then(async response => {
+      // Check if response is ok
+      if (!response.ok) {
+        console.error(`[Proxy] API error: ${response.status} ${response.statusText}`);
+        sendResponse({ 
+          error: `API error: ${response.status} ${response.statusText}`,
+          status: response.status
+        });
+        return;
+      }
+      
+      // Log response headers for debugging
+      console.log('[Proxy] Response headers:', 
+        Array.from(response.headers.entries())
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ')
+      );
+      
       // Get response as text instead of trying to parse JSON
       const text = await response.text();
-      sendResponse({ data: text });
+      
+      // Log first part of response for debugging
+      console.log('[Proxy] Response text (first 100 chars):', text.substring(0, 100));
+      
+      sendResponse({ data: text, status: response.status });
     })
     .catch(error => {
+      console.error('[Proxy] Fetch error:', error);
       sendResponse({ error: error.message });
     });
     
@@ -381,7 +403,8 @@ function startSignalPolling() {
       const response = await fetch(SWARMTRADE_NOTIFICATIONS_ENDPOINT, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       });
       
@@ -390,8 +413,29 @@ function startSignalPolling() {
         throw new Error(`SwarmTrade API error: ${response.status}`);
       }
       
+      // Check content type to ensure we're getting JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`[Signal Polling] Expected JSON but got ${contentType}`);
+        console.log('[Signal Polling] First 100 chars of response:', await response.text().then(text => text.substring(0, 100)));
+        throw new Error(`Invalid content type: ${contentType}`);
+      }
+      
       console.log('[Signal Polling] SwarmTrade response received');
-      const data = await response.json();
+      
+      // Parse response as text first to debug
+      const responseText = await response.text();
+      console.log('[Signal Polling] Response text (first 100 chars):', responseText.substring(0, 100));
+      
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('[Signal Polling] JSON parse error:', e);
+        console.log('[Signal Polling] Response was not valid JSON:', responseText.substring(0, 200));
+        throw new Error('Response was not valid JSON');
+      }
       
       if (!data || !data.signals || data.signals.length === 0) {
         console.log('[Signal Polling] No signals found in SwarmTrade response');
