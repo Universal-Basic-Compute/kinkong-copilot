@@ -10,34 +10,41 @@ for /f "tokens=2 delims=:" %%a in ('findstr "version" manifest.json') do (
 )
 
 set "PACKAGE_NAME=kinkong-copilot-v%VERSION%"
-set "TARGET_DIR=dist\%PACKAGE_NAME%"
+set "TEMP_DIR=temp\%PACKAGE_NAME%"
+set "ZIP_FILE=dist\%PACKAGE_NAME%.zip"
 
 echo Packaging KinKong Copilot v%VERSION%...
 
-:: Create clean dist directory
+:: Create clean temp and dist directories
+if exist temp rmdir /s /q temp
 if exist dist rmdir /s /q dist
-mkdir "%TARGET_DIR%"
+mkdir "%TEMP_DIR%"
+mkdir "dist"
 
 :: Copy required files and directories
 echo Copying files...
-xcopy /s /i assets "%TARGET_DIR%\assets"
-xcopy /s /i lib "%TARGET_DIR%\lib"
-xcopy /s /i src "%TARGET_DIR%\src"
-copy background.js "%TARGET_DIR%"
-copy content.js "%TARGET_DIR%"
-copy manifest.json "%TARGET_DIR%"
-copy popup.html "%TARGET_DIR%"
-copy popup.js "%TARGET_DIR%"
+xcopy /s /i assets "%TEMP_DIR%\assets"
+xcopy /s /i lib "%TEMP_DIR%\lib"
+xcopy /s /i src "%TEMP_DIR%\src"
+copy background.js "%TEMP_DIR%"
+copy content.js "%TEMP_DIR%"
+copy manifest.json "%TEMP_DIR%"
+copy popup.html "%TEMP_DIR%"
+copy popup.js "%TEMP_DIR%"
 
 :: Remove development files
 echo Removing development files...
-del /s /q "%TARGET_DIR%\*.map"
-del /s /q "%TARGET_DIR%\*.test.js"
+del /s /q "%TEMP_DIR%\*.map"
+del /s /q "%TEMP_DIR%\*.test.js"
 
 :: Create ZIP file using PowerShell
 echo Creating ZIP archive...
-powershell -command "Compress-Archive -Path '%TARGET_DIR%' -DestinationPath 'dist\%PACKAGE_NAME%.zip' -Force"
+powershell -command "Compress-Archive -Path '%TEMP_DIR%\*' -DestinationPath '%ZIP_FILE%' -Force"
 
-echo Package created: dist\%PACKAGE_NAME%.zip
+:: Clean up temp directory
+echo Cleaning up...
+rmdir /s /q temp
+
+echo Package created: %ZIP_FILE%
 echo Done!
 pause

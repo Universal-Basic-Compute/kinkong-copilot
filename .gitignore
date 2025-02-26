@@ -1,5 +1,7 @@
 # Build and distribution files
 build/
+dist/
+temp/
 
 # Environment and configuration
 .env
