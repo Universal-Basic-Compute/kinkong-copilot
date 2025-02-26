@@ -63,47 +63,66 @@ chrome.runtime.onMessage.addListener((message) => {
 
 async function handleContentPush(data) {
   try {
+    console.log('[Content] Received push data:', JSON.stringify(data));
+    
     // Check if modules are initialized
     if (!modules) {
-      console.log('Modules not initialized yet, initializing now...');
+      console.log('[Content] Modules not initialized yet, initializing now...');
       modules = await initializeModules();
+      console.log('[Content] Modules initialized successfully');
     }
     
     // Ensure chat interface is available
+    console.log('[Content] Ensuring chat interface is available');
     const elements = await modules.chatInterface.ensureChatInterface();
+    console.log('[Content] Chat interface ready:', elements ? 'Yes' : 'No');
     
     switch(data.type) {
       case 'SIGNAL':
+        console.log('[Content] Processing signal:', data.signal.id);
+        
         // Check if we've already processed this signal
         if (data.signal.id && processedSignalIds.has(data.signal.id)) {
-          console.log('Skipping duplicate signal:', data.signal.id);
+          console.log('[Content] Skipping duplicate signal:', data.signal.id);
           return;
         }
         
         // Add to processed set
         if (data.signal.id) {
           processedSignalIds.add(data.signal.id);
+          console.log(`[Content] Added signal ${data.signal.id} to processed set. Total processed: ${processedSignalIds.size}`);
           
           // Limit the size of the set to avoid memory issues
           if (processedSignalIds.size > 100) {
             // Remove oldest entries (convert to array, slice, and convert back to set)
+            const oldSize = processedSignalIds.size;
             processedSignalIds = new Set([...processedSignalIds].slice(-50));
+            console.log(`[Content] Trimmed processed signals set from ${oldSize} to ${processedSignalIds.size}`);
           }
         }
         
         // Show signal notification in chat
+        console.log('[Content] Formatting signal message');
         const signalMessage = formatSignalMessage(data.signal);
-        modules.chatInterface.addMessageToChatContainer(signalMessage, false);
+        console.log('[Content] Adding signal message to chat:', signalMessage);
+        await modules.chatInterface.addMessageToChatContainer(signalMessage, false);
+        console.log('[Content] Signal message added to chat');
         break;
         
       case 'PRICE_ALERT':
+        console.log('[Content] Processing price alert');
         // Show price alert in chat
         const alertMessage = formatPriceAlert(data.alert);
-        modules.chatInterface.addMessageToChatContainer(alertMessage, false);
+        console.log('[Content] Adding price alert to chat:', alertMessage);
+        await modules.chatInterface.addMessageToChatContainer(alertMessage, false);
+        console.log('[Content] Price alert added to chat');
         break;
+        
+      default:
+        console.log(`[Content] Unknown push data type: ${data.type}`);
     }
   } catch (error) {
-    console.error('Error handling pushed message:', error);
+    console.error('[Content] Error handling pushed message:', error);
   }
 }
 

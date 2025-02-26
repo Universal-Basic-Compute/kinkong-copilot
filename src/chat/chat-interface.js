@@ -23,48 +23,66 @@ function isExtensionContextValid() {
 
 
 async function processMessageQueue() {
-  if (isProcessingQueue || messageQueue.length === 0) return;
+  if (isProcessingQueue || messageQueue.length === 0) {
+    console.log(`[Chat] Queue processing skipped. isProcessing: ${isProcessingQueue}, queueLength: ${messageQueue.length}`);
+    return;
+  }
   
+  console.log(`[Chat] Starting to process message queue. Items: ${messageQueue.length}`);
   isProcessingQueue = true;
   
   while (messageQueue.length > 0) {
     const { message, isUser, shouldSave, shadow } = messageQueue[0];
+    console.log(`[Chat] Processing queue item. isUser: ${isUser}, shouldSave: ${shouldSave}`);
     
     try {
+      console.log('[Chat] Ensuring chat interface');
       const elements = await ensureChatInterface();
       if (!elements || !elements.messagesContainer) {
+        console.error('[Chat] Chat interface not ready');
         throw new Error('Chat interface not ready');
       }
 
       const { messagesContainer } = elements;
+      console.log('[Chat] Got messages container');
       
       // For user messages or initial messages, add them instantly
       if (isUser || shouldSave === false) {
+        console.log('[Chat] Adding message directly (user or non-saved message)');
         const messageDiv = document.createElement('div');
         messageDiv.className = `kinkong-message ${isUser ? 'user' : 'bot'}`;
         messageDiv.innerHTML = formatMessage(message);
         messagesContainer.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        console.log('[Chat] Message added and scrolled into view');
       } else {
+        console.log('[Chat] Adding message paragraphs to chat');
         await addMessageParagraphsToChat(message, isUser, messagesContainer);
+        console.log('[Chat] Message paragraphs added');
       }
 
       if (shouldSave) {
+        console.log('[Chat] Saving message');
         saveMessage(message, isUser);
       }
 
       if (shadow) {
+        console.log('[Chat] Showing message paragraphs in speech bubbles');
         await showMessageParagraphs(message, shadow);
       }
       
+      console.log('[Chat] Removing processed message from queue');
       messageQueue.shift();
+      console.log(`[Chat] Queue size after processing: ${messageQueue.length}`);
       
     } catch (error) {
-      console.error('Error processing message:', error);
+      console.error('[Chat] Error processing message:', error);
       messageQueue.shift(); // Remove failed message and continue
+      console.log(`[Chat] Removed failed message. Queue size: ${messageQueue.length}`);
     }
   }
   
+  console.log('[Chat] Finished processing message queue');
   isProcessingQueue = false;
 }
 
@@ -672,11 +690,18 @@ function setupActivityTracking(shadow) {
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {
+  console.log(`[Chat] Adding message to container. isUser: ${isUser}, shouldSave: ${shouldSave}`);
+  console.log(`[Chat] Message content: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`);
+  
   // Add to queue
   messageQueue.push({ message, isUser, shouldSave });
+  console.log(`[Chat] Added message to queue. Queue size: ${messageQueue.length}`);
   
   // Start processing if not already running
   if (!isProcessingQueue) {
+    console.log('[Chat] Starting queue processing');
     processMessageQueue();
+  } else {
+    console.log('[Chat] Queue processing already in progress');
   }
 }

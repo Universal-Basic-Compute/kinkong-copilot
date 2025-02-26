@@ -7,6 +7,12 @@ const AIRTABLE_ENDPOINT = 'https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Signals
 const AIRTABLE_API_KEY = 'keyXXXXXXXXXXXXXX'; // Replace with your Airtable API key
 const POLLING_INTERVAL = 20000; // 20 seconds
 
+// Add debug logs for configuration
+console.log('[Config] Initializing background script');
+console.log(`[Config] AIRTABLE_ENDPOINT: ${AIRTABLE_ENDPOINT}`);
+console.log(`[Config] AIRTABLE_API_KEY: ${AIRTABLE_API_KEY ? 'Set (first 4 chars: ' + AIRTABLE_API_KEY.substring(0, 4) + '...)' : 'Not set'}`);
+console.log(`[Config] POLLING_INTERVAL: ${POLLING_INTERVAL}ms`);
+
 function connectSSE() {
   // Don't create a new connection if one is already active
   if (sseConnected) {
@@ -355,6 +361,7 @@ function startSignalPolling() {
   if (signalPollingInterval) {
     clearInterval(signalPollingInterval);
     signalPollingInterval = null;
+    console.log('[Signal Polling] Cleared existing polling interval');
   }
   
   // Define the polling function
@@ -369,7 +376,10 @@ function startSignalPolling() {
         return;
       }
       
+      console.log(`[Signal Polling] Active tab: ${tabs[0].url}`);
+      
       // Make request to Airtable
+      console.log(`[Signal Polling] Requesting data from Airtable: ${AIRTABLE_ENDPOINT}`);
       const response = await fetch(`${AIRTABLE_ENDPOINT}?sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=10`, {
         method: 'GET',
         headers: {
@@ -379,33 +389,39 @@ function startSignalPolling() {
       });
       
       if (!response.ok) {
+        console.error(`[Signal Polling] Airtable API error: ${response.status} ${response.statusText}`);
         throw new Error(`Airtable API error: ${response.status}`);
       }
       
+      console.log('[Signal Polling] Airtable response received');
       const data = await response.json();
       
       if (!data.records || data.records.length === 0) {
-        console.log('[Signal Polling] No signals found');
+        console.log('[Signal Polling] No signals found in Airtable response');
         return;
       }
       
+      console.log(`[Signal Polling] Found ${data.records.length} total signals in Airtable`);
+      
       // Get current time
       const now = new Date();
+      console.log(`[Signal Polling] Current time: ${now.toISOString()}`);
       
       // Filter signals less than 1 hour old
       const recentSignals = data.records.filter(record => {
         const createdAt = new Date(record.fields.createdAt);
         const diffMs = now - createdAt;
         const diffHours = diffMs / (1000 * 60 * 60);
+        console.log(`[Signal Polling] Signal ${record.id} created at ${createdAt.toISOString()}, ${diffHours.toFixed(2)} hours old`);
         return diffHours < 1;
       });
       
       if (recentSignals.length === 0) {
-        console.log('[Signal Polling] No recent signals found');
+        console.log('[Signal Polling] No recent signals found (less than 1 hour old)');
         return;
       }
       
-      console.log(`[Signal Polling] Found ${recentSignals.length} recent signals`);
+      console.log(`[Signal Polling] Found ${recentSignals.length} recent signals (less than 1 hour old)`);
       
       // Send signals to active tab
       for (const signal of recentSignals) {
@@ -422,16 +438,21 @@ function startSignalPolling() {
           createdAt: signal.fields.createdAt
         };
         
+        console.log(`[Signal Polling] Sending signal to tab: ${JSON.stringify(formattedSignal)}`);
+        
         // Send to active tab
-        chrome.tabs.sendMessage(tabs[0].id, {
-          type: 'SERVER_PUSH',
-          data: {
-            type: 'SIGNAL',
-            signal: formattedSignal
-          }
-        }).catch(err => {
-          console.debug('[Signal Polling] Could not send to tab, may be inactive');
-        });
+        try {
+          await chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'SERVER_PUSH',
+            data: {
+              type: 'SIGNAL',
+              signal: formattedSignal
+            }
+          });
+          console.log(`[Signal Polling] Successfully sent signal ${signal.id} to tab ${tabs[0].id}`);
+        } catch (err) {
+          console.error(`[Signal Polling] Error sending signal to tab: ${err.message}`);
+        }
       }
       
     } catch (error) {
@@ -440,6 +461,7 @@ function startSignalPolling() {
   };
   
   // Run immediately on start
+  console.log('[Signal Polling] Running initial poll');
   pollForSignals();
   
   // Set up interval
