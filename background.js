@@ -477,28 +477,6 @@ function startSignalPolling() {
       // Check if the API returned a message about no signals
       if (data.message === "No recent signals found") {
         console.log('[Signal Polling] API reports no recent signals');
-        
-        // Generate a mock signal occasionally (10% chance)
-        const shouldGenerateMock = Math.random() < 0.1;
-        if (shouldGenerateMock) {
-          console.log('[Signal Polling] Generating mock signal since no real signals available');
-          const mockSignal = generateMockSignal(new Date());
-          
-          // Send mock signal to active tab
-          try {
-            await chrome.tabs.sendMessage(tabs[0].id, {
-              type: 'SERVER_PUSH',
-              data: {
-                type: 'SIGNAL',
-                signal: mockSignal
-              }
-            });
-            console.log(`[Signal Polling] Successfully sent mock signal to tab ${tabs[0].id}`);
-          } catch (err) {
-            console.error(`[Signal Polling] Error sending mock signal to tab: ${err.message}`);
-          }
-        }
-        
         return;
       }
       
@@ -577,53 +555,6 @@ function startSignalPolling() {
 }
 
 // Function to stop signal polling
-// Function to generate mock signals for testing
-function generateMockSignal(timestamp) {
-  // Random token names
-  const tokens = ['SOL', 'BTC', 'ETH', 'BONK', 'JUP', 'PYTH', 'RNDR', 'AVAX', 'LINK'];
-  const token = tokens[Math.floor(Math.random() * tokens.length)];
-  
-  // Random type (BUY/SELL)
-  const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
-  
-  // Random prices
-  const basePrice = type === 'BUY' ? 
-    (Math.random() * 100 + 10).toFixed(2) : 
-    (Math.random() * 100 + 20).toFixed(2);
-  
-  const entryPrice = basePrice;
-  const targetPrice = type === 'BUY' ? 
-    (parseFloat(basePrice) * (1 + Math.random() * 0.2)).toFixed(2) : 
-    (parseFloat(basePrice) * (1 - Math.random() * 0.2)).toFixed(2);
-  
-  const stopLoss = type === 'BUY' ? 
-    (parseFloat(basePrice) * (1 - Math.random() * 0.1)).toFixed(2) : 
-    (parseFloat(basePrice) * (1 + Math.random() * 0.1)).toFixed(2);
-  
-  // Random timeframe
-  const timeframes = ['SCALP', 'INTRADAY', 'SWING', 'POSITION'];
-  const timeframe = timeframes[Math.floor(Math.random() * timeframes.length)];
-  
-  // Random confidence
-  const confidence = Math.random() > 0.3 ? 'HIGH' : 'MEDIUM';
-  
-  // Generate a unique ID
-  const id = 'mock-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-  
-  return {
-    id: id,
-    token: token,
-    type: type,
-    entryPrice: entryPrice,
-    targetPrice: targetPrice,
-    stopLoss: stopLoss,
-    timeframe: timeframe,
-    confidence: confidence,
-    createdAt: timestamp.toISOString(),
-    exchange: 'Raydium',
-    notes: `This is a mock ${timeframe.toLowerCase()} signal for testing purposes.`
-  };
-}
 
 function stopSignalPolling() {
   if (signalPollingInterval) {
