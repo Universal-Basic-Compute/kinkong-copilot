@@ -1,9 +1,27 @@
 let eventSource;
+let sseConnected = false;
+let reconnectTimeout = null;
 const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
 
 function connectSSE() {
+  // Don't create a new connection if one is already active
+  if (sseConnected) {
+    console.log('SSE already connected, skipping reconnection');
+    return;
+  }
+  
+  // Clear any pending reconnect timeouts
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+
+  console.log('Establishing SSE connection to', SSE_ENDPOINT);
+  
+  // Close existing connection if any
   if (eventSource) {
     eventSource.close();
+    eventSource = null;
   }
 
   // Add headers to the request
@@ -22,6 +40,9 @@ function connectSSE() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
+    sseConnected = true;
+    console.log('SSE connection established');
+    
     const reader = response.body.getReader();
     let buffer = '';
 
@@ -37,6 +58,9 @@ function connectSSE() {
                 chrome.tabs.sendMessage(tab.id, {
                   type: 'SERVER_PUSH',
                   data: data
+                }).catch(err => {
+                  // Suppress errors from inactive tabs
+                  console.debug('Could not send to tab, may be inactive');
                 });
               });
             });
@@ -52,7 +76,8 @@ function connectSSE() {
       reader.read().then(({done, value}) => {
         if (done) {
           console.log('SSE connection closed');
-          setTimeout(connectSSE, 5000); // Reconnect after 5 seconds
+          sseConnected = false;
+          reconnectTimeout = setTimeout(connectSSE, 5000); // Reconnect after 5 seconds
           return;
         }
 
@@ -69,19 +94,36 @@ function connectSSE() {
         readStream();
       }).catch(error => {
         console.error('SSE read error:', error);
-        setTimeout(connectSSE, 5000);
+        sseConnected = false;
+        reconnectTimeout = setTimeout(connectSSE, 5000);
       });
     }
 
     readStream();
   }).catch(error => {
     console.error('SSE connection error:', error);
-    setTimeout(connectSSE, 5000);
+    sseConnected = false;
+    reconnectTimeout = setTimeout(connectSSE, 5000);
   });
 }
 
 // Initialize SSE connection when extension starts
 connectSSE();
+
+// Add tab and window focus listeners to maintain SSE connection
+chrome.tabs.onActivated.addListener(() => {
+  // Ensure SSE connection when a tab becomes active
+  if (!sseConnected) {
+    connectSSE();
+  }
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  // Reconnect when window gets focus (if not already connected)
+  if (windowId !== chrome.windows.WINDOW_ID_NONE && !sseConnected) {
+    connectSSE();
+  }
+});
 
 // Handle content script injection
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -291,7 +333,16 @@ function resizeImage(dataUrl, targetWidth) {
 
 // Clean up when extension is shutting down
 chrome.runtime.onSuspend.addListener(() => {
+  console.log('Extension suspending, cleaning up SSE connection');
   if (eventSource) {
     eventSource.close();
+    eventSource = null;
   }
+  
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+  
+  sseConnected = false;
 });
