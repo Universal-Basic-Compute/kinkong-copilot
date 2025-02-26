@@ -3,8 +3,8 @@ let sseConnected = false;
 let reconnectTimeout = null;
 let signalPollingInterval = null;
 const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
-const AIRTABLE_ENDPOINT = 'https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Signals'; // Replace with your Airtable base ID
-const AIRTABLE_API_KEY = 'keyXXXXXXXXXXXXXX'; // Replace with your Airtable API key
+const AIRTABLE_ENDPOINT = 'https://api.airtable.com/v0/appABC123XYZ/Signals'; // Replace with your actual base ID
+const AIRTABLE_API_KEY = 'keyABC123XYZ'; // Replace with your actual API key
 const POLLING_INTERVAL = 20000; // 20 seconds
 
 // Add debug logs for configuration
