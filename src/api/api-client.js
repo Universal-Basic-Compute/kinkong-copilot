@@ -4,7 +4,7 @@ export async function makeApiCall(endpoint, data) {
   try {
     // Get the generated code ID and version
     const codeId = await getOrCreateWalletId();
-    const version = '0.1.2'; // Version from manifest.json/config.js
+    const version = '1.2.0'; // Version from manifest.json/config.js
 
     // Capture screenshot
     let screenshot = null;
