@@ -1,7 +1,11 @@
 let eventSource;
 let sseConnected = false;
 let reconnectTimeout = null;
+let signalPollingInterval = null;
 const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
+const AIRTABLE_ENDPOINT = 'https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Signals'; // Replace with your Airtable base ID
+const AIRTABLE_API_KEY = 'keyXXXXXXXXXXXXXX'; // Replace with your Airtable API key
+const POLLING_INTERVAL = 20000; // 20 seconds
 
 function connectSSE() {
   // Don't create a new connection if one is already active
@@ -91,6 +95,9 @@ function checkSSEConnection() {
 // Initialize SSE connection when extension starts
 connectSSE();
 
+// Start signal polling on extension startup
+startSignalPolling();
+
 // Set up periodic connection check (every 30 seconds)
 setInterval(checkSSEConnection, 30000);
 
@@ -98,12 +105,32 @@ setInterval(checkSSEConnection, 30000);
 chrome.tabs.onActivated.addListener(() => {
   console.log('[SSE] Tab activated, checking connection');
   checkSSEConnection();
+  
+  // Start signal polling for the newly activated tab
+  startSignalPolling();
 });
 
 chrome.windows.onFocusChanged.addListener((windowId) => {
   if (windowId !== chrome.windows.WINDOW_ID_NONE) {
     console.log('[SSE] Window focused, checking connection');
     checkSSEConnection();
+    
+    // Start signal polling when window gets focus
+    startSignalPolling();
+  } else {
+    // Stop polling when window loses focus
+    stopSignalPolling();
+  }
+});
+
+// Add this listener to stop polling when tab is changed
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'loading') {
+    // Stop polling when navigating to a new page
+    stopSignalPolling();
+  } else if (changeInfo.status === 'complete') {
+    // Restart polling when page is fully loaded
+    startSignalPolling();
   }
 });
 
@@ -322,6 +349,113 @@ function resizeImage(dataUrl, targetWidth) {
   });
 }
 
+// Function to start polling for signals from Airtable
+function startSignalPolling() {
+  // Clear any existing interval
+  if (signalPollingInterval) {
+    clearInterval(signalPollingInterval);
+    signalPollingInterval = null;
+  }
+  
+  // Define the polling function
+  const pollForSignals = async () => {
+    try {
+      console.log('[Signal Polling] Checking for new signals...');
+      
+      // Get the active tab
+      const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+      if (!tabs || tabs.length === 0) {
+        console.log('[Signal Polling] No active tab found');
+        return;
+      }
+      
+      // Make request to Airtable
+      const response = await fetch(`${AIRTABLE_ENDPOINT}?sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=10`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Airtable API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.records || data.records.length === 0) {
+        console.log('[Signal Polling] No signals found');
+        return;
+      }
+      
+      // Get current time
+      const now = new Date();
+      
+      // Filter signals less than 1 hour old
+      const recentSignals = data.records.filter(record => {
+        const createdAt = new Date(record.fields.createdAt);
+        const diffMs = now - createdAt;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        return diffHours < 1;
+      });
+      
+      if (recentSignals.length === 0) {
+        console.log('[Signal Polling] No recent signals found');
+        return;
+      }
+      
+      console.log(`[Signal Polling] Found ${recentSignals.length} recent signals`);
+      
+      // Send signals to active tab
+      for (const signal of recentSignals) {
+        // Format the signal data
+        const formattedSignal = {
+          id: signal.id,
+          token: signal.fields.token,
+          type: signal.fields.type,
+          entryPrice: signal.fields.entryPrice,
+          targetPrice: signal.fields.targetPrice,
+          stopLoss: signal.fields.stopLoss,
+          timeframe: signal.fields.timeframe,
+          confidence: signal.fields.confidence,
+          createdAt: signal.fields.createdAt
+        };
+        
+        // Send to active tab
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'SERVER_PUSH',
+          data: {
+            type: 'SIGNAL',
+            signal: formattedSignal
+          }
+        }).catch(err => {
+          console.debug('[Signal Polling] Could not send to tab, may be inactive');
+        });
+      }
+      
+    } catch (error) {
+      console.error('[Signal Polling] Error:', error);
+    }
+  };
+  
+  // Run immediately on start
+  pollForSignals();
+  
+  // Set up interval
+  signalPollingInterval = setInterval(pollForSignals, POLLING_INTERVAL);
+  console.log(`[Signal Polling] Started polling every ${POLLING_INTERVAL/1000} seconds`);
+}
+
+// Function to stop signal polling
+function stopSignalPolling() {
+  if (signalPollingInterval) {
+    clearInterval(signalPollingInterval);
+    signalPollingInterval = null;
+    console.log('[Signal Polling] Stopped polling');
+  }
+}
+
 // Clean up when extension is shutting down
 chrome.runtime.onSuspend.addListener(() => {
   console.log('[SSE] Extension suspending, cleaning up SSE connection');
@@ -333,6 +467,11 @@ chrome.runtime.onSuspend.addListener(() => {
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
+  }
+  
+  if (signalPollingInterval) {
+    clearInterval(signalPollingInterval);
+    signalPollingInterval = null;
   }
   
   sseConnected = false;

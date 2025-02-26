@@ -4,6 +4,7 @@ window.currentPageContent = null;
 let urlObserver = null;
 let phantomInjectionAttempts = 0;
 const MAX_PHANTOM_ATTEMPTS = 10;
+let processedSignalIds = new Set();
 
 // Helper function to check if extension context is valid
 function isExtensionContextValid() {
@@ -73,6 +74,23 @@ async function handleContentPush(data) {
     
     switch(data.type) {
       case 'SIGNAL':
+        // Check if we've already processed this signal
+        if (data.signal.id && processedSignalIds.has(data.signal.id)) {
+          console.log('Skipping duplicate signal:', data.signal.id);
+          return;
+        }
+        
+        // Add to processed set
+        if (data.signal.id) {
+          processedSignalIds.add(data.signal.id);
+          
+          // Limit the size of the set to avoid memory issues
+          if (processedSignalIds.size > 100) {
+            // Remove oldest entries (convert to array, slice, and convert back to set)
+            processedSignalIds = new Set([...processedSignalIds].slice(-50));
+          }
+        }
+        
         // Show signal notification in chat
         const signalMessage = formatSignalMessage(data.signal);
         modules.chatInterface.addMessageToChatContainer(signalMessage, false);
@@ -90,7 +108,11 @@ async function handleContentPush(data) {
 }
 
 function formatSignalMessage(signal) {
-  return `🚨 New Trading Signal
+  // Format the date
+  const signalDate = new Date(signal.createdAt);
+  const formattedDate = signalDate.toLocaleString();
+  
+  return `🚨 New Trading Signal (${formattedDate})
 Token: ${signal.token}
 Type: ${signal.type}
 Entry: $${signal.entryPrice}
