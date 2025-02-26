@@ -11,7 +11,38 @@ console.log('[Config] Initializing background script');
 console.log(`[Config] SWARMTRADE_NOTIFICATIONS_ENDPOINT: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
 console.log(`[Config] POLLING_INTERVAL: ${POLLING_INTERVAL}ms`);
 
-function connectSSE() {
+// Function to get or create wallet ID for authentication
+async function getWalletId() {
+  try {
+    // Check if ID exists in storage
+    const result = await chrome.storage.local.get('walletId');
+    
+    // Return existing ID if valid
+    if (result.walletId && result.walletId !== '803c7488f8632c0b9506c6f2fec75405') {
+      return result.walletId;
+    }
+
+    // Generate new random code if none exists
+    const buffer = new Uint8Array(32);
+    crypto.getRandomValues(buffer);
+    
+    // Convert to 32-char hex string
+    const walletId = Array.from(buffer)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .substring(0, 32);
+
+    // Save to local storage
+    await chrome.storage.local.set({ walletId: walletId });
+
+    return walletId;
+  } catch (error) {
+    console.error('[Wallet] Error managing wallet ID:', error);
+    return '803c7488f8632c0b9506c6f2fec75405'; // Default code if error
+  }
+}
+
+async function connectSSE() {
   // Don't create a new connection if one is already active
   if (sseConnected) {
     console.log('[SSE] Already connected, skipping reconnection');
@@ -35,7 +66,15 @@ function connectSSE() {
 
   // Create a proper EventSource connection
   try {
-    eventSource = new EventSource(SSE_ENDPOINT, {
+    // Get wallet ID for authentication
+    const walletId = await getWalletId();
+    console.log(`[SSE] Using wallet ID for authentication: ${walletId.substring(0, 8)}...`);
+    
+    // Create URL with authentication parameter
+    const sseUrl = new URL(SSE_ENDPOINT);
+    sseUrl.searchParams.append('code', walletId);
+    
+    eventSource = new EventSource(sseUrl.toString(), {
       withCredentials: true
     });
     
@@ -398,13 +437,18 @@ function startSignalPolling() {
       
       console.log(`[Signal Polling] Active tab: ${tabs[0].url}`);
       
-      // Make request to SwarmTrade API
+      // Get wallet ID for authentication
+      const walletId = await getWalletId();
+      console.log(`[Signal Polling] Using wallet ID: ${walletId.substring(0, 8)}...`);
+      
+      // Make request to SwarmTrade API with authentication
       console.log(`[Signal Polling] Requesting data from SwarmTrade: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
       const response = await fetch(SWARMTRADE_NOTIFICATIONS_ENDPOINT, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-Wallet-ID': walletId
         }
       });
       
