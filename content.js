@@ -5,8 +5,24 @@ let urlObserver = null;
 let phantomInjectionAttempts = 0;
 const MAX_PHANTOM_ATTEMPTS = 10;
 
+// Helper function to check if extension context is valid
+function isExtensionContextValid() {
+  try {
+    // This will throw an error if the extension context is invalid
+    chrome.runtime.getURL('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Add SSE message handler
 chrome.runtime.onMessage.addListener((message) => {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    return;
+  }
+  
   if (message.type === 'SERVER_PUSH') {
     handleContentPush(message.data);
   }
@@ -17,7 +33,7 @@ chrome.runtime.onMessage.addListener((message) => {
     initializeModules().then(loadedModules => {
       modules = loadedModules;
       modules.chatInterface.ensureChatInterface().then(elements => {
-        if (elements.copilotImage) {
+        if (elements && elements.copilotImage) {
           elements.copilotImage.style.display = 'block';
         }
       });
@@ -111,6 +127,13 @@ function setupUrlObserver() {
 
   let lastUrl = location.href;
   urlObserver = new MutationObserver(() => {
+    // First check if extension context is still valid
+    if (!isExtensionContextValid()) {
+      console.log('Extension context invalid, disconnecting observer');
+      urlObserver.disconnect();
+      return;
+    }
+    
     const url = location.href;
     if (url !== lastUrl) {
       console.log('URL changed to:', url);
@@ -124,8 +147,14 @@ function setupUrlObserver() {
 
 async function handleUrlChangeIfEnabled() {
   try {
+    // Check extension context before proceeding
+    if (!isExtensionContextValid()) {
+      console.log('Extension context invalid, skipping URL change handling');
+      return;
+    }
+    
     const { copilotEnabled } = await chrome.storage.sync.get({ copilotEnabled: true });
-    if (copilotEnabled && await modules.pageDetector.isSupportedPage()) {
+    if (copilotEnabled && modules && await modules.pageDetector.isSupportedPage()) {
       await modules.urlHandler.handleUrlChange();
     }
   } catch (error) {
@@ -151,6 +180,11 @@ let copilotEnabled = true;
 
 // Add message listener 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    return;
+  }
+  
   if (message.type === 'updateCopilotState') {
     copilotEnabled = message.enabled;
     const copilotImage = document.querySelector('.kinkong-floating-copilot');

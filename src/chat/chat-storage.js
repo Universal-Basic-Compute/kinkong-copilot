@@ -1,6 +1,22 @@
 import { ensureChatInterface, addMessageToChatContainer } from './chat-interface.js';
 
+// Helper function to check if extension context is valid
+function isExtensionContextValid() {
+  try {
+    chrome.runtime.getURL('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function saveMessage(message, isUser) {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    console.warn('Extension context invalid, cannot save message');
+    return;
+  }
+  
   const currentUrl = window.location.href;
   try {
     const result = await chrome.storage.local.get('chatMessages');
@@ -23,6 +39,12 @@ export async function saveMessage(message, isUser) {
 }
 
 export async function loadMessages() {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    console.warn('Extension context invalid, cannot load messages');
+    return [];
+  }
+  
   const currentUrl = window.location.href;
   try {
     const result = await chrome.storage.local.get('chatMessages');

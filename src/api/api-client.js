@@ -1,7 +1,22 @@
 import { getOrCreateWalletId } from '../chat/chat-interface.js';
 
+// Helper function to check if extension context is valid
+function isExtensionContextValid() {
+  try {
+    chrome.runtime.getURL('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function makeApiCall(endpoint, data) {
   try {
+    // Check context validity first
+    if (!isExtensionContextValid()) {
+      throw new Error('Extension context invalid, cannot make API call');
+    }
+    
     // Get the generated code ID and version
     const codeId = await getOrCreateWalletId();
     const version = '1.2.0'; // Version from manifest.json/config.js
@@ -90,6 +105,11 @@ export async function makeApiCall(endpoint, data) {
 
 // Function to capture and resize screenshot
 async function captureScreenshot() {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    throw new Error('Extension context invalid, cannot capture screenshot');
+  }
+  
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'captureScreenshot' }, (response) => {
       if (chrome.runtime.lastError) {

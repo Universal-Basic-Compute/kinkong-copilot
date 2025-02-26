@@ -10,6 +10,17 @@ let isProcessingQueue = false;
 
 // Fonction utilitaire pour vérifier si le contexte est valide
 function isExtensionContextValid() {
+  try {
+    // This will throw an error if the extension context is invalid
+    chrome.runtime.getURL('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Fonction utilitaire pour vérifier si le contexte est valide
+function isExtensionContextValid() {
   return typeof chrome !== 'undefined' && chrome?.runtime?.id;
 }
 
@@ -66,6 +77,11 @@ async function processMessageQueue() {
 // Wallet ID management
 export async function getOrCreateWalletId() {
   try {
+    // Check context validity first
+    if (!isExtensionContextValid()) {
+      return '803c7488f8632c0b9506c6f2fec75405'; // Default code if context invalid
+    }
+    
     // Check if ID exists in storage
     const result = await chrome.storage.local.get('walletId');
     
@@ -97,6 +113,12 @@ export async function getOrCreateWalletId() {
 let interfaceElements = null;
 
 export async function ensureChatInterface() {
+  // Check context validity first
+  if (!isExtensionContextValid()) {
+    console.warn('Extension context invalid, cannot ensure chat interface');
+    return null;
+  }
+  
   // Return cached elements if they exist
   if (interfaceElements) {
     return interfaceElements;

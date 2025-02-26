@@ -6,10 +6,26 @@ import { waitForDexScreenerElements, waitForXContent } from '../utils/dom-utils.
 import { extractVisibleContent, extractXContent } from '../content/content-extractor.js';
 import { makeApiCall } from '../api/api-client.js';
 
+// Helper function to check if extension context is valid
+function isExtensionContextValid() {
+  try {
+    chrome.runtime.getURL('');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 let lastApiCallUrl = null;
 
 export async function handleUrlChange() {
   try {
+    // Check context validity first
+    if (!isExtensionContextValid()) {
+      console.warn('Extension context invalid, skipping URL change handling');
+      return;
+    }
+    
     const pageType = await isSupportedPage();
     if (!pageType) return;
 
@@ -28,7 +44,7 @@ export async function handleUrlChange() {
     // Only ensure chat interface is available, but don't make any automatic API calls
     try {
       const interfaceElements = await ensureChatInterface();
-      if (!interfaceElements.messagesContainer) {
+      if (!interfaceElements || !interfaceElements.messagesContainer) {
         throw new Error('Messages container not found');
       }
       
@@ -43,8 +59,10 @@ export async function handleUrlChange() {
   } catch (error) {
     console.error('Error in handleUrlChange:', error);
     try {
-      const { messagesContainer } = ensureChatInterface();
-      if (messagesContainer) {
+      if (!isExtensionContextValid()) return;
+      
+      const elements = await ensureChatInterface();
+      if (elements && elements.messagesContainer) {
         addMessageToChatContainer(
           'Sorry, something went wrong. Please try refreshing the page.',
           false
