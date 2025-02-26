@@ -1,4 +1,50 @@
-.aider*
-.env
-config.js
+# Build and distribution files
 dist/
+build/
+*.zip
+
+# Environment and configuration
+.env
+.env.*
+config.js
+secrets.js
+
+# Virtual environments
+venv/
+env/
+ENV/
+virtualenv/
+
+# Development tools
+aider*
+.aider*
+.vscode/
+.idea/
+*.sublime-*
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Chrome extension specific
+*.pem
+*.crx
