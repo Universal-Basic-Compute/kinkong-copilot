@@ -1,6 +1,5 @@
 # Build and distribution files
 build/
-*.zip
 
 # Environment and configuration
 .env
