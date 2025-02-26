@@ -51,9 +51,13 @@ export async function makeApiCall(endpoint, data) {
   console.groupEnd();
 
   try {
+    // Create URL with authentication parameter
+    const apiUrl = new URL(`https://swarmtrade.ai/api/${endpoint}`);
+    apiUrl.searchParams.append('code', codeId);
+    
     const proxyResponse = await chrome.runtime.sendMessage({
       type: 'proxyRequest',
-      endpoint: `https://swarmtrade.ai/api/${endpoint}`,
+      endpoint: apiUrl.toString(),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

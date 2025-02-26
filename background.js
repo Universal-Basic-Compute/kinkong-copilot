@@ -441,14 +441,17 @@ function startSignalPolling() {
       const walletId = await getWalletId();
       console.log(`[Signal Polling] Using wallet ID: ${walletId.substring(0, 8)}...`);
       
+      // Create URL with authentication parameter
+      const apiUrl = new URL(SWARMTRADE_NOTIFICATIONS_ENDPOINT);
+      apiUrl.searchParams.append('code', walletId);
+      
       // Make request to SwarmTrade API with authentication
-      console.log(`[Signal Polling] Requesting data from SwarmTrade: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
-      const response = await fetch(SWARMTRADE_NOTIFICATIONS_ENDPOINT, {
+      console.log(`[Signal Polling] Requesting data from SwarmTrade: ${apiUrl.toString()}`);
+      const response = await fetch(apiUrl.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Wallet-ID': walletId
+          'Accept': 'application/json'
         }
       });
       
