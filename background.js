@@ -6,7 +6,7 @@ const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
 function connectSSE() {
   // Don't create a new connection if one is already active
   if (sseConnected) {
-    console.log('SSE already connected, skipping reconnection');
+    console.log('[SSE] Already connected, skipping reconnection');
     return;
   }
   
@@ -16,113 +16,101 @@ function connectSSE() {
     reconnectTimeout = null;
   }
 
-  console.log('Establishing SSE connection to', SSE_ENDPOINT);
+  console.log('[SSE] Establishing connection to', SSE_ENDPOINT);
   
   // Close existing connection if any
   if (eventSource) {
+    console.log('[SSE] Closing existing connection');
     eventSource.close();
     eventSource = null;
   }
 
-  // Add headers to the request
-  const headers = new Headers({
-    'Accept': 'text/event-stream',
-    'Cache-Control': 'no-cache'
-  });
-
-  // Create fetch request with proper headers
-  fetch(SSE_ENDPOINT, {
-    method: 'GET',
-    headers: headers,
-    credentials: 'include'
-  }).then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  // Create a proper EventSource connection
+  try {
+    eventSource = new EventSource(SSE_ENDPOINT, {
+      withCredentials: true
+    });
     
-    sseConnected = true;
-    console.log('SSE connection established');
+    // Set up event handlers
+    eventSource.onopen = (event) => {
+      console.log('[SSE] Connection established successfully');
+      sseConnected = true;
+    };
     
-    const reader = response.body.getReader();
-    let buffer = '';
-
-    function processText(text) {
-      const messages = text.split('\n\n');
-      messages.forEach(message => {
-        if (message.trim()) {
-          try {
-            const data = JSON.parse(message.replace('data: ', ''));
-            // Forward to active tabs
-            chrome.tabs.query({active: true}, tabs => {
-              tabs.forEach(tab => {
-                chrome.tabs.sendMessage(tab.id, {
-                  type: 'SERVER_PUSH',
-                  data: data
-                }).catch(err => {
-                  // Suppress errors from inactive tabs
-                  console.debug('Could not send to tab, may be inactive');
-                });
-              });
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // Forward to active tabs
+        chrome.tabs.query({active: true}, tabs => {
+          tabs.forEach(tab => {
+            chrome.tabs.sendMessage(tab.id, {
+              type: 'SERVER_PUSH',
+              data: data
+            }).catch(err => {
+              // Suppress errors from inactive tabs
+              console.debug('[SSE] Could not send to tab, may be inactive');
             });
-          } catch (e) {
-            console.error('Error parsing SSE message:', e);
-          }
-        }
-      });
-    }
-
-    // Read the stream
-    function readStream() {
-      reader.read().then(({done, value}) => {
-        if (done) {
-          console.log('SSE connection closed');
-          sseConnected = false;
-          reconnectTimeout = setTimeout(connectSSE, 5000); // Reconnect after 5 seconds
-          return;
-        }
-
-        buffer += new TextDecoder().decode(value);
-        const messages = buffer.split('\n\n');
-        buffer = messages.pop(); // Keep the last incomplete message in buffer
-        
-        messages.forEach(message => {
-          if (message.trim()) {
-            processText(message);
-          }
+          });
         });
-
-        readStream();
-      }).catch(error => {
-        console.error('SSE read error:', error);
-        sseConnected = false;
-        reconnectTimeout = setTimeout(connectSSE, 5000);
-      });
-    }
-
-    readStream();
-  }).catch(error => {
-    console.error('SSE connection error:', error);
+      } catch (e) {
+        console.error('[SSE] Error parsing message:', e);
+      }
+    };
+    
+    eventSource.onerror = (event) => {
+      console.error('[SSE] Connection error:', event);
+      sseConnected = false;
+      
+      // Close the connection on error
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      
+      // Set up reconnection
+      console.log('[SSE] Will attempt to reconnect in 5 seconds');
+      reconnectTimeout = setTimeout(connectSSE, 5000);
+    };
+    
+  } catch (error) {
+    console.error('[SSE] Failed to create EventSource:', error);
     sseConnected = false;
     reconnectTimeout = setTimeout(connectSSE, 5000);
-  });
+  }
+}
+
+function checkSSEConnection() {
+  console.log('[SSE] Checking connection status: ' + (sseConnected ? 'Connected' : 'Disconnected'));
+  
+  if (!sseConnected) {
+    console.log('[SSE] Connection lost, attempting to reconnect');
+    connectSSE();
+  }
 }
 
 // Initialize SSE connection when extension starts
 connectSSE();
 
+// Set up periodic connection check (every 30 seconds)
+setInterval(checkSSEConnection, 30000);
+
 // Add tab and window focus listeners to maintain SSE connection
 chrome.tabs.onActivated.addListener(() => {
-  // Ensure SSE connection when a tab becomes active
-  if (!sseConnected) {
-    connectSSE();
-  }
+  console.log('[SSE] Tab activated, checking connection');
+  checkSSEConnection();
 });
 
 chrome.windows.onFocusChanged.addListener((windowId) => {
-  // Reconnect when window gets focus (if not already connected)
-  if (windowId !== chrome.windows.WINDOW_ID_NONE && !sseConnected) {
-    connectSSE();
+  if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+    console.log('[SSE] Window focused, checking connection');
+    checkSSEConnection();
   }
+});
+
+// Add listener to handle browser coming back online
+self.addEventListener('online', () => {
+  console.log('[SSE] Browser back online, checking connection');
+  checkSSEConnection();
 });
 
 // Handle content script injection
@@ -333,7 +321,7 @@ function resizeImage(dataUrl, targetWidth) {
 
 // Clean up when extension is shutting down
 chrome.runtime.onSuspend.addListener(() => {
-  console.log('Extension suspending, cleaning up SSE connection');
+  console.log('[SSE] Extension suspending, cleaning up SSE connection');
   if (eventSource) {
     eventSource.close();
     eventSource = null;
