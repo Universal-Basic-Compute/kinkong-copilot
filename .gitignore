@@ -14,6 +14,9 @@ venv/
 env/
 ENV/
 virtualenv/
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Development tools
 aider*
@@ -21,6 +24,7 @@ aider*
 .vscode/
 .idea/
 *.sublime-*
+.history/
 
 # Dependency directories
 node_modules/
@@ -44,6 +48,17 @@ Desktop.ini
 *.bak
 *.swp
 *~
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
 
 # Chrome extension specific
 *.pem
