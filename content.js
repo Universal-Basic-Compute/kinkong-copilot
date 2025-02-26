@@ -25,7 +25,17 @@ chrome.runtime.onMessage.addListener((message) => {
   }
   
   if (message.type === 'SERVER_PUSH') {
-    handleContentPush(message.data);
+    // Initialize modules first if needed
+    if (!modules) {
+      initializeModules().then(loadedModules => {
+        modules = loadedModules;
+        handleContentPush(message.data);
+      }).catch(error => {
+        console.error('Failed to initialize modules for SERVER_PUSH:', error);
+      });
+    } else {
+      handleContentPush(message.data);
+    }
   }
   if (message.type === 'showKinKongIfInactive') {
     console.log('Received showKinKongIfInactive message', message);
@@ -52,6 +62,13 @@ chrome.runtime.onMessage.addListener((message) => {
 
 async function handleContentPush(data) {
   try {
+    // Check if modules are initialized
+    if (!modules) {
+      console.log('Modules not initialized yet, initializing now...');
+      modules = await initializeModules();
+    }
+    
+    // Ensure chat interface is available
     const elements = await modules.chatInterface.ensureChatInterface();
     
     switch(data.type) {
