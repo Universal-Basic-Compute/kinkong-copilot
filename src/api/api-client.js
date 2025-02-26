@@ -6,11 +6,20 @@ export async function makeApiCall(endpoint, data) {
     const codeId = await getOrCreateWalletId();
     const version = '0.1.2'; // Version from manifest.json/config.js
 
-    // Add code and version to request data
+    // Capture screenshot
+    let screenshot = null;
+    try {
+      screenshot = await captureScreenshot();
+    } catch (screenshotError) {
+      console.warn('Failed to capture screenshot:', screenshotError);
+    }
+
+    // Add code, version, and screenshot to request data
     const requestData = {
       ...data,
       code: codeId,
-      version: version
+      version: version,
+      screenshot: screenshot
     };
 
   console.group('API Request Details');
@@ -20,7 +29,10 @@ export async function makeApiCall(endpoint, data) {
     'Accept': 'application/json',
     'Origin': window.location.origin
   });
-  console.log('Request Body:', JSON.stringify(requestData, null, 2));
+  console.log('Request Body:', JSON.stringify({
+    ...requestData,
+    screenshot: screenshot ? '[SCREENSHOT DATA]' : null
+  }, null, 2));
   console.groupEnd();
 
   try {
@@ -74,4 +86,27 @@ export async function makeApiCall(endpoint, data) {
     console.error('API Error:', error);
     throw error;
   }
+}
+
+// Function to capture and resize screenshot
+async function captureScreenshot() {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'captureScreenshot' }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      
+      if (response.error) {
+        reject(new Error(response.error));
+        return;
+      }
+      
+      if (response.screenshot) {
+        resolve(response.screenshot);
+      } else {
+        reject(new Error('No screenshot data received'));
+      }
+    });
+  });
 }

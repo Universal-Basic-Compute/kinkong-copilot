@@ -63,3 +63,4 @@ htmlcov/
 # Chrome extension specific
 *.pem
 *.crx
+*.zip

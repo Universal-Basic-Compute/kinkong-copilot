@@ -234,7 +234,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     return true; // Will respond asynchronously
   }
+  
+  // Add new handler for screenshot capture
+  if (request.type === 'captureScreenshot') {
+    chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+      if (!tabs || !tabs[0]) {
+        sendResponse({ error: 'No active tab found' });
+        return;
+      }
+      
+      try {
+        // Capture the visible tab
+        const dataUrl = await chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70});
+        
+        // Resize the image to 1568px width
+        const resizedDataUrl = await resizeImage(dataUrl, 1568);
+        
+        sendResponse({ screenshot: resizedDataUrl });
+      } catch (error) {
+        console.error('Screenshot capture error:', error);
+        sendResponse({ error: error.message || 'Failed to capture screenshot' });
+      }
+    });
+    
+    return true; // Will respond asynchronously
+  }
 });
+
+// Function to resize an image
+function resizeImage(dataUrl, targetWidth) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const aspectRatio = img.height / img.width;
+      const targetHeight = Math.round(targetWidth * aspectRatio);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      
+      // Convert to JPEG with reduced quality to keep size reasonable
+      const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      resolve(resizedDataUrl);
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image for resizing'));
+    };
+    
+    img.src = dataUrl;
+  });
+}
 
 // Clean up when extension is shutting down
 chrome.runtime.onSuspend.addListener(() => {
