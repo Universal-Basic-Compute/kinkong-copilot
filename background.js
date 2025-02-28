@@ -1,8 +1,4 @@
-let eventSource;
-let sseConnected = false;
-let reconnectTimeout = null;
 let signalPollingInterval = null;
-const SSE_ENDPOINT = 'https://swarmtrade.ai/api/notifications/stream';
 const SWARMTRADE_NOTIFICATIONS_ENDPOINT = 'https://swarmtrade.ai/api/notifications/latest';
 const POLLING_INTERVAL = 20000; // 20 seconds
 
@@ -42,122 +38,17 @@ async function getWalletId() {
   }
 }
 
-async function connectSSE() {
-  // Don't create a new connection if one is already active
-  if (sseConnected) {
-    console.log('[SSE] Already connected, skipping reconnection');
-    return;
-  }
-  
-  // Clear any pending reconnect timeouts
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-    reconnectTimeout = null;
-  }
-
-  console.log('[SSE] Establishing connection to', SSE_ENDPOINT);
-  
-  // Close existing connection if any
-  if (eventSource) {
-    console.log('[SSE] Closing existing connection');
-    eventSource.close();
-    eventSource = null;
-  }
-
-  // Create a proper EventSource connection
-  try {
-    // Get wallet ID for authentication
-    const walletId = await getWalletId();
-    console.log(`[SSE] Using wallet ID for authentication: ${walletId.substring(0, 8)}...`);
-    
-    // Create URL with authentication parameter
-    const sseUrl = new URL(SSE_ENDPOINT);
-    sseUrl.searchParams.append('code', walletId);
-    
-    eventSource = new EventSource(sseUrl.toString(), {
-      withCredentials: true
-    });
-    
-    // Set up event handlers
-    eventSource.onopen = (event) => {
-      console.log('[SSE] Connection established successfully');
-      sseConnected = true;
-    };
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // Forward to active tabs
-        chrome.tabs.query({active: true}, tabs => {
-          tabs.forEach(tab => {
-            chrome.tabs.sendMessage(tab.id, {
-              type: 'SERVER_PUSH',
-              data: data
-            }).catch(err => {
-              // Suppress errors from inactive tabs
-              console.debug('[SSE] Could not send to tab, may be inactive');
-            });
-          });
-        });
-      } catch (e) {
-        console.error('[SSE] Error parsing message:', e);
-      }
-    };
-    
-    eventSource.onerror = (event) => {
-      console.error('[SSE] Connection error:', event);
-      sseConnected = false;
-      
-      // Close the connection on error
-      if (eventSource) {
-        eventSource.close();
-        eventSource = null;
-      }
-      
-      // Set up reconnection
-      console.log('[SSE] Will attempt to reconnect in 5 seconds');
-      reconnectTimeout = setTimeout(connectSSE, 5000);
-    };
-    
-  } catch (error) {
-    console.error('[SSE] Failed to create EventSource:', error);
-    sseConnected = false;
-    reconnectTimeout = setTimeout(connectSSE, 5000);
-  }
-}
-
-function checkSSEConnection() {
-  console.log('[SSE] Checking connection status: ' + (sseConnected ? 'Connected' : 'Disconnected'));
-  
-  if (!sseConnected) {
-    console.log('[SSE] Connection lost, attempting to reconnect');
-    connectSSE();
-  }
-}
-
-// Initialize SSE connection when extension starts
-connectSSE();
-
 // Start signal polling on extension startup
 startSignalPolling();
 
-// Set up periodic connection check (every 30 seconds)
-setInterval(checkSSEConnection, 30000);
-
-// Add tab and window focus listeners to maintain SSE connection
+// Add tab and window focus listeners to maintain polling
 chrome.tabs.onActivated.addListener(() => {
-  console.log('[SSE] Tab activated, checking connection');
-  checkSSEConnection();
-  
   // Start signal polling for the newly activated tab
   startSignalPolling();
 });
 
 chrome.windows.onFocusChanged.addListener((windowId) => {
   if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-    console.log('[SSE] Window focused, checking connection');
-    checkSSEConnection();
-    
     // Start signal polling when window gets focus
     startSignalPolling();
   } else {
@@ -179,8 +70,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // Add listener to handle browser coming back online
 self.addEventListener('online', () => {
-  console.log('[SSE] Browser back online, checking connection');
-  checkSSEConnection();
+  console.log('[Polling] Browser back online, restarting polling');
+  startSignalPolling();
 });
 
 // Handle content script injection
@@ -566,21 +457,10 @@ function stopSignalPolling() {
 
 // Clean up when extension is shutting down
 chrome.runtime.onSuspend.addListener(() => {
-  console.log('[SSE] Extension suspending, cleaning up SSE connection');
-  if (eventSource) {
-    eventSource.close();
-    eventSource = null;
-  }
-  
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-    reconnectTimeout = null;
-  }
+  console.log('[Polling] Extension suspending, cleaning up polling');
   
   if (signalPollingInterval) {
     clearInterval(signalPollingInterval);
     signalPollingInterval = null;
   }
-  
-  sseConnected = false;
 });
