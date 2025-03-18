@@ -243,7 +243,7 @@ async function isSiteActivated(siteName) {
 document.addEventListener('DOMContentLoaded', async function() {
   // Set version number
   const versionTag = document.querySelector('.version-tag');
-  versionTag.textContent = `v0.1.2`;
+  versionTag.textContent = `v0.1.3`;
 
   // Configure premium subscription link with code
   const premiumLink = document.getElementById('premium-link');
