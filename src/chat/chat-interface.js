@@ -98,9 +98,24 @@ async function processMessageQueue() {
     try {
       console.log('[Chat] Ensuring chat interface');
       const elements = await ensureChatInterface();
+      
+      // Check if elements is null or messagesContainer is missing
       if (!elements || !elements.messagesContainer) {
         console.error('[Chat] Chat interface not ready');
-        throw new Error('Chat interface not ready');
+        
+        // Wait a bit and try again if we're on a supported page
+        const isSupported = await isSupportedPage();
+        if (isSupported) {
+          console.log('[Chat] On supported page, will retry later');
+          // Wait 2 seconds before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue; // Skip to next iteration without removing from queue
+        } else {
+          // Not on a supported page, just remove the message
+          console.log('[Chat] Not on supported page, removing message');
+          messageQueue.shift();
+          continue;
+        }
       }
 
       const { messagesContainer } = elements;
