@@ -171,14 +171,21 @@ chrome.runtime.onInstalled.addListener(() => {
 // Handle proxy requests from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'proxyRequest') {
+    console.log('[Proxy] Request details:', {
+      endpoint: request.endpoint,
+      method: request.method,
+      headers: request.headers,
+      body: request.body
+    });
+    
     // Create request options
     const options = {
       method: request.method,
       headers: request.headers
     };
     
-    // Only add body for non-GET requests
-    if (request.method !== 'GET' && request.body) {
+    // Add body for POST requests
+    if (request.method === 'POST' && request.body) {
       options.body = JSON.stringify(request.body);
     }
     
@@ -211,13 +218,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           .join(', ')
       );
       
-      // Get response as text instead of trying to parse JSON
-      const text = await response.text();
+      // Get response as arrayBuffer for audio data
+      const contentType = response.headers.get('content-type');
+      let responseData;
+      
+      if (contentType && contentType.includes('audio/')) {
+        // Handle audio data
+        const arrayBuffer = await response.arrayBuffer();
+        // Convert to base64 for transfer
+        responseData = btoa(
+          new Uint8Array(arrayBuffer)
+            .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+      } else {
+        // Handle text/json data
+        responseData = await response.text();
+      }
       
       // Log first part of response for debugging
-      console.log('[Proxy] Response text (first 100 chars):', text.substring(0, 100));
+      console.log('[Proxy] Response type:', contentType);
+      if (typeof responseData === 'string' && !contentType?.includes('audio/')) {
+        console.log('[Proxy] Response text (first 100 chars):', responseData.substring(0, 100));
+      } else {
+        console.log('[Proxy] Binary response received');
+      }
       
-      sendResponse({ data: text, status: response.status });
+      sendResponse({ data: responseData, status: response.status });
     })
     .catch(error => {
       console.error('[Proxy] Fetch error:', error);

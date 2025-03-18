@@ -39,9 +39,9 @@ async function speakMessage(message) {
     
     // Use the background script proxy to make the request
     const proxyResponse = await chrome.runtime.sendMessage({
-      type: 'proxyRequest',
+      type: 'proxyRequest', // Make sure we're using the correct message type
       endpoint: `https://konginvest.ai/api/tts?code=${walletId}`,
-      method: 'POST', // Changed back to POST
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'audio/mpeg'
