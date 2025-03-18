@@ -23,6 +23,7 @@
   "host_permissions": [
     "https://api.airtable.com/*",
     "https://swarmtrade.ai/*",
+    "https://konginvest.ai/*",
     "https://universalbasiccompute.ai/*"
   ],
   "background": {
@@ -36,6 +37,7 @@
         "*://*.twitter.com/*",
         "*://*.solscan.io/*",
         "*://*.swarmtrade.ai/*",
+        "*://*.konginvest.ai/*",
         "*://*.universalbasiccompute.ai/*",
         "*://*.raydium.io/*",
         "*://*.birdeye.so/*",
