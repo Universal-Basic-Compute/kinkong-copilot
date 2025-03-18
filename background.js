@@ -1,6 +1,12 @@
 // Add debug logs for configuration
 console.log('[Config] Initializing background script');
 
+// Request activeTab permission when needed
+chrome.action.onClicked.addListener((tab) => {
+  // This ensures activeTab permission is granted for this tab
+  console.log('Extension icon clicked, activeTab permission granted for:', tab.url);
+});
+
 // Function to get or create wallet ID for authentication
 async function getWalletId() {
   try {
@@ -290,49 +296,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   // Add new handler for screenshot capture
   if (request.type === 'captureScreenshot') {
-    try {
-      chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-        if (!tabs || !tabs[0]) {
-          sendResponse({ error: 'No active tab found', screenshot: null });
-          return;
-        }
-        
-        try {
-          // Directly try to capture the screenshot without requesting permission
-          // The activeTab permission in manifest should be sufficient
-          chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70}, (dataUrl) => {
-            if (chrome.runtime.lastError) {
-              console.error('Screenshot capture error:', chrome.runtime.lastError);
-              sendResponse({ 
-                error: chrome.runtime.lastError.message || 'Failed to capture screenshot',
-                screenshot: null 
-              });
-              return;
-            }
-            
-            // Resize the image
-            resizeImage(dataUrl, 1568)
-              .then(resizedDataUrl => {
-                sendResponse({ screenshot: resizedDataUrl });
-              })
-              .catch(error => {
-                console.error('Image resize error:', error);
-                // Return the original image if resizing fails
-                sendResponse({ screenshot: dataUrl });
-              });
-          });
-        } catch (error) {
-          console.error('Screenshot capture error:', error);
-          sendResponse({ 
-            error: error.message || 'Failed to capture screenshot',
-            screenshot: null 
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Screenshot capture error:', error);
+    // Check if the request is coming from a content script in an active tab
+    if (sender.tab && sender.tab.active) {
+      try {
+        // Use the sender's tab ID directly instead of querying for active tabs
+        chrome.tabs.captureVisibleTab(sender.tab.windowId, {format: 'jpeg', quality: 70}, (dataUrl) => {
+          if (chrome.runtime.lastError) {
+            console.error('Screenshot capture error:', chrome.runtime.lastError);
+            sendResponse({ 
+              error: chrome.runtime.lastError.message,
+              screenshot: null 
+            });
+            return;
+          }
+          
+          // If successful, resize the image
+          resizeImage(dataUrl, 1568)
+            .then(resizedDataUrl => {
+              sendResponse({ screenshot: resizedDataUrl });
+            })
+            .catch(error => {
+              console.error('Image resize error:', error);
+              // Return the original image if resizing fails
+              sendResponse({ screenshot: dataUrl });
+            });
+        });
+      } catch (error) {
+        console.error('Failed to capture screenshot:', error);
+        sendResponse({ 
+          error: error.message,
+          screenshot: null 
+        });
+      }
+    } else {
+      console.error('Cannot capture screenshot: not in an active tab');
       sendResponse({ 
-        error: error.message || 'Failed to capture screenshot',
+        error: 'Not in an active tab',
         screenshot: null 
       });
     }

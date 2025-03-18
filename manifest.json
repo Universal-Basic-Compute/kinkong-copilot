@@ -25,7 +25,8 @@
     "https://api.airtable.com/*",
     "https://swarmtrade.ai/*",
     "https://kinos.onrender.com/*",
-    "https://universalbasiccompute.ai/*"
+    "https://universalbasiccompute.ai/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"

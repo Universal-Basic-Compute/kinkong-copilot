@@ -26,10 +26,14 @@ export async function makeApiCall(endpoint, data) {
     const codeId = await getOrCreateWalletId();
     const version = '1.2.0'; // Version from manifest.json/config.js
 
-    // Capture screenshot
+    // Capture screenshot only if we're in an active tab
     let screenshot = null;
     try {
-      screenshot = await captureScreenshot();
+      if (document.visibilityState === 'visible') {
+        screenshot = await captureScreenshot();
+      } else {
+        console.log('Tab not visible, skipping screenshot');
+      }
     } catch (screenshotError) {
       console.warn('Failed to capture screenshot:', screenshotError);
       // Continue without screenshot
