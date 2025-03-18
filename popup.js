@@ -2,7 +2,7 @@ import { getOrCreateWalletId } from './src/chat/chat-interface.js';
 
 async function fetchSignals() {
   try {
-    const response = await fetch('https://kinos.onrender.com/api/signals');
+    const response = await fetch('https://konginvest.ai/api/signals');
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
