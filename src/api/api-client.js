@@ -17,6 +17,11 @@ export async function makeApiCall(endpoint, data) {
       throw new Error('Extension context invalid, cannot make API call');
     }
     
+    // Add network check
+    if (!navigator.onLine) {
+      throw new Error('NETWORK_OFFLINE');
+    }
+    
     // Get the generated code ID and version
     const codeId = await getOrCreateWalletId();
     const version = '1.2.0'; // Version from manifest.json/config.js
@@ -108,11 +113,19 @@ export async function makeApiCall(endpoint, data) {
     throw new Error('Unable to connect to KongInvest API. The service may be down or blocked by CORS policy.');
   }
   } catch (error) {
+    // Enhanced error categorization
     if (error.message === 'RATE_LIMIT_EXCEEDED') {
       throw error; // Propagate rate limit error specifically
+    } else if (error.message === 'NETWORK_OFFLINE') {
+      console.error('Network Error: User is offline');
+      throw new Error('You appear to be offline. Please check your internet connection and try again.');
+    } else if (error.message.includes('Extension context invalid')) {
+      console.error('Context Error:', error);
+      throw new Error('Browser extension context is invalid. Please try refreshing the page.');
+    } else {
+      console.error('API Error:', error);
+      throw new Error('Unable to connect to KongInvest API. The service may be down or blocked.');
     }
-    console.error('API Error:', error);
-    throw error;
   }
 }
 

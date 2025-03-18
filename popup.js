@@ -2,7 +2,7 @@ import { getOrCreateWalletId } from './src/chat/chat-interface.js';
 
 async function fetchSignals() {
   try {
-    const response = await fetch('https://swarmtrade.ai/api/signals');
+    const response = await fetch('https://konginvest.ai/api/signals');
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -159,7 +159,7 @@ function renderSignal(signal) {
 /*
 async function checkSubscriptionStatus() {
   try {
-    const response = await fetch('https://swarmtrade.ai/api/subscription/status');
+    const response = await fetch('https://konginvest.ai/api/subscription/status');
     const data = await response.json();
     
     if (data.isSubscribed) {
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const premiumLink = document.getElementById('premium-link');
   try {
     const walletId = await getOrCreateWalletId();
-    premiumLink.href = `https://swarmtrade.ai/copilot#${walletId}`;
+    premiumLink.href = `https://konginvest.ai/copilot#${walletId}`;
     premiumLink.target = '_blank'; // Ensure it opens in new tab
     premiumLink.rel = 'noopener noreferrer'; // Security best practices
   } catch (error) {
