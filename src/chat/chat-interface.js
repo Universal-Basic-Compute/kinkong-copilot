@@ -37,26 +37,32 @@ async function speakMessage(message) {
     // Get wallet ID for authentication
     const walletId = await getOrCreateWalletId();
     
-    // Create the request to your backend
-    const response = await fetch(
-      `https://konginvest.ai/api/tts?code=${walletId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: message
-        })
+    // Use the background script proxy to make the request
+    const proxyResponse = await chrome.runtime.sendMessage({
+      type: 'proxyRequest',
+      endpoint: `https://konginvest.ai/api/tts?code=${walletId}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: {
+        text: message
       }
-    );
+    });
     
-    if (!response.ok) {
-      throw new Error(`TTS API error: ${response.status} ${response.statusText}`);
+    if (proxyResponse.error) {
+      throw new Error(proxyResponse.error);
     }
     
-    // Get the audio blob
-    const audioBlob = await response.blob();
+    // Convert base64 data to blob
+    const byteCharacters = atob(proxyResponse.data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const audioBlob = new Blob([byteArray], { type: 'audio/mpeg' });
     
     // Create audio element and play
     const audioUrl = URL.createObjectURL(audioBlob);
