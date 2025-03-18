@@ -272,16 +272,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         
         try {
-          // Capture the visible tab
-          const dataUrl = await chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70});
-          
-          // Resize the image to 1568px width
-          const resizedDataUrl = await resizeImage(dataUrl, 1568);
-          
-          sendResponse({ screenshot: resizedDataUrl });
+          // Request activeTab permission explicitly
+          chrome.permissions.request({
+            permissions: ['activeTab']
+          }, async (granted) => {
+            if (granted) {
+              try {
+                // Capture the visible tab
+                const dataUrl = await chrome.tabs.captureVisibleTab({
+                  format: 'jpeg', 
+                  quality: 70
+                });
+                
+                // Resize the image to 1568px width
+                const resizedDataUrl = await resizeImage(dataUrl, 1568);
+                
+                sendResponse({ screenshot: resizedDataUrl });
+              } catch (captureError) {
+                console.error('Screenshot capture error:', captureError);
+                sendResponse({ 
+                  error: captureError.message || 'Failed to capture screenshot',
+                  screenshot: null 
+                });
+              }
+            } else {
+              console.error('Screenshot permission not granted');
+              sendResponse({ 
+                error: 'Screenshot permission not granted',
+                screenshot: null 
+              });
+            }
+          });
         } catch (error) {
           console.error('Screenshot capture error:', error);
-          // Return null for screenshot instead of failing completely
           sendResponse({ 
             error: error.message || 'Failed to capture screenshot',
             screenshot: null 

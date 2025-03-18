@@ -32,6 +32,7 @@ export async function makeApiCall(endpoint, data) {
       screenshot = await captureScreenshot();
     } catch (screenshotError) {
       console.warn('Failed to capture screenshot:', screenshotError);
+      // Continue without screenshot
     }
 
     // Add code, version, and screenshot to request data
@@ -39,7 +40,7 @@ export async function makeApiCall(endpoint, data) {
       ...data,
       code: codeId,
       version: version,
-      screenshot: screenshot
+      screenshot: screenshot || null // Ensure null if screenshot capture failed
     };
 
   console.group('API Request Details');
