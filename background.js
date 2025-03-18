@@ -1,11 +1,5 @@
-let signalPollingInterval = null;
-const SWARMTRADE_NOTIFICATIONS_ENDPOINT = 'https://swarmtrade.ai/api/notifications/latest';
-const POLLING_INTERVAL = 20000; // 20 seconds
-
 // Add debug logs for configuration
 console.log('[Config] Initializing background script');
-console.log(`[Config] SWARMTRADE_NOTIFICATIONS_ENDPOINT: ${SWARMTRADE_NOTIFICATIONS_ENDPOINT}`);
-console.log(`[Config] POLLING_INTERVAL: ${POLLING_INTERVAL}ms`);
 
 // Function to get or create wallet ID for authentication
 async function getWalletId() {
@@ -38,41 +32,6 @@ async function getWalletId() {
   }
 }
 
-// Start signal polling on extension startup
-startSignalPolling();
-
-// Add tab and window focus listeners to maintain polling
-chrome.tabs.onActivated.addListener(() => {
-  // Start signal polling for the newly activated tab
-  startSignalPolling();
-});
-
-chrome.windows.onFocusChanged.addListener((windowId) => {
-  if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-    // Start signal polling when window gets focus
-    startSignalPolling();
-  } else {
-    // Stop polling when window loses focus
-    stopSignalPolling();
-  }
-});
-
-// Add this listener to stop polling when tab is changed
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'loading') {
-    // Stop polling when navigating to a new page
-    stopSignalPolling();
-  } else if (changeInfo.status === 'complete') {
-    // Restart polling when page is fully loaded
-    startSignalPolling();
-  }
-});
-
-// Add listener to handle browser coming back online
-self.addEventListener('online', () => {
-  console.log('[Polling] Browser back online, restarting polling');
-  startSignalPolling();
-});
 
 // Handle content script injection
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -97,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (hostname.includes('dexscreener.com')) siteName = 'dexscreener';
       else if (hostname.includes('twitter.com') || hostname.includes('x.com')) siteName = 'twitter';
       else if (hostname.includes('solscan.io')) siteName = 'solscan';
-      else if (hostname.includes('swarmtrade.ai')) siteName = 'swarmtrade';
+      else if (hostname.includes('konginvest.ai')) siteName = 'konginvest';
       else if (hostname.includes('universalbasiccompute.ai')) siteName = 'ubc';
       else if (hostname.includes('raydium.io')) siteName = 'raydium';
       else if (hostname.includes('birdeye.so')) siteName = 'birdeye';
@@ -199,7 +158,7 @@ chrome.runtime.onInstalled.addListener(() => {
   
   // Check if third-party cookies are enabled
   chrome.cookies.get({
-    url: 'https://swarmtrade.ai',
+    url: 'https://konginvest.ai',
     name: 'test_cookie'
   }, function(cookie) {
     if (!cookie) {
@@ -305,162 +264,3 @@ function resizeImage(dataUrl, targetWidth) {
   });
 }
 
-// Function to start polling for signals from SwarmTrade API
-function startSignalPolling() {
-  // Clear any existing interval
-  if (signalPollingInterval) {
-    clearInterval(signalPollingInterval);
-    signalPollingInterval = null;
-    console.log('[Signal Polling] Cleared existing polling interval');
-  }
-  
-  // Define the polling function
-  const pollForSignals = async () => {
-    try {
-      console.log('[Signal Polling] Checking for new signals...');
-      
-      // Get the active tab
-      const tabs = await chrome.tabs.query({active: true, currentWindow: true});
-      if (!tabs || tabs.length === 0) {
-        console.log('[Signal Polling] No active tab found');
-        return;
-      }
-      
-      console.log(`[Signal Polling] Active tab: ${tabs[0].url}`);
-      
-      // Get wallet ID for authentication
-      const walletId = await getWalletId();
-      console.log(`[Signal Polling] Using wallet ID: ${walletId.substring(0, 8)}...`);
-      
-      // Create URL with authentication parameter
-      const apiUrl = new URL(SWARMTRADE_NOTIFICATIONS_ENDPOINT);
-      apiUrl.searchParams.append('code', walletId);
-      
-      // Make request to SwarmTrade API with authentication
-      console.log(`[Signal Polling] Requesting data from SwarmTrade: ${apiUrl.toString()}`);
-      const response = await fetch(apiUrl.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        console.error(`[Signal Polling] SwarmTrade API error: ${response.status} ${response.statusText}`);
-        throw new Error(`SwarmTrade API error: ${response.status}`);
-      }
-      
-      // Parse response as text first to debug
-      const responseText = await response.text();
-      console.log('[Signal Polling] Response text:', responseText);
-      
-      // Try to parse as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.error('[Signal Polling] JSON parse error:', e);
-        console.log('[Signal Polling] Response was not valid JSON:', responseText);
-        throw new Error('Response was not valid JSON');
-      }
-      
-      // Check if the API returned a message about no signals
-      if (data.message === "No recent signals found") {
-        console.log('[Signal Polling] API reports no recent signals');
-        return;
-      }
-      
-      // If we have signals data, process it
-      if (!data.signals || data.signals.length === 0) {
-        console.log('[Signal Polling] No signals found in SwarmTrade response');
-        return;
-      }
-      
-      console.log(`[Signal Polling] Found ${data.signals.length} total signals in SwarmTrade API`);
-      
-      // Get current time
-      const now = new Date();
-      console.log(`[Signal Polling] Current time: ${now.toISOString()}`);
-      
-      // Filter signals less than 1 hour old
-      const recentSignals = data.signals.filter(signal => {
-        const createdAt = new Date(signal.createdAt);
-        const diffMs = now - createdAt;
-        const diffHours = diffMs / (1000 * 60 * 60);
-        console.log(`[Signal Polling] Signal ${signal.id} created at ${createdAt.toISOString()}, ${diffHours.toFixed(2)} hours old`);
-        return diffHours < 1;
-      });
-      
-      if (recentSignals.length === 0) {
-        console.log('[Signal Polling] No recent signals found (less than 1 hour old)');
-        return;
-      }
-      
-      console.log(`[Signal Polling] Found ${recentSignals.length} recent signals (less than 1 hour old)`);
-      
-      // Send signals to active tab
-      for (const signal of recentSignals) {
-        // Format the signal data
-        const formattedSignal = {
-          id: signal.id,
-          token: signal.token,
-          type: signal.type,
-          entryPrice: signal.entryPrice,
-          targetPrice: signal.targetPrice,
-          stopLoss: signal.stopLoss,
-          timeframe: signal.timeframe,
-          confidence: signal.confidence,
-          createdAt: signal.createdAt
-        };
-        
-        console.log(`[Signal Polling] Sending signal to tab: ${JSON.stringify(formattedSignal)}`);
-        
-        // Send to active tab
-        try {
-          await chrome.tabs.sendMessage(tabs[0].id, {
-            type: 'SERVER_PUSH',
-            data: {
-              type: 'SIGNAL',
-              signal: formattedSignal
-            }
-          });
-          console.log(`[Signal Polling] Successfully sent signal ${signal.id} to tab ${tabs[0].id}`);
-        } catch (err) {
-          console.error(`[Signal Polling] Error sending signal to tab: ${err.message}`);
-        }
-      }
-      
-    } catch (error) {
-      console.error('[Signal Polling] Error:', error);
-    }
-  };
-  
-  // Run immediately on start
-  console.log('[Signal Polling] Running initial poll');
-  pollForSignals();
-  
-  // Set up interval
-  signalPollingInterval = setInterval(pollForSignals, POLLING_INTERVAL);
-  console.log(`[Signal Polling] Started polling every ${POLLING_INTERVAL/1000} seconds`);
-}
-
-// Function to stop signal polling
-
-function stopSignalPolling() {
-  if (signalPollingInterval) {
-    clearInterval(signalPollingInterval);
-    signalPollingInterval = null;
-    console.log('[Signal Polling] Stopped polling');
-  }
-}
-
-// Clean up when extension is shutting down
-chrome.runtime.onSuspend.addListener(() => {
-  console.log('[Polling] Extension suspending, cleaning up polling');
-  
-  if (signalPollingInterval) {
-    clearInterval(signalPollingInterval);
-    signalPollingInterval = null;
-  }
-});

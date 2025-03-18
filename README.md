@@ -64,7 +64,7 @@ Free to use. Premium features coming soon.
 
 ## Connect With Us
 
-- 🌐 Website: [SwarmTrade.ai](https://swarmtrade.ai)
+- 🌐 Website: [KongInvest.ai](https://konginvest.ai)
 - 🐦 Twitter: [@kinkong_ubc](https://twitter.com/kinkong_ubc)
 - 📱 Telegram: [t.me/kinkong_ubc](https://t.me/kinkong_ubc)
 

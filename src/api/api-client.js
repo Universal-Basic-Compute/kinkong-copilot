@@ -38,7 +38,7 @@ export async function makeApiCall(endpoint, data) {
     };
 
   console.group('API Request Details');
-  console.log('Endpoint:', `https://swarmtrade.ai/api/${endpoint}`);
+  console.log('Endpoint:', `https://konginvest.ai/api/${endpoint}`);
   console.log('Request Headers:', {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -52,7 +52,7 @@ export async function makeApiCall(endpoint, data) {
 
   try {
     // Create URL with authentication parameter
-    const apiUrl = new URL(`https://swarmtrade.ai/api/${endpoint}`);
+    const apiUrl = new URL(`https://konginvest.ai/api/${endpoint}`);
     apiUrl.searchParams.append('code', codeId);
     
     const proxyResponse = await chrome.runtime.sendMessage({
@@ -105,7 +105,7 @@ export async function makeApiCall(endpoint, data) {
     });
     console.groupEnd();
 
-    throw new Error('Unable to connect to SwarmTrade API. The service may be down or blocked by CORS policy.');
+    throw new Error('Unable to connect to KongInvest API. The service may be down or blocked by CORS policy.');
   }
   } catch (error) {
     if (error.message === 'RATE_LIMIT_EXCEEDED') {

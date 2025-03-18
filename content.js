@@ -78,37 +78,6 @@ async function handleContentPush(data) {
     console.log('[Content] Chat interface ready:', elements ? 'Yes' : 'No');
     
     switch(data.type) {
-      case 'SIGNAL':
-        console.log('[Content] Processing signal:', data.signal.id);
-        
-        // Check if we've already processed this signal
-        if (data.signal.id && processedSignalIds.has(data.signal.id)) {
-          console.log('[Content] Skipping duplicate signal:', data.signal.id);
-          return;
-        }
-        
-        // Add to processed set
-        if (data.signal.id) {
-          processedSignalIds.add(data.signal.id);
-          console.log(`[Content] Added signal ${data.signal.id} to processed set. Total processed: ${processedSignalIds.size}`);
-          
-          // Limit the size of the set to avoid memory issues
-          if (processedSignalIds.size > 100) {
-            // Remove oldest entries (convert to array, slice, and convert back to set)
-            const oldSize = processedSignalIds.size;
-            processedSignalIds = new Set([...processedSignalIds].slice(-50));
-            console.log(`[Content] Trimmed processed signals set from ${oldSize} to ${processedSignalIds.size}`);
-          }
-        }
-        
-        // Show signal notification in chat
-        console.log('[Content] Formatting signal message');
-        const signalMessage = formatSignalMessage(data.signal);
-        console.log('[Content] Adding signal message to chat:', signalMessage);
-        await modules.chatInterface.addMessageToChatContainer(signalMessage, false);
-        console.log('[Content] Signal message added to chat');
-        break;
-        
       case 'PRICE_ALERT':
         console.log('[Content] Processing price alert');
         // Show price alert in chat
@@ -124,29 +93,6 @@ async function handleContentPush(data) {
   } catch (error) {
     console.error('[Content] Error handling pushed message:', error);
   }
-}
-
-function formatSignalMessage(signal) {
-  // Format the date
-  const signalDate = new Date(signal.createdAt);
-  const formattedDate = signalDate.toLocaleString();
-  
-  // Build the message with available fields
-  let message = `🚨 New Trading Signal (${formattedDate})\n`;
-  
-  if (signal.token) message += `Token: ${signal.token}\n`;
-  if (signal.type) message += `Type: ${signal.type}\n`;
-  if (signal.entryPrice) message += `Entry: $${signal.entryPrice}\n`;
-  if (signal.targetPrice) message += `Target: $${signal.targetPrice}\n`;
-  if (signal.stopLoss) message += `Stop Loss: $${signal.stopLoss}\n`;
-  if (signal.timeframe) message += `Timeframe: ${signal.timeframe}\n`;
-  if (signal.confidence) message += `Confidence: ${signal.confidence}\n`;
-  
-  // Add any additional fields that might be in the API response
-  if (signal.exchange) message += `Exchange: ${signal.exchange}\n`;
-  if (signal.notes) message += `Notes: ${signal.notes}\n`;
-  
-  return message.trim();
 }
 
 function formatPriceAlert(alert) {

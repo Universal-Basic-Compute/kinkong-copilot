@@ -7,7 +7,7 @@ export function isXPage() {
 }
 
 export function isSwarmTradePage() {
-  return window.location.hostname === 'swarmtrade.ai';
+  return window.location.hostname === 'konginvest.ai';
 }
 
 export function isUBCPage() {
@@ -45,7 +45,7 @@ export async function isSupportedPage() {
   if (hostname === 'dexscreener.com') siteName = 'dexscreener';
   else if (hostname === 'x.com' || hostname === 'twitter.com') siteName = 'twitter';
   else if (hostname === 'solscan.io') siteName = 'solscan';
-  else if (hostname === 'swarmtrade.ai') siteName = 'swarmtrade';
+  else if (hostname === 'konginvest.ai') siteName = 'konginvest';
   else if (hostname === 'universalbasiccompute.ai') siteName = 'ubc';
   else if (hostname === 'raydium.io') siteName = 'raydium';
   else if (hostname === 'birdeye.so') siteName = 'birdeye';
