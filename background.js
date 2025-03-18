@@ -158,7 +158,7 @@ chrome.runtime.onInstalled.addListener(() => {
   
   // Check if third-party cookies are enabled
   chrome.cookies.get({
-    url: 'https://konginvest.ai',
+    url: 'https://kinos.onrender.com',
     name: 'test_cookie'
   }, function(cookie) {
     if (!cookie) {

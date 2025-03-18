@@ -40,7 +40,7 @@ async function speakMessage(message) {
     // Use the background script proxy to make the request
     const proxyResponse = await chrome.runtime.sendMessage({
       type: 'proxyRequest',
-      endpoint: `https://konginvest.ai/api/tts?code=${walletId}`,
+      endpoint: `https://kinos.onrender.com/api/tts?code=${walletId}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

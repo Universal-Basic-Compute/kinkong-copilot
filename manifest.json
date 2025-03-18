@@ -24,7 +24,7 @@
   "host_permissions": [
     "https://api.airtable.com/*",
     "https://swarmtrade.ai/*",
-    "https://konginvest.ai/*",
+    "https://kinos.onrender.com/*",
     "https://universalbasiccompute.ai/*"
   ],
   "background": {
