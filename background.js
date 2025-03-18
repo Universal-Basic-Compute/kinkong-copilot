@@ -298,36 +298,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         
         try {
-          // Request activeTab permission explicitly
-          chrome.permissions.request({
-            permissions: ['activeTab']
-          }, async (granted) => {
-            if (granted) {
-              try {
-                // Capture the visible tab
-                const dataUrl = await chrome.tabs.captureVisibleTab({
-                  format: 'jpeg', 
-                  quality: 70
-                });
-                
-                // Resize the image to 1568px width
-                const resizedDataUrl = await resizeImage(dataUrl, 1568);
-                
-                sendResponse({ screenshot: resizedDataUrl });
-              } catch (captureError) {
-                console.error('Screenshot capture error:', captureError);
-                sendResponse({ 
-                  error: captureError.message || 'Failed to capture screenshot',
-                  screenshot: null 
-                });
-              }
-            } else {
-              console.error('Screenshot permission not granted');
+          // Directly try to capture the screenshot without requesting permission
+          // The activeTab permission in manifest should be sufficient
+          chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70}, (dataUrl) => {
+            if (chrome.runtime.lastError) {
+              console.error('Screenshot capture error:', chrome.runtime.lastError);
               sendResponse({ 
-                error: 'Screenshot permission not granted',
+                error: chrome.runtime.lastError.message || 'Failed to capture screenshot',
                 screenshot: null 
               });
+              return;
             }
+            
+            // Resize the image
+            resizeImage(dataUrl, 1568)
+              .then(resizedDataUrl => {
+                sendResponse({ screenshot: resizedDataUrl });
+              })
+              .catch(error => {
+                console.error('Image resize error:', error);
+                // Return the original image if resizing fails
+                sendResponse({ screenshot: dataUrl });
+              });
           });
         } catch (error) {
           console.error('Screenshot capture error:', error);

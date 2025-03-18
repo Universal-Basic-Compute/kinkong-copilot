@@ -40,7 +40,7 @@ export async function makeApiCall(endpoint, data) {
       ...data,
       code: codeId,
       version: version,
-      screenshot: screenshot || null // Ensure null if screenshot capture failed
+      screenshot: screenshot // Will be null if capture failed
     };
 
   console.group('API Request Details');
