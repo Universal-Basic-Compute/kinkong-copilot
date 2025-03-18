@@ -98,6 +98,28 @@ export async function makeApiCall(endpoint, data) {
       throw new Error('Received HTML response instead of expected data. The API endpoint may be unavailable.');
     }
 
+    // Parse JSON response if it's from the copilot endpoint
+    if (endpoint === 'copilot') {
+      try {
+        const jsonData = JSON.parse(proxyResponse.data);
+        console.log('[API] Received JSON response:', jsonData);
+        
+        // Return the response text from the JSON
+        if (jsonData.response) {
+          return new Response(jsonData.response, {
+            status: proxyResponse.status || 200,
+            headers: {
+              'Content-Type': 'text/plain'
+            }
+          });
+        }
+      } catch (jsonError) {
+        console.error('[API] Error parsing JSON response:', jsonError);
+        // If JSON parsing fails, continue with the original response
+      }
+    }
+
+    // Return the original response for non-JSON or fallback
     return new Response(proxyResponse.data, {
       status: proxyResponse.status || 200,
       headers: {
