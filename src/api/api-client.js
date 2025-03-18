@@ -24,7 +24,7 @@ export async function makeApiCall(endpoint, data) {
     
     // Get the generated code ID and version
     const codeId = await getOrCreateWalletId();
-    const version = '1.2.0'; // Version from manifest.json/config.js
+    const version = '0.2.0'; // Version from manifest.json/config.js
 
     // Capture screenshot only if we're in an active tab
     let screenshot = null;
