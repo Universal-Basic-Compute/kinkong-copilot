@@ -39,7 +39,7 @@ async function speakMessage(message) {
     
     // Use the background script proxy to make the request
     const proxyResponse = await chrome.runtime.sendMessage({
-      type: 'proxyRequest', // Make sure we're using the correct message type
+      type: 'proxyRequest',
       endpoint: `https://konginvest.ai/api/tts?code=${walletId}`,
       method: 'POST',
       headers: {
@@ -47,7 +47,9 @@ async function speakMessage(message) {
         'Accept': 'audio/mpeg'
       },
       body: {
-        text: message
+        text: message,
+        voiceId: 'IKne3meq5aSn9XLyUdCD', // Default ElevenLabs voice ID
+        model: 'eleven_flash_v2_5'       // Use the specified model
       }
     });
     
