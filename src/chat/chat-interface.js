@@ -145,10 +145,7 @@ async function processMessageQueue() {
         await addMessageParagraphsToChat(message, isUser, messagesContainer);
         console.log('[Chat] Message paragraphs added');
         
-        // If it's a bot message, speak it
-        if (!isUser) {
-          speakMessage(message);
-        }
+        // TTS is now handled immediately after API response
       }
 
       if (shouldSave) {
@@ -705,6 +702,9 @@ async function initializeChatInterface(shadow) {
         }
 
         const responseText = await response.text();
+        
+        // Start TTS immediately after receiving the response
+        speakMessage(responseText);
         
         // Get shadow root for bubble display
         const shadowContainer = document.getElementById('kinkong-shadow-container');
