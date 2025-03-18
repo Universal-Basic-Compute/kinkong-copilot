@@ -171,11 +171,28 @@ chrome.runtime.onInstalled.addListener(() => {
 // Handle proxy requests from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'proxyRequest') {
-    fetch(request.endpoint, {
+    // Create request options
+    const options = {
       method: request.method,
-      headers: request.headers,
-      body: JSON.stringify(request.body)
-    })
+      headers: request.headers
+    };
+    
+    // Only add body for non-GET requests
+    if (request.method !== 'GET' && request.body) {
+      options.body = JSON.stringify(request.body);
+    }
+    
+    // For GET requests with body, append as query parameters
+    let endpoint = request.endpoint;
+    if (request.method === 'GET' && request.body) {
+      const url = new URL(endpoint);
+      Object.entries(request.body).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+      endpoint = url.toString();
+    }
+    
+    fetch(endpoint, options)
     .then(async response => {
       // Check if response is ok
       if (!response.ok) {
@@ -247,29 +264,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   // Add new handler for screenshot capture
   if (request.type === 'captureScreenshot') {
-    chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-      if (!tabs || !tabs[0]) {
-        sendResponse({ error: 'No active tab found', screenshot: null });
-        return;
-      }
-      
-      try {
-        // Capture the visible tab
-        const dataUrl = await chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70});
+    try {
+      chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+        if (!tabs || !tabs[0]) {
+          sendResponse({ error: 'No active tab found', screenshot: null });
+          return;
+        }
         
-        // Resize the image to 1568px width
-        const resizedDataUrl = await resizeImage(dataUrl, 1568);
-        
-        sendResponse({ screenshot: resizedDataUrl });
-      } catch (error) {
-        console.error('Screenshot capture error:', error);
-        // Return null for screenshot instead of failing completely
-        sendResponse({ 
-          error: error.message || 'Failed to capture screenshot',
-          screenshot: null 
-        });
-      }
-    });
+        try {
+          // Capture the visible tab
+          const dataUrl = await chrome.tabs.captureVisibleTab(null, {format: 'jpeg', quality: 70});
+          
+          // Resize the image to 1568px width
+          const resizedDataUrl = await resizeImage(dataUrl, 1568);
+          
+          sendResponse({ screenshot: resizedDataUrl });
+        } catch (error) {
+          console.error('Screenshot capture error:', error);
+          // Return null for screenshot instead of failing completely
+          sendResponse({ 
+            error: error.message || 'Failed to capture screenshot',
+            screenshot: null 
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Screenshot capture error:', error);
+      sendResponse({ 
+        error: error.message || 'Failed to capture screenshot',
+        screenshot: null 
+      });
+    }
     
     return true; // Will respond asynchronously
   }
