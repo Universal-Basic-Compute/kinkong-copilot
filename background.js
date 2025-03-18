@@ -210,6 +210,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Will respond asynchronously
   }
   
+  // Handle TTS proxy requests
+  if (request.type === 'ttsRequest') {
+    fetch(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify(request.body)
+    })
+    .then(async response => {
+      if (!response.ok) {
+        sendResponse({ 
+          error: `TTS API error: ${response.status} ${response.statusText}`,
+          status: response.status
+        });
+        return;
+      }
+      
+      // Get the audio as array buffer
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Convert to base64 for transfer
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+      
+      sendResponse({ data: base64, status: response.status });
+    })
+    .catch(error => {
+      console.error('[TTS] Fetch error:', error);
+      sendResponse({ error: error.message });
+    });
+    
+    return true; // Will respond asynchronously
+  }
+  
   // Add new handler for screenshot capture
   if (request.type === 'captureScreenshot') {
     chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {

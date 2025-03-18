@@ -218,6 +218,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   }
   
+  if (message.type === 'updateVoiceState') {
+    // Store the voice state
+    chrome.storage.sync.set({ voiceEnabled: message.enabled });
+    console.log(`Voice ${message.enabled ? 'enabled' : 'disabled'}`);
+  }
+  
   if (message.type === 'PHANTOM_CONNECT_REQUEST') {
     // Forward the request to the page through our existing bridge
     window.postMessage({ type: 'PHANTOM_CONNECT_REQUEST' }, '*');

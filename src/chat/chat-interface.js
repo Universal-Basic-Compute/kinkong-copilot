@@ -20,6 +20,60 @@ function isExtensionContextValid() {
   }
 }
 
+// Text-to-speech function using backend API
+async function speakMessage(message) {
+  try {
+    // Check if voice is enabled
+    const { voiceEnabled } = await chrome.storage.sync.get({
+      voiceEnabled: false
+    });
+    
+    if (!voiceEnabled) {
+      return; // Voice not enabled
+    }
+    
+    console.log('[TTS] Preparing to speak message');
+    
+    // Get wallet ID for authentication
+    const walletId = await getOrCreateWalletId();
+    
+    // Create the request to your backend
+    const response = await fetch(
+      `https://konginvest.ai/api/tts?code=${walletId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: message
+        })
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`TTS API error: ${response.status} ${response.statusText}`);
+    }
+    
+    // Get the audio blob
+    const audioBlob = await response.blob();
+    
+    // Create audio element and play
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl); // Clean up
+    };
+    
+    await audio.play();
+    console.log('[TTS] Playing audio');
+    
+  } catch (error) {
+    console.error('[TTS] Error speaking message:', error);
+  }
+}
+
 
 
 async function processMessageQueue() {
@@ -59,6 +113,11 @@ async function processMessageQueue() {
         console.log('[Chat] Adding message paragraphs to chat');
         await addMessageParagraphsToChat(message, isUser, messagesContainer);
         console.log('[Chat] Message paragraphs added');
+        
+        // If it's a bot message, speak it
+        if (!isUser) {
+          speakMessage(message);
+        }
       }
 
       if (shouldSave) {

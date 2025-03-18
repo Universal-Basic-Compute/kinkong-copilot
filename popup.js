@@ -375,6 +375,30 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     });
   });
+  
+  // Voice settings
+  const voiceToggle = document.getElementById('voice-enabled');
+
+  // Load saved voice preferences
+  chrome.storage.sync.get({
+    voiceEnabled: false
+  }, (items) => {
+    voiceToggle.checked = items.voiceEnabled;
+  });
+
+  // Save voice preference when changed
+  voiceToggle.addEventListener('change', () => {
+    const enabled = voiceToggle.checked;
+    chrome.storage.sync.set({ voiceEnabled: enabled });
+    
+    // Send message to content script to update voice state
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        type: 'updateVoiceState',
+        enabled: enabled
+      });
+    });
+  });
 
 
   const tradingSignals = document.getElementById('trading-signals');
