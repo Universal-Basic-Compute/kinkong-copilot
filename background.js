@@ -249,7 +249,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'captureScreenshot') {
     chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
       if (!tabs || !tabs[0]) {
-        sendResponse({ error: 'No active tab found' });
+        sendResponse({ error: 'No active tab found', screenshot: null });
         return;
       }
       
@@ -263,7 +263,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ screenshot: resizedDataUrl });
       } catch (error) {
         console.error('Screenshot capture error:', error);
-        sendResponse({ error: error.message || 'Failed to capture screenshot' });
+        // Return null for screenshot instead of failing completely
+        sendResponse({ 
+          error: error.message || 'Failed to capture screenshot',
+          screenshot: null 
+        });
       }
     });
     

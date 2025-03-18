@@ -52,7 +52,14 @@ async function speakMessage(message) {
     });
     
     if (proxyResponse.error) {
-      throw new Error(proxyResponse.error);
+      console.error('[TTS] API error:', proxyResponse.error);
+      return; // Just return without throwing
+    }
+    
+    // Check if we have data
+    if (!proxyResponse.data) {
+      console.error('[TTS] No data received from API');
+      return;
     }
     
     // Convert base64 data to blob
@@ -77,6 +84,7 @@ async function speakMessage(message) {
     
   } catch (error) {
     console.error('[TTS] Error speaking message:', error);
+    // Just log the error and continue
   }
 }
 
