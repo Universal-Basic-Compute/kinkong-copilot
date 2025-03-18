@@ -129,7 +129,12 @@ async function initializeModules() {
       urlHandler: await import(base + 'src/handlers/url-handler.js')
     };
     
+    // Make modules globally available
     window.kinkongModules = modules;
+    
+    // Also expose the content extractor function globally
+    window.extractPageContent = modules.contentExtractor.extractVisibleContent;
+    
     console.log('All modules loaded successfully');
     return modules;
   } catch (error) {

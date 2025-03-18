@@ -665,13 +665,34 @@ async function initializeChatInterface(shadow) {
       try {
         // Get wallet ID and page type
         const walletId = await getOrCreateWalletId();
-        const pageType = isSupportedPage();
+        const pageType = await isSupportedPage();
+        
+        // Extract page content directly
+        let pageContent = null;
+        try {
+          // Try to get content extractor module from window.kinkongModules
+          if (window.kinkongModules && window.kinkongModules.contentExtractor) {
+            pageContent = window.kinkongModules.contentExtractor.extractVisibleContent();
+          } else {
+            // Fallback to direct extraction
+            pageContent = {
+              url: window.location.href,
+              pageContent: {
+                title: document.title,
+                mainContent: document.body.innerText
+              }
+            };
+          }
+          console.log('Extracted page content:', pageContent ? 'success' : 'failed');
+        } catch (extractError) {
+          console.warn('Failed to extract page content:', extractError);
+        }
 
-        // Use the currentPageContent from content.js
+        // Use the extracted page content or fallback to currentPageContent
         const response = await makeApiCall('copilot', {
           message: message,
           url: window.location.href,
-          pageContent: window.currentPageContent || null,
+          pageContent: pageContent || window.currentPageContent || null,
           pageType: pageType || null,
           fullyLoaded: true,
           wallet: walletId // Use generated wallet ID
@@ -777,6 +798,28 @@ async function addMessageParagraphsToChat(message, isUser, messagesContainer) {
 function setupActivityTracking(shadow) {
   // This function is intentionally empty as we've removed the auto-messaging functionality
   // No automatic API calls will be made when the user visits a page
+}
+
+// Helper function to extract page content directly
+async function extractPageContent() {
+  try {
+    // Try to get content extractor module from window.kinkongModules
+    if (window.kinkongModules && window.kinkongModules.contentExtractor) {
+      return window.kinkongModules.contentExtractor.extractVisibleContent();
+    }
+    
+    // Fallback to basic extraction
+    return {
+      url: window.location.href,
+      pageContent: {
+        title: document.title,
+        mainContent: document.body.innerText.substring(0, 10000) // Limit size
+      }
+    };
+  } catch (error) {
+    console.error('Error extracting page content:', error);
+    return null;
+  }
 }
 
 export async function addMessageToChatContainer(message, isUser = true, shouldSave = true) {

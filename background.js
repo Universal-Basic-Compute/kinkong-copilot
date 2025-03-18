@@ -152,6 +152,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           type: 'showKinKongIfInactive',
           pageContent: message.pageContent
         });
+    
+        // Also store the page content in a global variable that can be accessed by the chat interface
+        chrome.scripting.executeScript({
+          target: {tabId: tab.id},
+          func: (pageContent) => {
+            window.currentPageContent = pageContent;
+          },
+          args: [message.pageContent]
+        }).catch(err => console.error('Failed to store page content:', err));
       } catch (error) {
         console.error('Injection failed:', error);
       }
