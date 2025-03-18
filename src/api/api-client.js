@@ -43,8 +43,19 @@ export async function makeApiCall(endpoint, data) {
       screenshot: screenshot // Will be null if capture failed
     };
 
+  // Modify endpoint URL based on the endpoint parameter
+  let apiUrl;
+  if (endpoint === 'copilot') {
+    // Use the new projects/kinkong/<code>/messages endpoint
+    apiUrl = new URL(`https://kinos.onrender.com/api/projects/kinkong/${codeId}/messages`);
+  } else {
+    // Use the standard endpoint format for other API calls
+    apiUrl = new URL(`https://kinos.onrender.com/api/${endpoint}`);
+    apiUrl.searchParams.append('code', codeId);
+  }
+
   console.group('API Request Details');
-  console.log('Endpoint:', `https://kinos.onrender.com/api/${endpoint}`);
+  console.log('Endpoint:', apiUrl.toString());
   console.log('Request Headers:', {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -57,9 +68,6 @@ export async function makeApiCall(endpoint, data) {
   console.groupEnd();
 
   try {
-    // Create URL with authentication parameter
-    const apiUrl = new URL(`https://kinos.onrender.com/api/${endpoint}`);
-    apiUrl.searchParams.append('code', codeId);
     
     const proxyResponse = await chrome.runtime.sendMessage({
       type: 'proxyRequest',
@@ -111,7 +119,7 @@ export async function makeApiCall(endpoint, data) {
     });
     console.groupEnd();
 
-    throw new Error('Unable to connect to KongInvest API. The service may be down or blocked by CORS policy.');
+    throw new Error('Unable to connect to KinOS API. The service may be down or blocked by CORS policy.');
   }
   } catch (error) {
     // Enhanced error categorization
@@ -125,7 +133,7 @@ export async function makeApiCall(endpoint, data) {
       throw new Error('Browser extension context is invalid. Please try refreshing the page.');
     } else {
       console.error('API Error:', error);
-      throw new Error('Unable to connect to KongInvest API. The service may be down or blocked.');
+      throw new Error('Unable to connect to KinOS API. The service may be down or blocked.');
     }
   }
 }
